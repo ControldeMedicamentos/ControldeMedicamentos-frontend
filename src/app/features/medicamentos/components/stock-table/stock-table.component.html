@@ -1,0 +1,100 @@
+<div class="stock-header">
+  <div>
+    <p class="stock-codigo">{{ medicamento.codigoSismed }}</p>
+    <p class="stock-desc">{{ medicamento.descripcionCorta || medicamento.descripcionSismed }}</p>
+  </div>
+  <div class="stock-total">
+    <span class="stock-number">{{ stockTotal }}</span>
+    <span class="stock-label">unidades en stock</span>
+  </div>
+</div>
+
+@if (errorMessage) {
+  <p class="error-msg">{{ errorMessage }}</p>
+}
+
+@if (isLoading) {
+  <div class="state-msg">
+    <span class="pi pi-spinner pi-spin"></span> Cargando lotes...
+  </div>
+} @else if (inventarios.length === 0 && !showForm) {
+  <div class="state-msg">
+    <span class="pi pi-inbox"></span>
+    Sin lotes registrados
+  </div>
+} @else if (inventarios.length > 0) {
+  <table class="lote-table">
+    <thead>
+      <tr>
+        <th>Lote</th>
+        <th>Vencimiento</th>
+        <th class="text-right">Stock</th>
+        <th class="text-right">Mín.</th>
+        <th class="text-center">Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (inv of inventarios; track inv.id) {
+        <tr>
+          <td class="lote-num">{{ inv.lote || '—' }}</td>
+          <td>{{ inv.fechaVencimiento ? (inv.fechaVencimiento | date:'dd/MM/yyyy') : '—' }}</td>
+          <td class="text-right font-bold">{{ inv.stockActual }}</td>
+          <td class="text-right text-muted">{{ inv.stockMinimo }}</td>
+          <td class="text-center">
+            <span class="estado-badge" [class]="getEstado(inv)">
+              {{ getEstadoLabel(getEstado(inv)) }}
+            </span>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
+
+@if (showForm) {
+  <form [formGroup]="form" (ngSubmit)="guardarLote()" class="lote-form">
+    <h4 class="form-title">Nuevo ingreso de lote</h4>
+    <div class="lote-grid">
+      <label class="field">
+        N° Lote
+        <input type="text" formControlName="lote" placeholder="Ej: LOT-2024-001" maxlength="80">
+      </label>
+      <label class="field">
+        Fecha vencimiento
+        <input type="date" formControlName="fechaVencimiento">
+      </label>
+      <label class="field">
+        Stock inicial *
+        <input type="number" formControlName="stockActual" min="0">
+        @if (hasError('stockActual')) {
+          <span class="field-error">Requerido (mín. 0)</span>
+        }
+      </label>
+      <label class="field">
+        Stock mínimo *
+        <input type="number" formControlName="stockMinimo" min="0">
+        @if (hasError('stockMinimo')) {
+          <span class="field-error">Requerido (mín. 0)</span>
+        }
+      </label>
+    </div>
+    <div class="lote-actions">
+      <button type="button" class="btn-secondary" (click)="showForm = false" [disabled]="isSaving">
+        Cancelar
+      </button>
+      <button type="submit" class="btn-primary" [disabled]="isSaving">
+        <span class="pi" [class.pi-check]="!isSaving" [class.pi-spin]="isSaving" [class.pi-spinner]="isSaving"></span>
+        {{ isSaving ? 'Guardando...' : 'Registrar lote' }}
+      </button>
+    </div>
+  </form>
+}
+
+@if (!showForm) {
+  <div class="add-lote">
+    <button type="button" class="btn-add" (click)="abrirForm()">
+      <span class="pi pi-plus"></span>
+      Agregar lote / ingreso
+    </button>
+  </div>
+}

@@ -1,0 +1,66 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="med-form">
+  <div class="form-grid">
+
+    <label class="field">
+      Código SISMED *
+      <input type="text" formControlName="codigoSismed" placeholder="Ej: MEP2020001" maxlength="20"
+             style="text-transform:uppercase">
+      @if (hasError('codigoSismed')) {
+        <span class="field-error">Requerido (letras, números, guiones). Máx. 20 caracteres.</span>
+      }
+      @if (isEditing) {
+        <span class="field-hint">El código SISMED no se puede modificar.</span>
+      }
+    </label>
+
+    <label class="field">
+      Código SIGA
+      <input type="text" formControlName="codigoSiga" placeholder="Ej: SIGA-001" maxlength="30">
+    </label>
+
+    <label class="field full-width">
+      Descripción SISMED *
+      <input type="text" formControlName="descripcionSismed"
+             placeholder="Descripción completa según catálogo SISMED" maxlength="300">
+      @if (hasError('descripcionSismed')) {
+        <span class="field-error">La descripción es requerida</span>
+      }
+    </label>
+
+    <label class="field full-width">
+      Descripción corta
+      <input type="text" formControlName="descripcionCorta"
+             placeholder="Nombre resumido para mostrar en reportes" maxlength="120">
+    </label>
+
+    <label class="field">
+      Presentación / Frasco
+      <input type="text" formControlName="presentacionFrasco"
+             placeholder="Ej: FCO X 10 DOSIS" maxlength="80">
+    </label>
+
+    <label class="field">
+      Factor de conversión *
+      <input type="number" formControlName="conversion" min="1" max="9999">
+      @if (hasError('conversion')) {
+        <span class="field-error">Debe ser al menos 1</span>
+      }
+    </label>
+
+    <label class="field check-field">
+      <input type="checkbox" formControlName="activo">
+      Medicamento activo
+    </label>
+
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn-secondary" (click)="cancelled.emit()" [disabled]="isLoading">
+      Cancelar
+    </button>
+    <button type="submit" class="btn-primary" [disabled]="isLoading">
+      <span class="pi" [class.pi-save]="!isLoading" [class.pi-spin]="isLoading" [class.pi-spinner]="isLoading"></span>
+      {{ isLoading ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Registrar') }}
+    </button>
+  </div>
+</form>
