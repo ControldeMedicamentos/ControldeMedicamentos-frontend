@@ -1,4 +1,127 @@
-<section class="page-title">
-  <h2>Medicamentos</h2>
-  <p>Inventario, lotes y stock disponible.</p>
-</section>
+<div class="page-header">
+  <div class="page-title-block">
+    <h2 class="page-title">Medicamentos</h2>
+    <p class="page-subtitle">Inventario, lotes y stock disponible.</p>
+  </div>
+  <button class="btn-primary" (click)="abrirNuevo()">
+    <span class="pi pi-plus"></span>
+    Nuevo medicamento
+  </button>
+</div>
+
+@if (errorMessage) {
+  <app-alert-message [message]="errorMessage" type="error" />
+}
+
+<div class="toolbar">
+  <div class="search-box">
+    <span class="pi pi-search search-icon"></span>
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Buscar por código, descripción..."
+      [(ngModel)]="searchText"
+      (ngModelChange)="onSearch()"
+    >
+  </div>
+</div>
+
+<div class="table-wrapper">
+  @if (isLoading) {
+    <div class="state-msg">
+      <span class="pi pi-spinner pi-spin"></span> Cargando medicamentos...
+    </div>
+  } @else if (filtrados.length === 0) {
+    <div class="state-msg">
+      <span class="pi pi-inbox"></span>
+      No se encontraron medicamentos
+    </div>
+  } @else {
+    <table class="med-table">
+      <thead>
+        <tr>
+          <th>Código SISMED</th>
+          <th>Descripción</th>
+          <th>Presentación</th>
+          <th class="text-right">Stock</th>
+          <th class="text-center">Estado</th>
+          <th class="text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (med of paginados; track med.id) {
+          <tr [class.inactive-row]="!med.activo">
+            <td class="code-cell">{{ med.codigoSismed }}</td>
+            <td>
+              <span class="desc-main">{{ med.descripcionCorta || med.descripcionSismed }}</span>
+              @if (med.descripcionCorta) {
+                <span class="desc-sub">{{ med.descripcionSismed }}</span>
+              }
+            </td>
+            <td class="text-muted">{{ med.presentacionFrasco || '—' }}</td>
+            <td class="text-right">
+              <span class="stock-badge"
+                    [class.low]="isLowStock(med.id) && getStockTotal(med.id) > 0"
+                    [class.no-stock]="getStockTotal(med.id) === 0">
+                {{ getStockTotal(med.id) }}
+              </span>
+            </td>
+            <td class="text-center">
+              <span class="status-badge" [class.inactive]="!med.activo">
+                {{ med.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <button class="btn-icon" title="Ver stock y lotes" (click)="abrirStock(med)">
+                <span class="pi pi-box"></span>
+              </button>
+              <button class="btn-icon" title="Editar" (click)="abrirEditar(med)">
+                <span class="pi pi-pencil"></span>
+              </button>
+              <button class="btn-icon" [title]="med.activo ? 'Desactivar' : 'Activar'" (click)="toggleActivo(med)">
+                <span class="pi" [class.pi-eye]="!med.activo" [class.pi-eye-slash]="med.activo"></span>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button class="page-btn" [disabled]="page === 1" (click)="setPage(page - 1)">
+          <span class="pi pi-chevron-left"></span>
+        </button>
+        @for (p of pageNumbers; track p) {
+          <button class="page-btn" [class.active]="p === page" (click)="setPage(p)">{{ p }}</button>
+        }
+        <button class="page-btn" [disabled]="page === totalPages" (click)="setPage(page + 1)">
+          <span class="pi pi-chevron-right"></span>
+        </button>
+        <span class="page-info">{{ page }} / {{ totalPages }}</span>
+      </div>
+    }
+  }
+</div>
+
+<app-modal-confirmation
+  title="{{ medicamentoSeleccionado ? 'Editar medicamento' : 'Nuevo medicamento' }}"
+  [isOpen]="showFormModal"
+  (closed)="cerrarFormModal()">
+  <app-medicamento-form
+    [medicamento]="medicamentoSeleccionado"
+    [isLoading]="isSaving"
+    (formSubmit)="guardar($event)"
+    (cancelled)="cerrarFormModal()" />
+</app-modal-confirmation>
+
+<app-modal-confirmation
+  [title]="medicamentoSeleccionado ? 'Stock · ' + medicamentoSeleccionado.codigoSismed : 'Stock'"
+  [isOpen]="showStockModal"
+  (closed)="cerrarStockModal()">
+  @if (medicamentoSeleccionado) {
+    <app-stock-table
+      [medicamento]="medicamentoSeleccionado"
+      (actualizado)="onStockActualizado()" />
+  }
+</app-modal-confirmation>

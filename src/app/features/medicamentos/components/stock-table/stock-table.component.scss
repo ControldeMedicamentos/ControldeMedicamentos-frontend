@@ -1,0 +1,214 @@
+@use '../../../../../styles/variables' as *;
+
+.stock-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid $color-border;
+  margin-bottom: 1rem;
+}
+
+.stock-codigo {
+  margin: 0 0 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: $color-primary;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stock-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  color: $color-text;
+  font-weight: 500;
+}
+
+.stock-total {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.stock-number {
+  display: block;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: $color-primary;
+  line-height: 1;
+}
+
+.stock-label {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.state-msg {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  color: #94a3b8;
+  font-size: 0.875rem;
+}
+
+.error-msg {
+  background: #fef2f2;
+  color: #dc2626;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  margin: 0 0 0.75rem;
+}
+
+.lote-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin-bottom: 0.75rem;
+
+  th {
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    border-bottom: 1px solid $color-border;
+  }
+
+  td {
+    padding: 0.6rem 0.75rem;
+    color: $color-text;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  tr:last-child td { border-bottom: none; }
+}
+
+.lote-num { font-family: monospace; font-size: 0.8rem; }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.text-muted { color: #94a3b8; }
+.font-bold { font-weight: 600; }
+
+.estado-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+
+  &.ok { background: #dcfce7; color: #166534; }
+  &.bajo { background: #fff7ed; color: #c2410c; }
+  &.por_vencer { background: #fefce8; color: #854d0e; }
+  &.vencido { background: #fef2f2; color: #dc2626; }
+}
+
+.add-lote {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid $color-border;
+}
+
+.btn-add {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: 1px dashed $color-border;
+  border-radius: 6px;
+  padding: 0.45rem 0.9rem;
+  color: $color-primary;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  width: 100%;
+  justify-content: center;
+  transition: background 0.15s;
+
+  &:hover { background: #eff6ff; }
+}
+
+.lote-form {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-top: 0.75rem;
+}
+
+.form-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $color-text;
+}
+
+.lote-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.83rem;
+  font-weight: 500;
+  color: $color-text;
+
+  input {
+    padding: 0.45rem 0.6rem;
+    border: 1px solid $color-border;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 0.875rem;
+    color: $color-text;
+
+    &:focus { outline: none; border-color: $color-primary; }
+  }
+}
+
+.field-error { font-size: 0.75rem; color: #ef4444; font-weight: 400; }
+
+.lote-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.btn-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.9rem;
+  background: $color-primary;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+
+  &:hover:not(:disabled) { background: $color-primary-dark; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.btn-secondary {
+  padding: 0.4rem 0.9rem;
+  background: #fff;
+  color: $color-text;
+  border: 1px solid $color-border;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+
+  &:hover:not(:disabled) { background: $color-surface; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
