@@ -21,6 +21,11 @@
       (ngModelChange)="filtrar()"
     >
   </div>
+  <select class="estado-filter" [(ngModel)]="filtroEstado" (ngModelChange)="filtrar()">
+    <option value="activos">Solo activos</option>
+    <option value="inactivos">Solo inactivos</option>
+    <option value="todos">Todos</option>
+  </select>
   <div class="view-toggle">
     <button type="button" [class.active]="viewMode === 'grid'" (click)="setViewMode('grid')" title="Cuadrícula">
       <span class="pi pi-th-large"></span>
@@ -53,6 +58,7 @@
           [paciente]="paciente"
           (verDetalle)="verDetalle($event)"
           (editar)="abrirModalEditar($event)"
+          (toggleActivo)="toggleActivo($event)"
         />
       }
     </div>
@@ -62,12 +68,22 @@
         <div class="list-row">
           <span class="list-avatar pi pi-user"></span>
           <div class="list-info">
-            <span class="list-name">{{ paciente.nombresApellidos }}</span>
+            <div class="list-name-row">
+              <span class="list-name">{{ paciente.nombresApellidos }}</span>
+              @if (paciente.activo === false) {
+                <span class="badge-inactivo">Inactivo</span>
+              }
+            </div>
             <span class="list-doc">{{ tipoDocLabel(paciente.tipoDocumento) }}: {{ paciente.nroDocumento }}</span>
           </div>
           <span class="list-meta">{{ paciente.carreraArea || '—' }}</span>
           <span class="list-meta hidden-sm">{{ paciente.cicloAcademico || '—' }}</span>
           <div class="list-actions">
+            <button type="button" class="btn-icon"
+                    [title]="paciente.activo !== false ? 'Desactivar' : 'Activar'"
+                    (click)="toggleActivo(paciente)">
+              <span class="pi" [class.pi-eye-slash]="paciente.activo !== false" [class.pi-eye]="paciente.activo === false"></span>
+            </button>
             <button type="button" class="btn-icon" (click)="abrirModalEditar(paciente)" title="Editar">
               <span class="pi pi-pencil"></span>
             </button>

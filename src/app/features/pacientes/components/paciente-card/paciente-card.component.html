@@ -1,8 +1,13 @@
-<div class="card">
+<div class="card" [class.card-inactive]="paciente.activo === false">
   <div class="card-header">
-    <span class="avatar pi pi-user"></span>
+    <span class="avatar pi pi-user" [class.avatar-inactive]="paciente.activo === false"></span>
     <div class="card-info">
-      <h4 class="card-name">{{ paciente.nombresApellidos }}</h4>
+      <div class="card-name-row">
+        <h4 class="card-name">{{ paciente.nombresApellidos }}</h4>
+        @if (paciente.activo === false) {
+          <span class="badge-inactivo">Inactivo</span>
+        }
+      </div>
       <span class="card-dni">{{ tipoDocLabel }}: {{ paciente.nroDocumento }}</span>
     </div>
   </div>
@@ -33,13 +38,18 @@
   </ul>
 
   <div class="card-actions">
+    <button type="button" class="btn-toggle"
+            [title]="paciente.activo !== false ? 'Desactivar' : 'Activar'"
+            (click)="toggleActivo.emit(paciente)">
+      <span class="pi" [class.pi-eye-slash]="paciente.activo !== false" [class.pi-eye]="paciente.activo === false"></span>
+    </button>
     <button type="button" class="btn-outline" (click)="editar.emit(paciente)">
       <span class="pi pi-pencil"></span>
       Editar
     </button>
     <button type="button" class="btn-primary" (click)="verDetalle.emit(paciente.id)">
       <span class="pi pi-eye"></span>
-      Ver detalle
+      Ver
     </button>
   </div>
 </div>

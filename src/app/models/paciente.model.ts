@@ -11,6 +11,7 @@ export interface Paciente {
   carreraArea?: string;
   cicloAcademico?: string;
   telefono?: string;
+  activo?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

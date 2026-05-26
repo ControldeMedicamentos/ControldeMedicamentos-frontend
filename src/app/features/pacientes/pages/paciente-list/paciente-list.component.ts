@@ -40,6 +40,7 @@ export class PacienteListComponent implements OnInit {
   viewMode: 'grid' | 'list' = 'grid';
   page = 1;
   pageSize = 12;
+  filtroEstado: 'todos' | 'activos' | 'inactivos' = 'activos';
 
   get modalTitulo(): string {
     return this.pacienteSeleccionado ? 'Editar paciente' : 'Nuevo paciente';
@@ -82,14 +83,31 @@ export class PacienteListComponent implements OnInit {
 
   filtrar(): void {
     const termino = this.busqueda.toLowerCase().trim();
-    this.filtrados = termino
-      ? this.pacientes.filter(
-          (p) =>
-            p.nroDocumento.toLowerCase().includes(termino) ||
-            p.nombresApellidos.toLowerCase().includes(termino)
-        )
+    let resultado = termino
+      ? this.pacientes.filter(p =>
+          p.nroDocumento.toLowerCase().includes(termino) ||
+          p.nombresApellidos.toLowerCase().includes(termino))
       : [...this.pacientes];
+
+    if (this.filtroEstado === 'activos') {
+      resultado = resultado.filter(p => p.activo !== false);
+    } else if (this.filtroEstado === 'inactivos') {
+      resultado = resultado.filter(p => p.activo === false);
+    }
+
+    this.filtrados = resultado;
     this.page = 1;
+  }
+
+  toggleActivo(paciente: Paciente): void {
+    this.pacienteService.toggleActivo(paciente.id).subscribe({
+      next: (updated) => {
+        const idx = this.pacientes.findIndex(p => p.id === paciente.id);
+        if (idx !== -1) this.pacientes[idx] = updated;
+        this.filtrar();
+      },
+      error: () => (this.errorMessage = 'Error al cambiar el estado del paciente.')
+    });
   }
 
   setViewMode(mode: 'grid' | 'list'): void {

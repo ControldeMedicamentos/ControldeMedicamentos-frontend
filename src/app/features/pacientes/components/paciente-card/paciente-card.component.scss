@@ -15,6 +15,49 @@
   }
 }
 
+.card-inactive { opacity: 0.65; }
+
+.card-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.badge-inactivo {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.avatar-inactive {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+.btn-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #fff;
+  border: 1px solid $color-border;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #64748b;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+  padding: 0;
+
+  &:hover { background: $color-surface; color: $color-text; }
+}
+
 .card-header {
   display: flex;
   align-items: center;

@@ -1,275 +1,316 @@
 <div class="create-header">
   <div>
     <h2 class="page-title">Nueva atención</h2>
-    <p class="page-subtitle">Registro de consulta médica e historia clínica</p>
+    <p class="page-subtitle">Historia clínica · Registro de consulta</p>
   </div>
-  <div class="header-actions">
-    <button type="button" class="btn-secondary" (click)="cancelar()" [disabled]="isSaving">
-      Cancelar
-    </button>
-  </div>
+  <button type="button" class="btn-secondary" (click)="cancelar()" [disabled]="isSaving">
+    <span class="pi pi-arrow-left"></span>
+    Volver
+  </button>
 </div>
-
-@if (errorMessage) {
-  <app-alert-message [message]="errorMessage" type="error" />
-}
 
 @if (isLoading) {
   <div class="state-msg">
     <span class="pi pi-spinner pi-spin"></span> Cargando datos...
   </div>
 } @else {
-  <form [formGroup]="form" (ngSubmit)="submit()" class="create-form">
 
-    <div class="form-section">
-      <h3 class="section-title">
-        <span class="pi pi-user"></span> Datos del paciente
-      </h3>
-      <div class="section-body">
-        <div class="pac-selector">
-          @if (pacienteSeleccionado) {
-            <div class="pac-selected">
-              <div class="pac-avatar">{{ pacienteSeleccionado.nombresApellidos.charAt(0) }}</div>
-              <div class="pac-info">
-                <span class="pac-name">{{ pacienteSeleccionado.nombresApellidos }}</span>
-                <span class="pac-doc">{{ pacienteSeleccionado.tipoDocumento === 'CARNET_EXTRANJERIA' ? 'C.E.' : pacienteSeleccionado.tipoDocumento }}: {{ pacienteSeleccionado.nroDocumento }}</span>
-              </div>
-              <button type="button" class="pac-clear" (click)="clearPaciente()" title="Cambiar paciente">
-                <span class="pi pi-times"></span>
-              </button>
-            </div>
+  <div class="stepper">
+    @for (step of steps; track step.num) {
+      <div class="step-item" [class.completed]="currentStep > step.num" [class.active]="currentStep === step.num">
+        <button
+          type="button"
+          class="step-circle"
+          [disabled]="currentStep <= step.num"
+          (click)="goTo(step.num)"
+          [attr.aria-label]="step.label">
+          @if (currentStep > step.num) {
+            <span class="pi pi-check"></span>
           } @else {
-            <div class="pac-search-wrapper">
-              <span class="pi pi-search pac-search-icon"></span>
-              <input
-                type="text"
-                class="pac-search-input"
-                placeholder="Buscar por nombre o número de documento..."
-                [(ngModel)]="pacienteQuery"
-                [ngModelOptions]="{ standalone: true }"
-                (input)="onPacienteInput()"
-                (blur)="onPacienteBlur()"
-                autocomplete="off"
-              >
-              @if (showSuggestions) {
-                <div class="pac-dropdown">
-                  @for (p of pacienteSuggestions; track p.id) {
-                    <div class="pac-option" (mousedown)="selectPaciente(p)">
-                      <span class="pac-option-name">{{ p.nombresApellidos }}</span>
-                      <span class="pac-option-doc">{{ p.nroDocumento }}</span>
-                    </div>
-                  }
+            {{ step.num }}
+          }
+        </button>
+        <span class="step-label">{{ step.label }}</span>
+      </div>
+      @if (step.num < steps.length) {
+        <div class="step-connector" [class.done]="currentStep > step.num"></div>
+      }
+    }
+  </div>
+
+  @if (errorMessage) {
+    <app-alert-message [message]="errorMessage" type="error" />
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+
+    @if (currentStep === 1) {
+      <div class="step-panel">
+        <div class="panel-header">
+          <span class="pi pi-user panel-icon"></span>
+          <h3 class="panel-title">Datos del paciente</h3>
+        </div>
+        <div class="panel-body">
+
+          <div class="field full-width">
+            <label class="field-label">Buscar paciente *</label>
+            @if (pacienteSeleccionado) {
+              <div class="pac-selected">
+                <div class="pac-avatar">{{ pacienteSeleccionado.nombresApellidos.charAt(0) }}</div>
+                <div class="pac-info">
+                  <span class="pac-name">{{ pacienteSeleccionado.nombresApellidos }}</span>
+                  <span class="pac-doc">
+                    {{ pacienteSeleccionado.tipoDocumento === 'CARNET_EXTRANJERIA' ? 'C.E.' : pacienteSeleccionado.tipoDocumento }}:
+                    {{ pacienteSeleccionado.nroDocumento }}
+                  </span>
                 </div>
-              }
-            </div>
-          }
-        </div>
-
-        <label class="field">
-          Fecha de evaluación *
-          <input type="date" formControlName="fechaEvaluacion">
-          @if (hasError('fechaEvaluacion')) {
-            <span class="field-error">Requerido</span>
-          }
-        </label>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <h3 class="section-title">
-        <span class="pi pi-file-edit"></span> Motivo de consulta
-      </h3>
-      <div class="section-body">
-        <label class="field full-width">
-          Motivo *
-          <input type="text" formControlName="motivo" placeholder="Motivo principal de la consulta" maxlength="300">
-          @if (hasError('motivo')) {
-            <span class="field-error">Requerido (máx. 300 caracteres)</span>
-          }
-        </label>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <h3 class="section-title">
-        <span class="pi pi-clipboard"></span> Evaluación clínica
-        <span class="section-optional">Opcional</span>
-      </h3>
-      <div class="section-body">
-        <label class="field">
-          Antecedentes
-          <textarea formControlName="antecedentes" rows="2" placeholder="Antecedentes relevantes del paciente"></textarea>
-        </label>
-        <label class="field">
-          Inmunizaciones
-          <textarea formControlName="inmunizaciones" rows="2" placeholder="Historial de vacunas e inmunizaciones"></textarea>
-        </label>
-        <label class="field">
-          Signos vitales
-          <textarea formControlName="signosVitales" rows="2" placeholder="PA, FC, FR, temperatura, peso, talla..."></textarea>
-        </label>
-        <label class="field">
-          Examen físico
-          <textarea formControlName="examenFisico" rows="3" placeholder="Hallazgos del examen físico por sistemas"></textarea>
-        </label>
-        <label class="field">
-          Laboratorio / Imágenes
-          <textarea formControlName="laboratorio" rows="2" placeholder="Resultados de exámenes auxiliares"></textarea>
-        </label>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <h3 class="section-title">
-        <span class="pi pi-tag"></span> Diagnósticos
-        <span class="section-optional">Hasta 3</span>
-      </h3>
-      <div class="section-body">
-        <div class="dx-row">
-          <span class="dx-num">1</span>
-          <label class="field flex-grow">
-            Diagnóstico
-            <input type="text" formControlName="diagnostico1" placeholder="Descripción del diagnóstico" maxlength="150">
-          </label>
-          <label class="field dx-cie">
-            CIE-10
-            <input type="text" formControlName="cie101" placeholder="Ej: J11.1" maxlength="15" style="text-transform:uppercase">
-          </label>
-          <label class="field dx-tipo">
-            Tipo
-            <select formControlName="tipoDiagnostico1">
-              <option value="">—</option>
-              @for (opt of tipoDxOptions; track opt.value) {
-                <option [value]="opt.value">{{ opt.label }}</option>
-              }
-            </select>
-          </label>
-        </div>
-
-        <div class="dx-row">
-          <span class="dx-num">2</span>
-          <label class="field flex-grow">
-            Diagnóstico
-            <input type="text" formControlName="diagnostico2" placeholder="Diagnóstico secundario (opcional)" maxlength="150">
-          </label>
-          <label class="field dx-cie">
-            CIE-10
-            <input type="text" formControlName="cie102" placeholder="Ej: J11.1" maxlength="15" style="text-transform:uppercase">
-          </label>
-          <label class="field dx-tipo">
-            Tipo
-            <select formControlName="tipoDiagnostico2">
-              <option value="">—</option>
-              @for (opt of tipoDxOptions; track opt.value) {
-                <option [value]="opt.value">{{ opt.label }}</option>
-              }
-            </select>
-          </label>
-        </div>
-
-        <div class="dx-row">
-          <span class="dx-num">3</span>
-          <label class="field flex-grow">
-            Diagnóstico
-            <input type="text" formControlName="diagnostico3" placeholder="Diagnóstico terciario (opcional)" maxlength="150">
-          </label>
-          <label class="field dx-cie">
-            CIE-10
-            <input type="text" formControlName="cie103" placeholder="Ej: J11.1" maxlength="15" style="text-transform:uppercase">
-          </label>
-          <label class="field dx-tipo">
-            Tipo
-            <select formControlName="tipoDiagnostico3">
-              <option value="">—</option>
-              @for (opt of tipoDxOptions; track opt.value) {
-                <option [value]="opt.value">{{ opt.label }}</option>
-              }
-            </select>
-          </label>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <h3 class="section-title">
-        <span class="pi pi-check-square"></span> Plan y conclusiones
-        <span class="section-optional">Opcional</span>
-      </h3>
-      <div class="section-body">
-        <label class="field">
-          Conclusión
-          <input type="text" formControlName="conclusion" placeholder="Conclusión de la consulta" maxlength="80">
-        </label>
-        <label class="field">
-          Derivación
-          <input type="text" formControlName="derivacion" placeholder="Derivación a especialidad o servicio" maxlength="120">
-        </label>
-        <label class="field full-width">
-          Observaciones
-          <textarea formControlName="observaciones" rows="2" placeholder="Observaciones adicionales"></textarea>
-        </label>
-      </div>
-    </div>
-
-    <div class="form-section">
-      <h3 class="section-title">
-        <span class="pi pi-box"></span> Medicamentos entregados
-        <span class="section-optional">Opcional</span>
-      </h3>
-      <div class="section-body">
-        @if (consumos.length > 0) {
-          <div class="consumos-list">
-            @for (ctrl of consumos.controls; track $index) {
-              <div class="consumo-row" [formGroup]="consumoGroup($index)">
-                <label class="field flex-grow">
-                  Medicamento *
-                  <select formControlName="medicamentoId">
-                    <option [value]="null">— Seleccionar —</option>
-                    @for (med of medicamentosActivos; track med.id) {
-                      <option [value]="med.id">{{ med.codigoSismed }} · {{ med.descripcionCorta || med.descripcionSismed }}</option>
+                <button type="button" class="pac-clear" (click)="clearPaciente()" title="Cambiar paciente">
+                  <span class="pi pi-times"></span>
+                </button>
+              </div>
+            } @else {
+              <div class="pac-search-wrap">
+                <span class="pi pi-search search-icon"></span>
+                <input
+                  type="text"
+                  class="pac-input"
+                  placeholder="Buscar por nombre o número de documento..."
+                  [(ngModel)]="pacienteQuery"
+                  [ngModelOptions]="{ standalone: true }"
+                  (input)="onPacienteInput()"
+                  (blur)="onPacienteBlur()"
+                  autocomplete="off">
+                @if (showSuggestions) {
+                  <div class="pac-dropdown">
+                    @for (p of pacienteSuggestions; track p.id) {
+                      <div class="pac-option" (mousedown)="selectPaciente(p)">
+                        <span class="pac-opt-name">{{ p.nombresApellidos }}</span>
+                        <span class="pac-opt-doc">{{ p.nroDocumento }}</span>
+                      </div>
                     }
-                  </select>
-                  @if (consumoHasError($index, 'medicamentoId')) {
-                    <span class="field-error">Seleccione un medicamento</span>
-                  }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <label class="field">
+            <span class="field-label">Fecha de evaluación *</span>
+            <input type="date" formControlName="fechaEvaluacion">
+            @if (hasError('fechaEvaluacion')) {
+              <span class="field-error">Requerido</span>
+            }
+          </label>
+
+        </div>
+      </div>
+    }
+
+    @if (currentStep === 2) {
+      <div class="step-panel">
+        <div class="panel-header">
+          <span class="pi pi-clipboard panel-icon"></span>
+          <h3 class="panel-title">Evaluación clínica</h3>
+          <span class="panel-hint">Los campos de evaluación son opcionales salvo el motivo</span>
+        </div>
+        <div class="panel-body">
+
+          <label class="field full-width">
+            <span class="field-label">Motivo de consulta *</span>
+            <input type="text" formControlName="motivo" placeholder="Motivo principal de la consulta" maxlength="300">
+            @if (hasError('motivo')) {
+              <span class="field-error">Requerido (máx. 300 caracteres)</span>
+            }
+          </label>
+
+          <label class="field">
+            <span class="field-label">Antecedentes</span>
+            <textarea formControlName="antecedentes" rows="3" placeholder="Antecedentes personales, familiares, alergias..."></textarea>
+          </label>
+
+          <label class="field">
+            <span class="field-label">Inmunizaciones</span>
+            <textarea formControlName="inmunizaciones" rows="3" placeholder="Vacunas aplicadas e historial de inmunizaciones"></textarea>
+          </label>
+
+          <label class="field">
+            <span class="field-label">Signos vitales</span>
+            <textarea formControlName="signosVitales" rows="3" placeholder="PA, FC, FR, temperatura, SpO2, peso, talla..."></textarea>
+          </label>
+
+          <label class="field">
+            <span class="field-label">Examen físico</span>
+            <textarea formControlName="examenFisico" rows="3" placeholder="Hallazgos por sistemas (cardiovascular, respiratorio...)"></textarea>
+          </label>
+
+          <label class="field">
+            <span class="field-label">Laboratorio / Imágenes</span>
+            <textarea formControlName="laboratorio" rows="3" placeholder="Resultados de exámenes auxiliares y diagnóstico por imágenes"></textarea>
+          </label>
+
+        </div>
+      </div>
+    }
+
+    @if (currentStep === 3) {
+      <div class="step-panel">
+        <div class="panel-header">
+          <span class="pi pi-tag panel-icon"></span>
+          <h3 class="panel-title">Diagnósticos</h3>
+          <span class="panel-hint">Hasta 3 diagnósticos con código CIE-10</span>
+        </div>
+        <div class="panel-body">
+
+          @for (n of [1, 2, 3]; track n) {
+            <div class="dx-block">
+              <div class="dx-header">
+                <span class="dx-num">{{ n }}</span>
+                <span class="dx-subtitle">{{ n === 1 ? 'Diagnóstico principal' : 'Diagnóstico ' + n + ' (opcional)' }}</span>
+              </div>
+              <div class="dx-fields">
+                <label class="field flex-grow">
+                  <span class="field-label">Descripción</span>
+                  <input type="text" [formControlName]="'diagnostico' + n" placeholder="Descripción del diagnóstico" maxlength="150">
                 </label>
-                <label class="field consumo-cant">
-                  Cantidad *
-                  <input type="number" formControlName="cantidadConsumida" min="1">
-                  @if (consumoHasError($index, 'cantidadConsumida')) {
-                    <span class="field-error">Mín. 1</span>
-                  }
+                <label class="field dx-cie">
+                  <span class="field-label">CIE-10</span>
+                  <input type="text" [formControlName]="'cie10' + n" placeholder="J11.1" maxlength="15" style="text-transform:uppercase">
                 </label>
-                <label class="field consumo-tipo">
-                  Tipo consumo *
-                  <select formControlName="tipoConsumo">
-                    @for (opt of tipoConsumoOptions; track opt.value) {
+                <label class="field dx-tipo">
+                  <span class="field-label">Tipo</span>
+                  <select [formControlName]="'tipoDiagnostico' + n">
+                    <option value="">— Tipo —</option>
+                    @for (opt of tipoDxOptions; track opt.value) {
                       <option [value]="opt.value">{{ opt.label }}</option>
                     }
                   </select>
                 </label>
-                <button type="button" class="btn-remove" (click)="quitarConsumo($index)" title="Quitar">
-                  <span class="pi pi-trash"></span>
-                </button>
               </div>
-            }
-          </div>
-        }
-        <button type="button" class="btn-add-consumo" (click)="agregarConsumo()">
-          <span class="pi pi-plus"></span>
-          Agregar medicamento
-        </button>
-      </div>
-    </div>
+            </div>
+          }
 
-    <div class="form-footer">
-      <button type="button" class="btn-secondary" (click)="cancelar()" [disabled]="isSaving">
-        Cancelar
-      </button>
-      <button type="submit" class="btn-primary" [disabled]="isSaving">
-        <span class="pi" [class.pi-save]="!isSaving" [class.pi-spinner]="isSaving" [class.pi-spin]="isSaving"></span>
-        {{ isSaving ? 'Guardando...' : 'Registrar atención' }}
-      </button>
+        </div>
+      </div>
+    }
+
+    @if (currentStep === 4) {
+      <div class="step-panel">
+        <div class="panel-header">
+          <span class="pi pi-check-square panel-icon"></span>
+          <h3 class="panel-title">Plan y conclusiones</h3>
+          <span class="panel-hint">Todos los campos son opcionales</span>
+        </div>
+        <div class="panel-body">
+
+          <label class="field">
+            <span class="field-label">Conclusión</span>
+            <input type="text" formControlName="conclusion" placeholder="Conclusión de la consulta" maxlength="80">
+          </label>
+
+          <label class="field">
+            <span class="field-label">Derivación</span>
+            <input type="text" formControlName="derivacion" placeholder="Especialidad o servicio de derivación" maxlength="120">
+          </label>
+
+          <label class="field full-width">
+            <span class="field-label">Observaciones</span>
+            <textarea formControlName="observaciones" rows="3" placeholder="Indicaciones, seguimiento u otras observaciones"></textarea>
+          </label>
+
+        </div>
+      </div>
+    }
+
+    @if (currentStep === 5) {
+      <div class="step-panel">
+        <div class="panel-header">
+          <span class="pi pi-box panel-icon"></span>
+          <h3 class="panel-title">Medicamentos entregados</h3>
+          <span class="panel-hint">Opcional · El stock se descuenta automáticamente al registrar</span>
+        </div>
+        <div class="panel-body single-col">
+
+          @if (consumos.length === 0) {
+            <div class="empty-consumos">
+              <span class="pi pi-box" style="font-size:1.5rem;color:#cbd5e1"></span>
+              <span>Sin medicamentos agregados</span>
+            </div>
+          }
+
+          @for (ctrl of consumos.controls; track $index) {
+            <div class="consumo-row" [formGroup]="consumoGroup($index)">
+              <label class="field flex-grow">
+                <span class="field-label">Medicamento *</span>
+                <select formControlName="medicamentoId">
+                  <option [value]="null">— Seleccionar —</option>
+                  @for (med of medicamentosActivos; track med.id) {
+                    <option [value]="med.id">{{ med.codigoSismed }} · {{ med.descripcionCorta || med.descripcionSismed }}</option>
+                  }
+                </select>
+                @if (consumoHasError($index, 'medicamentoId')) {
+                  <span class="field-error">Seleccione un medicamento</span>
+                }
+              </label>
+              <label class="field w-cant">
+                <span class="field-label">Cantidad *</span>
+                <input type="number" formControlName="cantidadConsumida" min="1">
+                @if (consumoHasError($index, 'cantidadConsumida')) {
+                  <span class="field-error">Mín. 1</span>
+                }
+              </label>
+              <label class="field w-tipo">
+                <span class="field-label">Tipo consumo</span>
+                <select formControlName="tipoConsumo">
+                  @for (opt of tipoConsumoOptions; track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              </label>
+              <button type="button" class="btn-remove" (click)="quitarConsumo($index)" title="Quitar">
+                <span class="pi pi-trash"></span>
+              </button>
+            </div>
+          }
+
+          <button type="button" class="btn-add-med" (click)="agregarConsumo()">
+            <span class="pi pi-plus"></span>
+            Agregar medicamento
+          </button>
+
+        </div>
+      </div>
+    }
+
+    @if (stepError) {
+      <div class="step-error-msg">
+        <span class="pi pi-exclamation-triangle"></span>
+        {{ stepError }}
+      </div>
+    }
+
+    <div class="step-nav">
+      @if (currentStep > 1) {
+        <button type="button" class="btn-anterior" (click)="anterior()" [disabled]="isSaving">
+          <span class="pi pi-chevron-left"></span>
+          Anterior
+        </button>
+      } @else {
+        <div></div>
+      }
+
+      <div class="nav-right">
+        @if (currentStep < steps.length) {
+          <button type="button" class="btn-siguiente" (click)="siguiente()">
+            Siguiente
+            <span class="pi pi-chevron-right"></span>
+          </button>
+        } @else {
+          <button type="submit" class="btn-primary" [disabled]="isSaving">
+            <span class="pi" [class.pi-save]="!isSaving" [class.pi-spinner]="isSaving" [class.pi-spin]="isSaving"></span>
+            {{ isSaving ? 'Guardando...' : 'Registrar atención' }}
+          </button>
+        }
+      </div>
     </div>
 
   </form>
