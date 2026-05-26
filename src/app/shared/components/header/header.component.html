@@ -1,0 +1,14 @@
+<header class="header">
+  <div>
+    <h1>Control de Medicamentos</h1>
+    <p>SISMED / SIGA</p>
+  </div>
+  <div class="user-box">
+    <span class="pi pi-user"></span>
+    <span>{{ user?.username }}</span>
+    <button type="button" (click)="logout()">
+      <span class="pi pi-sign-out"></span>
+      Salir
+    </button>
+  </div>
+</header>

@@ -1,0 +1,16 @@
+.alert {
+  align-items: center;
+  background: #eef6ff;
+  border: 1px solid #bfd7f1;
+  border-radius: 4px;
+  color: #164b7d;
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.alert.error {
+  background: #fff1f2;
+  border-color: #fecdd3;
+  color: #9f1239;
+}

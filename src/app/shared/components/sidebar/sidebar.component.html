@@ -1,0 +1,14 @@
+<aside class="sidebar">
+  <div class="brand">
+    <span class="pi pi-shield"></span>
+    <strong>SISMED</strong>
+  </div>
+  <nav>
+    @for (item of items; track item.path) {
+      <a [routerLink]="item.path" routerLinkActive="active">
+        <span [class]="item.icon"></span>
+        {{ item.label }}
+      </a>
+    }
+  </nav>
+</aside>
