@@ -1,0 +1,90 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="paciente-form">
+  <div class="form-grid">
+
+    <label class="field">
+      Tipo de Documento *
+      <select formControlName="tipoDocumento" (change)="onTipoChange()">
+        @for (opt of tipoDocOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="field">
+      {{ nroDocLabel }} *
+      <input
+        type="text"
+        formControlName="nroDocumento"
+        [placeholder]="nroDocPlaceholder"
+        maxlength="15"
+      >
+      @if (hasError('nroDocumento')) {
+        <span class="field-error">{{ nroDocError }}</span>
+      }
+    </label>
+
+    <label class="field full-width">
+      Nombres y Apellidos *
+      <input type="text" formControlName="nombresApellidos" placeholder="Nombres y apellidos completos" maxlength="150">
+      @if (hasError('nombresApellidos')) {
+        <span class="field-error">Requerido (mín. 3 letras, sin números ni caracteres especiales)</span>
+      }
+    </label>
+
+    <label class="field">
+      Sexo *
+      <select formControlName="sexo">
+        @for (opt of sexoOptions; track opt.value) {
+          <option [value]="opt.value">{{ opt.label }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="field">
+      Edad
+      <input type="number" formControlName="edad" placeholder="Ej: 22" min="0" max="120">
+      @if (hasError('edad')) {
+        <span class="field-error">Edad debe ser entre 0 y 120 años</span>
+      }
+    </label>
+
+    <label class="field">
+      Carrera / Área
+      <select formControlName="carreraArea">
+        <option value="">— Seleccionar —</option>
+        @for (opt of carreraOptions; track opt) {
+          <option [value]="opt">{{ opt }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="field">
+      Ciclo Académico
+      <select formControlName="cicloAcademico">
+        <option value="">— Seleccionar —</option>
+        @for (opt of cicloOptions; track opt) {
+          <option [value]="opt">{{ opt }}</option>
+        }
+      </select>
+    </label>
+
+    <label class="field">
+      Teléfono
+      <input type="text" formControlName="telefono" placeholder="Ej: 987654321" maxlength="9">
+      @if (hasError('telefono')) {
+        <span class="field-error">Teléfono debe tener 9 dígitos</span>
+      }
+    </label>
+
+  </div>
+
+  <div class="form-actions">
+    <button type="button" class="btn-secondary" (click)="cancelled.emit()" [disabled]="isLoading">
+      Cancelar
+    </button>
+    <button type="submit" class="btn-primary" [disabled]="isLoading">
+      <span class="pi" [class.pi-save]="!isLoading" [class.pi-spin]="isLoading" [class.pi-spinner]="isLoading"></span>
+      {{ isLoading ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Registrar') }}
+    </button>
+  </div>
+</form>

@@ -1,4 +1,110 @@
-<section class="page-title">
-  <h2>Pacientes</h2>
-  <p>Registro y consulta de pacientes.</p>
-</section>
+<div class="page-header">
+  <div>
+    <h2 class="page-title">Pacientes</h2>
+    <p class="page-subtitle">Registro y consulta de pacientes</p>
+  </div>
+  <button type="button" class="btn-primary" (click)="abrirModalNuevo()">
+    <span class="pi pi-plus"></span>
+    Nuevo paciente
+  </button>
+</div>
+
+<app-alert-message [message]="errorMessage" type="error" />
+
+<div class="toolbar">
+  <div class="search-bar">
+    <span class="pi pi-search"></span>
+    <input
+      type="text"
+      placeholder="Buscar por documento o nombre..."
+      [(ngModel)]="busqueda"
+      (ngModelChange)="filtrar()"
+    >
+  </div>
+  <div class="view-toggle">
+    <button type="button" [class.active]="viewMode === 'grid'" (click)="setViewMode('grid')" title="Cuadrícula">
+      <span class="pi pi-th-large"></span>
+    </button>
+    <button type="button" [class.active]="viewMode === 'list'" (click)="setViewMode('list')" title="Lista">
+      <span class="pi pi-list"></span>
+    </button>
+  </div>
+</div>
+
+@if (isLoading) {
+  <div class="state-message">
+    <span class="pi pi-spinner pi-spin"></span>
+    Cargando pacientes...
+  </div>
+} @else if (filtrados.length === 0) {
+  <div class="state-message">
+    <span class="pi pi-users"></span>
+    @if (busqueda) {
+      No se encontraron pacientes con "{{ busqueda }}"
+    } @else {
+      No hay pacientes registrados aún
+    }
+  </div>
+} @else {
+  @if (viewMode === 'grid') {
+    <div class="cards-grid">
+      @for (paciente of paginados; track paciente.id) {
+        <app-paciente-card
+          [paciente]="paciente"
+          (verDetalle)="verDetalle($event)"
+          (editar)="abrirModalEditar($event)"
+        />
+      }
+    </div>
+  } @else {
+    <div class="list-view">
+      @for (paciente of paginados; track paciente.id) {
+        <div class="list-row">
+          <span class="list-avatar pi pi-user"></span>
+          <div class="list-info">
+            <span class="list-name">{{ paciente.nombresApellidos }}</span>
+            <span class="list-doc">{{ tipoDocLabel(paciente.tipoDocumento) }}: {{ paciente.nroDocumento }}</span>
+          </div>
+          <span class="list-meta">{{ paciente.carreraArea || '—' }}</span>
+          <span class="list-meta hidden-sm">{{ paciente.cicloAcademico || '—' }}</span>
+          <div class="list-actions">
+            <button type="button" class="btn-icon" (click)="abrirModalEditar(paciente)" title="Editar">
+              <span class="pi pi-pencil"></span>
+            </button>
+            <button type="button" class="btn-icon-primary" (click)="verDetalle(paciente.id)" title="Ver detalle">
+              <span class="pi pi-eye"></span>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (totalPages > 1) {
+    <div class="pagination">
+      <button type="button" class="page-btn" (click)="setPage(page - 1)" [disabled]="page === 1">
+        <span class="pi pi-chevron-left"></span>
+      </button>
+      @for (p of pageNumbers; track p) {
+        <button type="button" class="page-btn" [class.active]="p === page" (click)="setPage(p)">{{ p }}</button>
+      }
+      <button type="button" class="page-btn" (click)="setPage(page + 1)" [disabled]="page === totalPages">
+        <span class="pi pi-chevron-right"></span>
+      </button>
+      <span class="page-info">Página {{ page }} de {{ totalPages }}</span>
+    </div>
+  }
+}
+
+<app-modal-confirmation
+  [title]="modalTitulo"
+  [isOpen]="modalAbierto"
+  (closed)="cerrarModal()"
+>
+  <app-paciente-form
+    [paciente]="pacienteSeleccionado"
+    [isLoading]="isSaving"
+    (formSubmit)="guardar($event)"
+    (cancelled)="cerrarModal()"
+  />
+</app-modal-confirmation>
