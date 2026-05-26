@@ -1,4 +1,164 @@
-<section class="page-title">
-  <h2>Dashboard</h2>
-  <p>Resumen operativo del tópico.</p>
-</section>
+<div class="dash-header">
+  <div>
+    <h2 class="dash-title">Panel de control</h2>
+    <p class="dash-subtitle">Tópico de Salud · {{ mesActual | titlecase }}</p>
+  </div>
+  <button class="btn-primary" (click)="irANuevaAtencion()">
+    <span class="pi pi-plus"></span>
+    Nueva atención
+  </button>
+</div>
+
+@if (errorMessage) {
+  <div class="error-bar">
+    <span class="pi pi-exclamation-triangle"></span>
+    {{ errorMessage }}
+    <button class="btn-retry" (click)="cargar()">Reintentar</button>
+  </div>
+}
+
+@if (isLoading) {
+  <div class="loading-state">
+    <span class="pi pi-spinner pi-spin"></span> Cargando estadísticas...
+  </div>
+} @else if (stats) {
+
+  <div class="stat-cards">
+
+    <div class="stat-card" (click)="irAPacientes()">
+      <div class="stat-icon stat-icon--blue">
+        <span class="pi pi-users"></span>
+      </div>
+      <div class="stat-body">
+        <span class="stat-value">{{ stats.totalPacientesActivos }}</span>
+        <span class="stat-label">Pacientes activos</span>
+      </div>
+    </div>
+
+    <div class="stat-card" (click)="irAAtenciones()">
+      <div class="stat-icon stat-icon--teal">
+        <span class="pi pi-calendar-plus"></span>
+      </div>
+      <div class="stat-body">
+        <span class="stat-value">{{ stats.atencionesMes }}</span>
+        <span class="stat-label">Atenciones este mes</span>
+      </div>
+    </div>
+
+    <div class="stat-card" [class.stat-card--warn]="stats.medicamentosConBajoStock > 0" (click)="irAMedicamentos()">
+      <div class="stat-icon" [class.stat-icon--blue]="stats.medicamentosConBajoStock === 0"
+                              [class.stat-icon--orange]="stats.medicamentosConBajoStock > 0">
+        <span class="pi pi-exclamation-triangle"></span>
+      </div>
+      <div class="stat-body">
+        <span class="stat-value">{{ stats.medicamentosConBajoStock }}</span>
+        <span class="stat-label">Lotes con stock bajo</span>
+      </div>
+    </div>
+
+    <div class="stat-card" [class.stat-card--danger]="stats.inventariosAlertaVencimiento > 0" (click)="irAMedicamentos()">
+      <div class="stat-icon" [class.stat-icon--blue]="stats.inventariosAlertaVencimiento === 0"
+                              [class.stat-icon--red]="stats.inventariosAlertaVencimiento > 0">
+        <span class="pi pi-clock"></span>
+      </div>
+      <div class="stat-body">
+        <span class="stat-value">{{ stats.inventariosAlertaVencimiento }}</span>
+        <span class="stat-label">Lotes próx. a vencer / vencidos</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="dash-grid">
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3 class="panel-title">
+          <span class="pi pi-history"></span>
+          Últimas atenciones
+        </h3>
+        <button class="btn-link" (click)="irAAtenciones()">Ver todas</button>
+      </div>
+
+      @if (stats.atencioneRecientes.length === 0) {
+        <div class="empty-state">
+          <span class="pi pi-calendar-times"></span>
+          Sin atenciones registradas
+        </div>
+      } @else {
+        <table class="panel-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Paciente</th>
+              <th>Motivo</th>
+              <th class="text-center">Medicamentos</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (at of stats.atencioneRecientes; track at.id) {
+              <tr>
+                <td class="date-cell">{{ at.fechaEvaluacion | date:'dd/MM/yyyy' }}</td>
+                <td>
+                  <span class="patient-name">{{ at.pacienteNombre }}</span>
+                  <span class="patient-doc">{{ at.pacienteNroDocumento }}</span>
+                </td>
+                <td class="motivo-cell">{{ at.motivo }}</td>
+                <td class="text-center">
+                  @if (at.cantidadConsumos > 0) {
+                    <span class="consumo-badge">{{ at.cantidadConsumos }}</span>
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3 class="panel-title">
+          <span class="pi pi-bell"></span>
+          Alertas de stock
+        </h3>
+        <button class="btn-link" (click)="irAMedicamentos()">Ver medicamentos</button>
+      </div>
+
+      @if (stats.stockAlertas.length === 0) {
+        <div class="empty-state">
+          <span class="pi pi-check-circle"></span>
+          Sin alertas de stock
+        </div>
+      } @else {
+        <table class="panel-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Medicamento</th>
+              <th class="text-right">Stock</th>
+              <th class="text-center">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (inv of stats.stockAlertas; track inv.id) {
+              <tr>
+                <td class="code-cell">{{ inv.codigoSismed }}</td>
+                <td class="desc-cell">{{ inv.descripcionSismed }}</td>
+                <td class="text-right font-bold">{{ inv.stockActual }}</td>
+                <td class="text-center">
+                  <span class="estado-badge" [class]="estadoInventario(inv)">
+                    {{ estadoLabel(estadoInventario(inv)) }}
+                  </span>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+  </div>
+}
