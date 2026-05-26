@@ -28,4 +28,8 @@ export class PacienteService {
   update(id: number, data: PacienteCreate): Observable<Paciente> {
     return this.api.put<Paciente, PacienteCreate>(`${this.base}/${id}`, data);
   }
+
+  toggleActivo(id: number): Observable<Paciente> {
+    return this.api.patch<Paciente>(`${this.base}/${id}/status`);
+  }
 }

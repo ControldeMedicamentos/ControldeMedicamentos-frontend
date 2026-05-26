@@ -100,6 +100,36 @@
   }
 }
 
+.estado-filter {
+  padding: 0.45rem 0.7rem;
+  border: 1px solid $color-border;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: $color-text;
+  background: #fff;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  &:focus { outline: none; border-color: $color-primary; }
+}
+
+.list-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.badge-inactivo {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

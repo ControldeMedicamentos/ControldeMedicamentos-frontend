@@ -1,4 +1,199 @@
-<section class="page-title">
-  <h2>Atenciones</h2>
-  <p>Registro de consultas, diagnósticos y consumos.</p>
-</section>
+<div class="page-header">
+  <div class="page-title-block">
+    <h2 class="page-title">Atenciones</h2>
+    <p class="page-subtitle">Registro de consultas, diagnósticos y consumos.</p>
+  </div>
+  <button class="btn-primary" (click)="nuevaAtencion()">
+    <span class="pi pi-plus"></span>
+    Nueva atención
+  </button>
+</div>
+
+<div class="filter-bar">
+  <label class="filter-field">
+    Desde
+    <input type="date" class="filter-input" [(ngModel)]="desde">
+  </label>
+  <label class="filter-field">
+    Hasta
+    <input type="date" class="filter-input" [(ngModel)]="hasta">
+  </label>
+  <button class="btn-buscar" (click)="buscar()" [disabled]="isLoading">
+    <span class="pi pi-search"></span>
+    Buscar
+  </button>
+</div>
+
+@if (errorMessage) {
+  <app-alert-message [message]="errorMessage" type="error" />
+}
+
+<div class="table-wrapper">
+  @if (isLoading) {
+    <div class="state-msg">
+      <span class="pi pi-spinner pi-spin"></span> Cargando atenciones...
+    </div>
+  } @else if (atenciones.length === 0) {
+    <div class="state-msg">
+      <span class="pi pi-calendar-times"></span>
+      Sin atenciones en el período seleccionado
+    </div>
+  } @else {
+    <table class="aten-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Paciente</th>
+          <th>Documento</th>
+          <th>Motivo</th>
+          <th class="text-center">Medicamentos</th>
+          <th>Registrado por</th>
+          <th class="text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (at of paginados; track at.id) {
+          <tr>
+            <td class="date-cell">{{ at.fechaEvaluacion | date:'dd/MM/yyyy' }}</td>
+            <td class="name-cell">{{ at.pacienteNombre }}</td>
+            <td class="doc-cell">{{ at.pacienteNroDocumento }}</td>
+            <td class="motivo-cell">{{ at.motivo }}</td>
+            <td class="text-center">
+              @if (at.consumos.length > 0) {
+                <span class="consumo-badge">{{ at.consumos.length }}</span>
+              } @else {
+                <span class="text-muted">—</span>
+              }
+            </td>
+            <td class="text-muted user-cell">{{ at.usuarioRegistro }}</td>
+            <td class="text-center">
+              <button class="btn-icon" title="Ver detalle" (click)="verDetalle(at)">
+                <span class="pi pi-eye"></span>
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button class="page-btn" [disabled]="page === 1" (click)="setPage(page - 1)">
+          <span class="pi pi-chevron-left"></span>
+        </button>
+        @for (p of pageNumbers; track p) {
+          <button class="page-btn" [class.active]="p === page" (click)="setPage(p)">{{ p }}</button>
+        }
+        <button class="page-btn" [disabled]="page === totalPages" (click)="setPage(page + 1)">
+          <span class="pi pi-chevron-right"></span>
+        </button>
+        <span class="page-info">{{ page }} / {{ totalPages }} · {{ atenciones.length }} registros</span>
+      </div>
+    }
+  }
+</div>
+
+@if (atencionDetalle) {
+  <app-modal-confirmation
+    [title]="'Atención · ' + (atencionDetalle.fechaEvaluacion | date:'dd/MM/yyyy')"
+    [isOpen]="showDetail"
+    (closed)="showDetail = false">
+
+    <div class="detail-grid">
+      <div class="detail-block">
+        <span class="detail-label">Paciente</span>
+        <span class="detail-value">{{ atencionDetalle.pacienteNombre }}</span>
+      </div>
+      <div class="detail-block">
+        <span class="detail-label">Documento</span>
+        <span class="detail-value">{{ atencionDetalle.pacienteNroDocumento }}</span>
+      </div>
+      <div class="detail-block full-col">
+        <span class="detail-label">Motivo</span>
+        <span class="detail-value">{{ atencionDetalle.motivo }}</span>
+      </div>
+
+      @if (atencionDetalle.diagnostico1) {
+        <div class="detail-block full-col">
+          <span class="detail-label">Diagnóstico 1</span>
+          <span class="detail-value">
+            {{ atencionDetalle.diagnostico1 }}
+            @if (atencionDetalle.cie101) { · <code>{{ atencionDetalle.cie101 }}</code> }
+            @if (atencionDetalle.tipoDiagnostico1) {
+              <span class="dx-badge">{{ tipoDxLabel(atencionDetalle.tipoDiagnostico1) }}</span>
+            }
+          </span>
+        </div>
+      }
+      @if (atencionDetalle.diagnostico2) {
+        <div class="detail-block full-col">
+          <span class="detail-label">Diagnóstico 2</span>
+          <span class="detail-value">
+            {{ atencionDetalle.diagnostico2 }}
+            @if (atencionDetalle.cie102) { · <code>{{ atencionDetalle.cie102 }}</code> }
+            @if (atencionDetalle.tipoDiagnostico2) {
+              <span class="dx-badge">{{ tipoDxLabel(atencionDetalle.tipoDiagnostico2) }}</span>
+            }
+          </span>
+        </div>
+      }
+      @if (atencionDetalle.diagnostico3) {
+        <div class="detail-block full-col">
+          <span class="detail-label">Diagnóstico 3</span>
+          <span class="detail-value">
+            {{ atencionDetalle.diagnostico3 }}
+            @if (atencionDetalle.cie103) { · <code>{{ atencionDetalle.cie103 }}</code> }
+            @if (atencionDetalle.tipoDiagnostico3) {
+              <span class="dx-badge">{{ tipoDxLabel(atencionDetalle.tipoDiagnostico3) }}</span>
+            }
+          </span>
+        </div>
+      }
+
+      @if (atencionDetalle.conclusion) {
+        <div class="detail-block full-col">
+          <span class="detail-label">Conclusión</span>
+          <span class="detail-value">{{ atencionDetalle.conclusion }}</span>
+        </div>
+      }
+      @if (atencionDetalle.observaciones) {
+        <div class="detail-block full-col">
+          <span class="detail-label">Observaciones</span>
+          <span class="detail-value">{{ atencionDetalle.observaciones }}</span>
+        </div>
+      }
+
+      <div class="detail-block">
+        <span class="detail-label">Registrado por</span>
+        <span class="detail-value">{{ atencionDetalle.usuarioRegistro }}</span>
+      </div>
+    </div>
+
+    @if (atencionDetalle.consumos.length > 0) {
+      <div class="consumos-section">
+        <h4 class="consumos-title">Medicamentos consumidos</h4>
+        <table class="consumos-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Medicamento</th>
+              <th class="text-center">Cantidad</th>
+              <th>Tipo consumo</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (c of atencionDetalle.consumos; track c.id) {
+              <tr>
+                <td class="code-cell">{{ c.codigoSismed }}</td>
+                <td>{{ c.descripcionSismed }}</td>
+                <td class="text-center font-bold">{{ c.cantidadConsumida }}</td>
+                <td>{{ tipoConsumoLabel(c.tipoConsumo) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+  </app-modal-confirmation>
+}

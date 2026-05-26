@@ -13,6 +13,7 @@ export class PacienteCardComponent {
   @Input({ required: true }) paciente!: Paciente;
   @Output() verDetalle = new EventEmitter<number>();
   @Output() editar = new EventEmitter<Paciente>();
+  @Output() toggleActivo = new EventEmitter<Paciente>();
 
   get tipoDocLabel(): string {
     const labels: Record<string, string> = {

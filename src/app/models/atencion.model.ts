@@ -31,7 +31,7 @@ export interface ConsumoMedicamentoCreate {
 export interface Atencion {
   id: number;
   pacienteId: number;
-  pacienteDni: string;
+  pacienteNroDocumento: string;
   pacienteNombre: string;
   fechaEvaluacion: string;
   motivo: string;
