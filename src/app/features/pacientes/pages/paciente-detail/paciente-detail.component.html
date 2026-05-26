@@ -1,0 +1,87 @@
+<div class="page-header">
+  <button type="button" class="btn-back" (click)="volver()">
+    <span class="pi pi-arrow-left"></span>
+    Pacientes
+  </button>
+  @if (paciente) {
+    <button type="button" class="btn-primary" (click)="modalAbierto = true">
+      <span class="pi pi-pencil"></span>
+      Editar
+    </button>
+  }
+</div>
+
+<app-alert-message [message]="errorMessage" type="error" />
+
+@if (isLoading) {
+  <div class="state-message">
+    <span class="pi pi-spinner pi-spin"></span>
+    Cargando...
+  </div>
+} @else if (paciente) {
+  <div class="detail-card">
+    <div class="detail-header">
+      <span class="avatar pi pi-user"></span>
+      <div>
+        <h3 class="detail-name">{{ paciente.nombresApellidos }}</h3>
+        <span class="detail-dni">{{ paciente.tipoDocumento === 'CARNET_EXTRANJERIA' ? 'C.E.' : paciente.tipoDocumento }}: {{ paciente.nroDocumento }}</span>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-field">
+        <span class="detail-label">Sexo</span>
+        <span class="detail-value">{{ paciente.sexo | titlecase }}</span>
+      </div>
+      @if (paciente.edad) {
+        <div class="detail-field">
+          <span class="detail-label">Edad</span>
+          <span class="detail-value">{{ paciente.edad }} años</span>
+        </div>
+      }
+      @if (paciente.carreraArea) {
+        <div class="detail-field">
+          <span class="detail-label">Carrera / Área</span>
+          <span class="detail-value">{{ paciente.carreraArea }}</span>
+        </div>
+      }
+      @if (paciente.cicloAcademico) {
+        <div class="detail-field">
+          <span class="detail-label">Ciclo académico</span>
+          <span class="detail-value">{{ paciente.cicloAcademico }}</span>
+        </div>
+      }
+      @if (paciente.telefono) {
+        <div class="detail-field">
+          <span class="detail-label">Teléfono</span>
+          <span class="detail-value">{{ paciente.telefono }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="detail-section">
+      <h4 class="section-title">
+        <span class="pi pi-list"></span>
+        Atenciones
+      </h4>
+      <p class="section-placeholder">
+        Las atenciones de este paciente se gestionan desde el módulo de Atenciones.
+      </p>
+    </div>
+  </div>
+}
+
+@if (paciente) {
+  <app-modal-confirmation
+    title="Editar paciente"
+    [isOpen]="modalAbierto"
+    (closed)="modalAbierto = false"
+  >
+    <app-paciente-form
+      [paciente]="paciente"
+      [isLoading]="isSaving"
+      (formSubmit)="guardar($event)"
+      (cancelled)="modalAbierto = false"
+    />
+  </app-modal-confirmation>
+}

@@ -1,0 +1,45 @@
+<div class="card">
+  <div class="card-header">
+    <span class="avatar pi pi-user"></span>
+    <div class="card-info">
+      <h4 class="card-name">{{ paciente.nombresApellidos }}</h4>
+      <span class="card-dni">{{ tipoDocLabel }}: {{ paciente.nroDocumento }}</span>
+    </div>
+  </div>
+
+  <ul class="card-details">
+    @if (paciente.edad) {
+      <li>
+        <span class="pi pi-calendar"></span>
+        {{ paciente.edad }} años
+      </li>
+    }
+    <li>
+      <span class="pi pi-tag"></span>
+      {{ paciente.sexo | titlecase }}
+    </li>
+    @if (paciente.carreraArea) {
+      <li>
+        <span class="pi pi-briefcase"></span>
+        {{ paciente.carreraArea }}
+      </li>
+    }
+    @if (paciente.telefono) {
+      <li>
+        <span class="pi pi-phone"></span>
+        {{ paciente.telefono }}
+      </li>
+    }
+  </ul>
+
+  <div class="card-actions">
+    <button type="button" class="btn-outline" (click)="editar.emit(paciente)">
+      <span class="pi pi-pencil"></span>
+      Editar
+    </button>
+    <button type="button" class="btn-primary" (click)="verDetalle.emit(paciente.id)">
+      <span class="pi pi-eye"></span>
+      Ver detalle
+    </button>
+  </div>
+</div>
