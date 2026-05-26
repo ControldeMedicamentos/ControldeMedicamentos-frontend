@@ -1,0 +1,6 @@
+@if (message) {
+  <div class="alert" [class.error]="type === 'error'">
+    <span class="pi" [class.pi-exclamation-triangle]="type === 'error'" [class.pi-info-circle]="type === 'info'"></span>
+    {{ message }}
+  </div>
+}

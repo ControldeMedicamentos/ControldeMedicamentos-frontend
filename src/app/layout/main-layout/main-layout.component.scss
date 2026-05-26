@@ -1,0 +1,15 @@
+.main-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.page {
+  padding: 24px;
+}

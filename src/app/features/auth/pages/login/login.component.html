@@ -1,0 +1,31 @@
+<form class="login" [formGroup]="form" (ngSubmit)="submit()">
+  <div class="title">
+    <span class="pi pi-lock"></span>
+    <div>
+      <h2>Iniciar sesión</h2>
+      <p>Acceso al sistema SISMED</p>
+    </div>
+  </div>
+
+  <app-alert-message [message]="errorMessage" type="error" />
+
+  <label>
+    Usuario
+    <input type="text" formControlName="username" autocomplete="username">
+  </label>
+
+  <label>
+    Contraseña
+    <div class="password-field">
+      <input [type]="showPassword ? 'text' : 'password'" formControlName="password" autocomplete="current-password">
+      <button type="button" class="password-toggle" (click)="togglePasswordVisibility()">
+        <span class="pi" [class.pi-eye]="!showPassword" [class.pi-eye-slash]="showPassword"></span>
+      </button>
+    </div>
+  </label>
+
+  <button type="submit" [disabled]="isLoading">
+    <span class="pi pi-sign-in"></span>
+    {{ isLoading ? 'Validando...' : 'Ingresar' }}
+  </button>
+</form>
