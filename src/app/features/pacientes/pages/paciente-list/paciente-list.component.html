@@ -63,34 +63,70 @@
       }
     </div>
   } @else {
-    <div class="list-view">
-      @for (paciente of paginados; track paciente.id) {
-        <div class="list-row">
-          <span class="list-avatar pi pi-user"></span>
-          <div class="list-info">
-            <div class="list-name-row">
-              <span class="list-name">{{ paciente.nombresApellidos }}</span>
-              @if (paciente.activo === false) {
-                <span class="badge-inactivo">Inactivo</span>
-              }
-            </div>
-            <span class="list-doc">{{ tipoDocLabel(paciente.tipoDocumento) }}: {{ paciente.nroDocumento }}</span>
-          </div>
-          <span class="list-meta">{{ paciente.carreraArea || '—' }}</span>
-          <span class="list-meta hidden-sm">{{ paciente.cicloAcademico || '—' }}</span>
-          <div class="list-actions">
-            <button type="button" class="btn-icon"
-                    [title]="paciente.activo !== false ? 'Desactivar' : 'Activar'"
-                    (click)="toggleActivo(paciente)">
-              <span class="pi" [class.pi-eye-slash]="paciente.activo !== false" [class.pi-eye]="paciente.activo === false"></span>
-            </button>
-            <button type="button" class="btn-icon" (click)="abrirModalEditar(paciente)" title="Editar">
-              <span class="pi pi-pencil"></span>
-            </button>
-            <button type="button" class="btn-icon-primary" (click)="verDetalle(paciente.id)" title="Ver detalle">
-              <span class="pi pi-eye"></span>
-            </button>
-          </div>
+    <div class="table-wrapper">
+      <table class="pac-table">
+        <thead>
+          <tr>
+            <th>Paciente</th>
+            <th>Tipo</th>
+            <th>Carrera / Área</th>
+            <th>Ciclo</th>
+            <th>Fecha Nac.</th>
+            <th>Teléfono</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (paciente of paginados; track paciente.id) {
+            <tr [class.row-inactive]="paciente.activo === false">
+              <td>
+                <span class="pac-name">{{ paciente.nombresApellidos }}</span>
+                <span class="pac-doc">{{ tipoDocLabel(paciente.tipoDocumento) }}: {{ paciente.nroDocumento }}</span>
+              </td>
+              <td>
+                <span class="badge-tipo badge-tipo--{{ paciente.tipoPaciente | lowercase }}">
+                  {{ tipoPacienteLabel(paciente.tipoPaciente) }}
+                </span>
+                @if (paciente.activo === false) {
+                  <span class="badge-inactivo">Inactivo</span>
+                }
+              </td>
+              <td class="text-muted-empty">{{ paciente.carreraArea || '—' }}</td>
+              <td class="text-muted-empty">{{ paciente.cicloAcademico || '—' }}</td>
+              <td class="text-muted-empty">{{ paciente.fechaNacimiento ? (paciente.fechaNacimiento | date:'dd/MM/yyyy') : '—' }}</td>
+              <td class="text-muted-empty">{{ paciente.telefono || '—' }}</td>
+              <td>
+                <div class="row-actions">
+                  <button type="button" class="btn-icon"
+                          [title]="paciente.activo !== false ? 'Desactivar' : 'Activar'"
+                          (click)="toggleActivo(paciente)">
+                    <span class="pi" [class.pi-eye-slash]="paciente.activo !== false" [class.pi-eye]="paciente.activo === false"></span>
+                  </button>
+                  <button type="button" class="btn-icon" (click)="abrirModalEditar(paciente)" title="Editar">
+                    <span class="pi pi-pencil"></span>
+                  </button>
+                  <button type="button" class="btn-icon btn-icon--primary" (click)="verDetalle(paciente.id)" title="Ver detalle">
+                    <span class="pi pi-eye"></span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+
+      @if (totalPages > 1) {
+        <div class="table-pagination">
+          <button type="button" class="page-btn" (click)="setPage(page - 1)" [disabled]="page === 1">
+            <span class="pi pi-chevron-left"></span>
+          </button>
+          @for (p of pageNumbers; track p) {
+            <button type="button" class="page-btn" [class.active]="p === page" (click)="setPage(p)">{{ p }}</button>
+          }
+          <button type="button" class="page-btn" (click)="setPage(page + 1)" [disabled]="page === totalPages">
+            <span class="pi pi-chevron-right"></span>
+          </button>
+          <span class="page-info">Página {{ page }} de {{ totalPages }}</span>
         </div>
       }
     </div>

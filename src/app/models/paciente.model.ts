@@ -1,12 +1,14 @@
 export type TipoDocumento = 'DNI' | 'CARNET_EXTRANJERIA' | 'PASAPORTE';
 export type Sexo = 'MUJER' | 'HOMBRE' | 'OTRO';
+export type TipoPaciente = 'ESTUDIANTE' | 'DOCENTE' | 'ADMINISTRATIVO' | 'INVITADO';
 
 export interface Paciente {
   id: number;
+  tipoPaciente: TipoPaciente;
   tipoDocumento: TipoDocumento;
   nroDocumento: string;
   nombresApellidos: string;
-  edad?: number;
+  fechaNacimiento?: string;
   sexo: Sexo;
   carreraArea?: string;
   cicloAcademico?: string;
@@ -17,10 +19,11 @@ export interface Paciente {
 }
 
 export interface PacienteCreate {
+  tipoPaciente: TipoPaciente;
   tipoDocumento: TipoDocumento;
   nroDocumento: string;
   nombresApellidos: string;
-  edad?: number;
+  fechaNacimiento?: string;
   sexo: Sexo;
   carreraArea?: string;
   cicloAcademico?: string;

@@ -1,9 +1,21 @@
 <form [formGroup]="form" (ngSubmit)="submit()" class="paciente-form">
   <div class="form-grid">
 
+    <label class="field full-width">
+      Tipo de Paciente *
+      <div class="tipo-pac-group">
+        @for (opt of tipoPacienteOptions; track opt.value) {
+          <label class="tipo-pac-btn" [class.active]="tipoPacienteActual === opt.value">
+            <input type="radio" formControlName="tipoPaciente" [value]="opt.value" hidden>
+            {{ opt.label }}
+          </label>
+        }
+      </div>
+    </label>
+
     <label class="field">
       Tipo de Documento *
-      <select formControlName="tipoDocumento" (change)="onTipoChange()">
+      <select formControlName="tipoDocumento" (change)="onTipoDocChange()">
         @for (opt of tipoDocOptions; track opt.value) {
           <option [value]="opt.value">{{ opt.label }}</option>
         }
@@ -41,32 +53,45 @@
     </label>
 
     <label class="field">
-      Edad
-      <input type="number" formControlName="edad" placeholder="Ej: 22" min="0" max="120">
-      @if (hasError('edad')) {
-        <span class="field-error">Edad debe ser entre 0 y 120 años</span>
+      Fecha de Nacimiento
+      <input
+        type="date"
+        formControlName="fechaNacimiento"
+        [max]="maxFechaNacimiento"
+        [min]="minFechaNacimiento"
+      >
+      @if (edadCalculada !== null) {
+        <span class="edad-hint">{{ edadCalculada }} años</span>
       }
     </label>
 
-    <label class="field">
-      Carrera / Área
-      <select formControlName="carreraArea">
-        <option value="">— Seleccionar —</option>
-        @for (opt of carreraOptions; track opt) {
-          <option [value]="opt">{{ opt }}</option>
+    @if (showCarrera) {
+      <label class="field">
+        {{ carreraLabel }}
+        @if (isCarreraSelect) {
+          <select formControlName="carreraArea">
+            <option value="">— Seleccionar —</option>
+            @for (opt of carreraOptions; track opt) {
+              <option [value]="opt">{{ opt }}</option>
+            }
+          </select>
+        } @else {
+          <input type="text" formControlName="carreraArea" [placeholder]="'Ej: ' + carreraLabel" maxlength="150">
         }
-      </select>
-    </label>
+      </label>
+    }
 
-    <label class="field">
-      Ciclo Académico
-      <select formControlName="cicloAcademico">
-        <option value="">— Seleccionar —</option>
-        @for (opt of cicloOptions; track opt) {
-          <option [value]="opt">{{ opt }}</option>
-        }
-      </select>
-    </label>
+    @if (showCiclo) {
+      <label class="field">
+        Ciclo Académico
+        <select formControlName="cicloAcademico">
+          <option value="">— Seleccionar —</option>
+          @for (opt of cicloOptions; track opt) {
+            <option [value]="opt">{{ opt }}</option>
+          }
+        </select>
+      </label>
+    }
 
     <label class="field">
       Teléfono

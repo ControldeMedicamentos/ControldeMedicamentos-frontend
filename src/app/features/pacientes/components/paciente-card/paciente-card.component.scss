@@ -94,9 +94,30 @@
   text-overflow: ellipsis;
 }
 
+.card-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .card-dni {
   font-size: 0.8rem;
   color: #64748b;
+}
+
+.badge-tipo {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  flex-shrink: 0;
+
+  &--estudiante    { background: #dbeafe; color: #1e40af; }
+  &--docente       { background: #ede9fe; color: #6d28d9; }
+  &--administrativo { background: #d1fae5; color: #065f46; }
+  &--invitado      { background: #fff7ed; color: #c2410c; }
 }
 
 .card-details {
