@@ -1,22 +1,30 @@
+export type TipoProducto = 'MARCA' | 'GENERICO';
+
 export interface Medicamento {
   id: number;
-  codigoSismed: string;
-  codigoSiga?: string;
-  descripcionSismed: string;
-  presentacionFrasco?: string;
-  descripcionCorta?: string;
-  conversion: number;
+  nombre: string;
+  registroSanitario?: string;
+  tipoProducto?: TipoProducto;
+  presentacion?: string;
+  fabricante?: string;
+  paisFabricacion?: string;
+  precioUnitario?: number;
+  stockMinimo?: number;
+  codigoSismed?: string;
+  descripcionSismed?: string;
   activo: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface MedicamentoCreate {
-  codigoSismed: string;
-  codigoSiga?: string;
-  descripcionSismed: string;
-  presentacionFrasco?: string;
-  descripcionCorta?: string;
-  conversion?: number;
+  nombre: string;
+  registroSanitario?: string;
+  tipoProducto?: TipoProducto;
+  presentacion?: string;
+  fabricante?: string;
+  paisFabricacion?: string;
+  precioUnitario?: number;
+  stockMinimo?: number;
   activo?: boolean;
 }

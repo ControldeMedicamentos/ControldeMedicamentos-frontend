@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
-import { Inventario } from '../../../../models/inventario.model';
+import { Inventario, MovimientoInventario } from '../../../../models/inventario.model';
 import { Medicamento, MedicamentoCreate } from '../../../../models/medicamento.model';
 import { AlertMessageComponent } from '../../../../shared/components/alert-message/alert-message.component';
 import { ModalConfirmationComponent } from '../../../../shared/components/modal-confirmation/modal-confirmation.component';
@@ -41,7 +41,13 @@ export class MedicamentosListComponent implements OnInit {
 
   showFormModal = false;
   showStockModal = false;
+  showDeleteConfirm = false;
+  showConfirmToggle = false;
+  showHistorialModal = false;
   medicamentoSeleccionado?: Medicamento;
+  medicamentoParaToggle?: Medicamento;
+  historialMovimientos: MovimientoInventario[] = [];
+  isLoadingHistorial = false;
 
   ngOnInit(): void {
     this.cargar();
@@ -70,11 +76,17 @@ export class MedicamentosListComponent implements OnInit {
     const q = this.searchText.trim().toLowerCase();
     if (!q) return this.medicamentos;
     return this.medicamentos.filter(m =>
-      m.codigoSismed.toLowerCase().includes(q) ||
-      m.descripcionSismed.toLowerCase().includes(q) ||
-      (m.descripcionCorta ?? '').toLowerCase().includes(q) ||
-      (m.codigoSiga ?? '').toLowerCase().includes(q)
+      m.nombre.toLowerCase().includes(q) ||
+      (m.registroSanitario ?? '').toLowerCase().includes(q) ||
+      (m.fabricante ?? '').toLowerCase().includes(q) ||
+      (m.codigoSismed ?? '').toLowerCase().includes(q)
     );
+  }
+
+  tipoProductoLabel(tipo?: string): string {
+    if (tipo === 'MARCA') return 'Marca';
+    if (tipo === 'GENERICO') return 'Genérico';
+    return '';
   }
 
   get totalPages(): number {
@@ -159,6 +171,22 @@ export class MedicamentosListComponent implements OnInit {
   }
 
   toggleActivo(med: Medicamento): void {
+    if (med.activo) {
+      this.medicamentoParaToggle = med;
+      this.showConfirmToggle = true;
+    } else {
+      this.ejecutarToggleMed(med);
+    }
+  }
+
+  confirmarDesactivarMed(): void {
+    if (!this.medicamentoParaToggle) return;
+    this.ejecutarToggleMed(this.medicamentoParaToggle);
+    this.showConfirmToggle = false;
+    this.medicamentoParaToggle = undefined;
+  }
+
+  private ejecutarToggleMed(med: Medicamento): void {
     this.medicamentoService.toggleActivo(med.id).subscribe({
       next: (updated) => {
         const idx = this.medicamentos.findIndex(m => m.id === med.id);
@@ -171,6 +199,52 @@ export class MedicamentosListComponent implements OnInit {
   onStockActualizado(): void {
     this.inventarioService.getAll().subscribe({
       next: (invs) => (this.inventarios = invs)
+    });
+  }
+
+  abrirHistorial(med: Medicamento): void {
+    this.medicamentoSeleccionado = med;
+    this.historialMovimientos = [];
+    this.showHistorialModal = true;
+    this.isLoadingHistorial = true;
+    this.inventarioService.getMovimientos(med.id).subscribe({
+      next: (data) => { this.historialMovimientos = data; this.isLoadingHistorial = false; },
+      error: () => (this.isLoadingHistorial = false)
+    });
+  }
+
+  tipoMovLabel(tipo: string): string {
+    const labels: Record<string, string> = {
+      INGRESO: 'Ingreso', REINGRESO: 'Reingreso', CONSUMO: 'Consumo',
+      DEVOLUCION: 'Devolución', VENCIDO: 'Vencido', MERMA: 'Merma',
+      DISTRIBUCION: 'Distribución', TRANSFERENCIA: 'Transferencia', SALDO_INICIAL: 'Saldo inicial'
+    };
+    return labels[tipo] ?? tipo;
+  }
+
+  tipoMovClass(tipo: string): string {
+    if (['INGRESO','REINGRESO','SALDO_INICIAL'].includes(tipo)) return 'mov-entrada';
+    if (tipo === 'CONSUMO') return 'mov-consumo';
+    return 'mov-salida';
+  }
+
+  abrirEliminar(med: Medicamento): void {
+    this.medicamentoSeleccionado = med;
+    this.showDeleteConfirm = true;
+  }
+
+  confirmarEliminar(): void {
+    if (!this.medicamentoSeleccionado) return;
+    this.medicamentoService.delete(this.medicamentoSeleccionado.id).subscribe({
+      next: () => {
+        this.showDeleteConfirm = false;
+        this.medicamentoSeleccionado = undefined;
+        this.cargar();
+      },
+      error: () => {
+        this.errorMessage = 'No se puede eliminar: el medicamento tiene consumos registrados.';
+        this.showDeleteConfirm = false;
+      }
     });
   }
 }

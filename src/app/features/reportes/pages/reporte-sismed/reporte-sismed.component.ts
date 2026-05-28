@@ -18,7 +18,10 @@ export class ReporteSismedComponent implements OnInit {
   reporteData: ReporteSISMED[] = [];
   isLoading = false;
   isExporting = false;
+  isCerrando = false;
   errorMessage = '';
+  successMessage = '';
+  showConfirmCierre = false;
 
   get periodo6(): string {
     return this.selectedPeriodo.replace('-', '');
@@ -32,6 +35,38 @@ export class ReporteSismedComponent implements OnInit {
 
   ngOnInit(): void {
     this.generar();
+  }
+
+  onPeriodoChange(): void {
+    this.reporteData = [];
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.showConfirmCierre = false;
+  }
+
+  confirmarCierre(): void { this.showConfirmCierre = true; }
+  cancelarCierre(): void  { this.showConfirmCierre = false; }
+
+  cerrarMes(): void {
+    this.isCerrando = true;
+    this.showConfirmCierre = false;
+    this.errorMessage = '';
+    this.reporteService.cerrarMes(this.periodo6).subscribe({
+      next: (res) => {
+        this.successMessage = res.mensaje;
+        this.isCerrando = false;
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.message ?? 'Error al cerrar el mes.';
+        this.isCerrando = false;
+      }
+    });
+  }
+
+  get periodoEsAnterior(): boolean {
+    const [anio, mes] = this.selectedPeriodo.split('-').map(Number);
+    const hoy = new Date();
+    return anio < hoy.getFullYear() || (anio === hoy.getFullYear() && mes < hoy.getMonth() + 1);
   }
 
   generar(): void {

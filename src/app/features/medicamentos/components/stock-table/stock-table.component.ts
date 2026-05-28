@@ -26,11 +26,14 @@ export class StockTableComponent implements OnInit, OnChanges {
   showForm = false;
   errorMessage = '';
 
+  readonly hoy = new Date().toISOString().split('T')[0];
+  readonly manana = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+
   readonly form = this.fb.nonNullable.group({
-    lote: ['', Validators.maxLength(80)],
+    lote:             ['', Validators.maxLength(80)],
+    fechaIngreso:     [''],
     fechaVencimiento: [''],
-    stockActual: [0, [Validators.required, Validators.min(0)]],
-    stockMinimo: [0, [Validators.required, Validators.min(0)]]
+    stockActual:      [1, [Validators.required, Validators.min(1)]]
   });
 
   ngOnInit(): void {
@@ -63,7 +66,7 @@ export class StockTableComponent implements OnInit, OnChanges {
       const diffDays = Math.floor((venc.getTime() - hoy.getTime()) / 86400000);
       if (diffDays <= 30) return 'por_vencer';
     }
-    if (inv.stockActual <= inv.stockMinimo) return 'bajo';
+    if (inv.stockActual <= (this.medicamento.stockMinimo ?? 0)) return 'bajo';
     return 'ok';
   }
 
@@ -75,7 +78,7 @@ export class StockTableComponent implements OnInit, OnChanges {
   }
 
   abrirForm(): void {
-    this.form.reset({ lote: '', fechaVencimiento: '', stockActual: 0, stockMinimo: 0 });
+    this.form.reset({ lote: '', fechaIngreso: '', fechaVencimiento: '', stockActual: 1 });
     this.showForm = true;
   }
 
@@ -88,8 +91,8 @@ export class StockTableComponent implements OnInit, OnChanges {
     const payload: InventarioCreate = {
       medicamentoId: this.medicamento.id,
       stockActual: raw.stockActual,
-      stockMinimo: raw.stockMinimo,
       lote: raw.lote || undefined,
+      fechaIngreso: raw.fechaIngreso || undefined,
       fechaVencimiento: raw.fechaVencimiento || undefined
     };
     this.isSaving = true;

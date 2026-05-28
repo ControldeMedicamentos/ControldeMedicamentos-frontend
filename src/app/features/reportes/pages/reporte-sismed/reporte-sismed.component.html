@@ -8,7 +8,7 @@
 <div class="filter-bar">
   <div class="filter-group">
     <label class="filter-label">Período</label>
-    <input type="month" class="filter-input" [(ngModel)]="selectedPeriodo" />
+    <input type="month" class="filter-input" [(ngModel)]="selectedPeriodo" (ngModelChange)="onPeriodoChange()" />
   </div>
   <button class="btn-primary" (click)="generar()" [disabled]="isLoading">
     <span class="pi" [class.pi-refresh]="!isLoading" [class.pi-spinner]="isLoading" [class.pi-spin]="isLoading"></span>
@@ -19,8 +19,38 @@
       <span class="pi" [class.pi-download]="!isExporting" [class.pi-spinner]="isExporting" [class.pi-spin]="isExporting"></span>
       Exportar Excel
     </button>
+    @if (periodoEsAnterior) {
+      <button class="btn-cierre" (click)="confirmarCierre()" [disabled]="isCerrando">
+        <span class="pi pi-lock"></span>
+        Cerrar mes
+      </button>
+    }
   }
 </div>
+
+@if (showConfirmCierre) {
+  <div class="cierre-confirm">
+    <span class="pi pi-exclamation-triangle cierre-icon"></span>
+    <div class="cierre-body">
+      <strong>¿Cerrar {{ periodoLabel }}?</strong>
+      <p>Se calcularán los stocks finales de cada medicamento y se generarán los saldos iniciales para el período siguiente. Esta acción no se puede deshacer.</p>
+    </div>
+    <div class="cierre-actions">
+      <button class="btn-cancel-cierre" (click)="cancelarCierre()">Cancelar</button>
+      <button class="btn-do-cierre" (click)="cerrarMes()" [disabled]="isCerrando">
+        <span class="pi" [class.pi-lock]="!isCerrando" [class.pi-spinner]="isCerrando" [class.pi-spin]="isCerrando"></span>
+        {{ isCerrando ? 'Cerrando...' : 'Confirmar cierre' }}
+      </button>
+    </div>
+  </div>
+}
+
+@if (successMessage) {
+  <div class="success-bar">
+    <span class="pi pi-check-circle"></span>
+    {{ successMessage }}
+  </div>
+}
 
 @if (errorMessage) {
   <div class="error-bar">
@@ -50,28 +80,22 @@
       <table class="rep-table">
         <thead>
           <tr class="thead-groups">
-            <th colspan="2" class="th-group th-group--base">Medicamento</th>
+            <th colspan="1" class="th-group th-group--base">Medicamento</th>
             <th colspan="3" class="th-group th-group--ingreso">Entradas</th>
-            <th colspan="9" class="th-group th-group--consumo">Consumos por tipo</th>
+            <th colspan="4" class="th-group th-group--consumo">Consumos por tipo de paciente</th>
             <th colspan="1" class="th-group th-group--total-c">Total</th>
             <th colspan="5" class="th-group th-group--salida">Salidas</th>
             <th colspan="1" class="th-group th-group--stock">Stock</th>
           </tr>
           <tr class="thead-cols">
-            <th class="col-code">Código</th>
-            <th class="col-desc">Descripción</th>
+            <th class="col-desc">Nombre</th>
             <th class="col-num">Saldo<br>Inicial</th>
             <th class="col-num">Ingresos</th>
             <th class="col-num">Reingresos</th>
-            <th class="col-num">Venta</th>
-            <th class="col-num">SIS</th>
-            <th class="col-num">Intersan.</th>
-            <th class="col-num">Fact.<br>Pérd.</th>
-            <th class="col-num">Def./<br>Nac.</th>
-            <th class="col-num">Exon.</th>
-            <th class="col-num">SOAT</th>
-            <th class="col-num">Créd.<br>Hosp.</th>
-            <th class="col-num">Otro<br>Conv.</th>
+            <th class="col-num">Alumno</th>
+            <th class="col-num">Docente</th>
+            <th class="col-num">Admin.</th>
+            <th class="col-num">Invitado</th>
             <th class="col-num col-total-c">Consumos</th>
             <th class="col-num">Devoluc.</th>
             <th class="col-num">Vencidos</th>
@@ -82,22 +106,16 @@
           </tr>
         </thead>
         <tbody>
-          @for (r of reporteData; track r.codigoSismed) {
+          @for (r of reporteData; track r.nombreMedicamento) {
             <tr>
-              <td class="col-code">{{ r.codigoSismed }}</td>
-              <td class="col-desc">{{ r.descripcionSismed }}</td>
+              <td class="col-desc">{{ r.nombreMedicamento }}</td>
               <td class="col-num">{{ r.saldoInicial }}</td>
               <td class="col-num">{{ r.ingresos }}</td>
               <td class="col-num">{{ r.reingresos }}</td>
-              <td class="col-num">{{ r.venta }}</td>
-              <td class="col-num">{{ r.sis }}</td>
-              <td class="col-num">{{ r.intersanidad }}</td>
-              <td class="col-num">{{ r.factoresPerdida }}</td>
-              <td class="col-num">{{ r.defuncionNacimiento }}</td>
-              <td class="col-num">{{ r.exonerado }}</td>
-              <td class="col-num">{{ r.soat }}</td>
-              <td class="col-num">{{ r.creditoHospitalario }}</td>
-              <td class="col-num">{{ r.otroConvenio }}</td>
+              <td class="col-num">{{ r.alumno }}</td>
+              <td class="col-num">{{ r.docente }}</td>
+              <td class="col-num">{{ r.administrativo }}</td>
+              <td class="col-num">{{ r.invitado }}</td>
               <td class="col-num col-total-c">{{ r.consumos }}</td>
               <td class="col-num">{{ r.devoluciones }}</td>
               <td class="col-num">{{ r.vencidos }}</td>
@@ -110,19 +128,14 @@
         </tbody>
         <tfoot>
           <tr class="totals-row">
-            <td colspan="2" class="totals-label">TOTALES</td>
+            <td class="totals-label">TOTALES</td>
             <td class="col-num">{{ total('saldoInicial') }}</td>
             <td class="col-num">{{ total('ingresos') }}</td>
             <td class="col-num">{{ total('reingresos') }}</td>
-            <td class="col-num">{{ total('venta') }}</td>
-            <td class="col-num">{{ total('sis') }}</td>
-            <td class="col-num">{{ total('intersanidad') }}</td>
-            <td class="col-num">{{ total('factoresPerdida') }}</td>
-            <td class="col-num">{{ total('defuncionNacimiento') }}</td>
-            <td class="col-num">{{ total('exonerado') }}</td>
-            <td class="col-num">{{ total('soat') }}</td>
-            <td class="col-num">{{ total('creditoHospitalario') }}</td>
-            <td class="col-num">{{ total('otroConvenio') }}</td>
+            <td class="col-num">{{ total('alumno') }}</td>
+            <td class="col-num">{{ total('docente') }}</td>
+            <td class="col-num">{{ total('administrativo') }}</td>
+            <td class="col-num">{{ total('invitado') }}</td>
             <td class="col-num col-total-c">{{ total('consumos') }}</td>
             <td class="col-num">{{ total('devoluciones') }}</td>
             <td class="col-num">{{ total('vencidos') }}</td>

@@ -1,7 +1,9 @@
 <div class="stock-header">
   <div>
-    <p class="stock-codigo">{{ medicamento.codigoSismed }}</p>
-    <p class="stock-desc">{{ medicamento.descripcionCorta || medicamento.descripcionSismed }}</p>
+    <p class="stock-codigo">{{ medicamento.nombre }}</p>
+    @if (medicamento.presentacion) {
+      <p class="stock-desc">{{ medicamento.presentacion }}</p>
+    }
   </div>
   <div class="stock-total">
     <span class="stock-number">{{ stockTotal }}</span>
@@ -27,9 +29,9 @@
     <thead>
       <tr>
         <th>Lote</th>
-        <th>Vencimiento</th>
-        <th class="text-right">Stock</th>
-        <th class="text-right">Mín.</th>
+        <th>F. Ingreso</th>
+        <th>F. Vencimiento</th>
+        <th class="text-right">Cantidad</th>
         <th class="text-center">Estado</th>
       </tr>
     </thead>
@@ -37,9 +39,9 @@
       @for (inv of inventarios; track inv.id) {
         <tr>
           <td class="lote-num">{{ inv.lote || '—' }}</td>
+          <td>{{ inv.fechaIngreso ? (inv.fechaIngreso | date:'dd/MM/yyyy') : '—' }}</td>
           <td>{{ inv.fechaVencimiento ? (inv.fechaVencimiento | date:'dd/MM/yyyy') : '—' }}</td>
           <td class="text-right font-bold">{{ inv.stockActual }}</td>
-          <td class="text-right text-muted">{{ inv.stockMinimo }}</td>
           <td class="text-center">
             <span class="estado-badge" [class]="getEstado(inv)">
               {{ getEstadoLabel(getEstado(inv)) }}
@@ -60,22 +62,19 @@
         <input type="text" formControlName="lote" placeholder="Ej: LOT-2024-001" maxlength="80">
       </label>
       <label class="field">
-        Fecha vencimiento
-        <input type="date" formControlName="fechaVencimiento">
-      </label>
-      <label class="field">
-        Cantidad Ingresada *
-        <input type="number" formControlName="stockActual" min="0">
+        Cantidad ingresada *
+        <input type="number" formControlName="stockActual" min="1">
         @if (hasError('stockActual')) {
           <span class="field-error">Requerido (mín. 0)</span>
         }
       </label>
       <label class="field">
-        Stock mínimo *
-        <input type="number" formControlName="stockMinimo" min="0">
-        @if (hasError('stockMinimo')) {
-          <span class="field-error">Requerido (mín. 0)</span>
-        }
+        Fecha de ingreso
+        <input type="date" formControlName="fechaIngreso" [max]="hoy">
+      </label>
+      <label class="field">
+        Fecha de vencimiento
+        <input type="date" formControlName="fechaVencimiento" [min]="manana">
       </label>
     </div>
     <div class="lote-actions">

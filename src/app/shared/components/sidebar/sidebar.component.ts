@@ -20,6 +20,7 @@ export class SidebarComponent {
     { label: 'Pacientes', path: '/pacientes', icon: 'pi pi-users' },
     { label: 'Atenciones', path: '/atenciones', icon: 'pi pi-clipboard' },
     { label: 'Medicamentos', path: '/medicamentos', icon: 'pi pi-box' },
+    { label: 'Ajustes', path: '/medicamentos/ajustes', icon: 'pi pi-sliders-h' },
     { label: 'Reportes', path: '/reportes', icon: 'pi pi-file-excel' }
   ];
 }

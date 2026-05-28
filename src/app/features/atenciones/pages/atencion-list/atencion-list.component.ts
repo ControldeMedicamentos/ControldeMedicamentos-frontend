@@ -1,10 +1,14 @@
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Atencion, TipoConsumo, TipoDiagnostico } from '../../../../models/atencion.model';
+import { Atencion, AtencionArchivo, TipoConsumo, TipoDiagnostico } from '../../../../models/atencion.model';
+import { environment } from '../../../../../environments/environment';
 import { AlertMessageComponent } from '../../../../shared/components/alert-message/alert-message.component';
 import { ModalConfirmationComponent } from '../../../../shared/components/modal-confirmation/modal-confirmation.component';
+import { AtencionDraft, AtencionDraftService } from '../../services/atencion-draft.service';
 import { AtencionService } from '../../services/atencion.service';
 
 @Component({
@@ -16,6 +20,9 @@ import { AtencionService } from '../../services/atencion.service';
 })
 export class AtencionListComponent implements OnInit {
   private readonly atencionService = inject(AtencionService);
+  private readonly draftService = inject(AtencionDraftService);
+  private readonly http = inject(HttpClient);
+  private readonly sanitizer = inject(DomSanitizer);
   private readonly router = inject(Router);
 
   atenciones: Atencion[] = [];
@@ -24,15 +31,52 @@ export class AtencionListComponent implements OnInit {
 
   desde = this.primerDiaMes();
   hasta = this.hoy();
+  busquedaPaciente = '';
 
   page = 1;
   readonly pageSize = 15;
 
   showDetail = false;
   atencionDetalle?: Atencion;
+  archivosDetalle: AtencionArchivo[] = [];
+  isLoadingArchivos = false;
+
+  preview: { url: string; safeUrl?: SafeResourceUrl; nombre: string; tipo?: string } | null = null;
+
+  draft: AtencionDraft | null = null;
+  showConfirmDescartar = false;
 
   ngOnInit(): void {
+    this.draft = this.draftService.load();
     this.buscar();
+  }
+
+  continuarDraft(): void {
+    this.router.navigate(['/atenciones/nueva']);
+  }
+
+  descartarDraft(): void {
+    this.showConfirmDescartar = true;
+  }
+
+  confirmarDescartar(): void {
+    this.draftService.clear();
+    this.draft = null;
+    this.showConfirmDescartar = false;
+  }
+
+  get draftPacienteNombre(): string {
+    return this.draft?.paciente?.nombresApellidos ?? 'Sin paciente seleccionado';
+  }
+
+  get draftStepLabel(): string {
+    const labels = ['', 'Paciente', 'Evaluación', 'Diagnósticos', 'Plan', 'Medicamentos'];
+    const step = this.draft?.currentStep ?? 1;
+    return `Paso ${step}: ${labels[step] ?? ''}`;
+  }
+
+  get draftTiempo(): string {
+    return this.draft ? this.draftService.tiempoGuardado(this.draft.savedAt) : '';
   }
 
   private primerDiaMes(): string {
@@ -62,13 +106,24 @@ export class AtencionListComponent implements OnInit {
     });
   }
 
+  get filtrados(): Atencion[] {
+    const q = this.busquedaPaciente.trim().toLowerCase();
+    if (!q) return this.atenciones;
+    return this.atenciones.filter(a =>
+      a.pacienteNombre.toLowerCase().includes(q) ||
+      a.pacienteNroDocumento.toLowerCase().includes(q)
+    );
+  }
+
+  onBusquedaChange(): void { this.page = 1; }
+
   get totalPages(): number {
-    return Math.max(1, Math.ceil(this.atenciones.length / this.pageSize));
+    return Math.max(1, Math.ceil(this.filtrados.length / this.pageSize));
   }
 
   get paginados(): Atencion[] {
     const start = (this.page - 1) * this.pageSize;
-    return this.atenciones.slice(start, start + this.pageSize);
+    return this.filtrados.slice(start, start + this.pageSize);
   }
 
   get pageNumbers(): number[] {
@@ -85,7 +140,36 @@ export class AtencionListComponent implements OnInit {
 
   verDetalle(atencion: Atencion): void {
     this.atencionDetalle = atencion;
+    this.archivosDetalle = [];
     this.showDetail = true;
+    this.isLoadingArchivos = true;
+    this.atencionService.getArchivos(atencion.id).subscribe({
+      next: (a) => { this.archivosDetalle = a; this.isLoadingArchivos = false; },
+      error: () => (this.isLoadingArchivos = false)
+    });
+  }
+
+  abrirArchivo(fileId: number, nombre: string, tipo?: string): void {
+    this.http.get(`${environment.apiUrl}/appointments/files/${fileId}/download`, { responseType: 'blob' })
+      .subscribe(blob => {
+        const url = URL.createObjectURL(blob);
+        const safeUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+        this.preview = { url, safeUrl, nombre, tipo };
+      });
+  }
+
+  cerrarPreview(): void {
+    if (this.preview?.url) URL.revokeObjectURL(this.preview.url);
+    this.preview = null;
+  }
+
+  isImagen(tipo?: string): boolean { return !!tipo?.startsWith('image/'); }
+  isPDF(tipo?: string): boolean { return tipo === 'application/pdf'; }
+
+  formatSize(bytes?: number): string {
+    if (!bytes) return '';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   }
 
   nuevaAtencion(): void {

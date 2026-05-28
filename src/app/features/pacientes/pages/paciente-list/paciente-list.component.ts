@@ -37,6 +37,8 @@ export class PacienteListComponent implements OnInit {
   errorMessage = '';
   modalAbierto = false;
   pacienteSeleccionado?: Paciente;
+  showConfirmToggle = false;
+  pacienteParaToggle?: Paciente;
 
   get viewMode(): 'grid' | 'list' { return this.uiState.viewMode; }
   get filtroEstado(): 'todos' | 'activos' | 'inactivos' { return this.uiState.filtroEstado; }
@@ -107,6 +109,22 @@ export class PacienteListComponent implements OnInit {
   }
 
   toggleActivo(paciente: Paciente): void {
+    if (paciente.activo) {
+      this.pacienteParaToggle = paciente;
+      this.showConfirmToggle = true;
+    } else {
+      this.ejecutarToggle(paciente);
+    }
+  }
+
+  confirmarDesactivar(): void {
+    if (!this.pacienteParaToggle) return;
+    this.ejecutarToggle(this.pacienteParaToggle);
+    this.showConfirmToggle = false;
+    this.pacienteParaToggle = undefined;
+  }
+
+  private ejecutarToggle(paciente: Paciente): void {
     this.pacienteService.toggleActivo(paciente.id).subscribe({
       next: (updated) => {
         const idx = this.pacientes.findIndex(p => p.id === paciente.id);

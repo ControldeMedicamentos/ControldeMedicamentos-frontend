@@ -96,7 +96,7 @@
 
           <label class="field">
             <span class="field-label">Fecha de evaluación *</span>
-            <input type="date" formControlName="fechaEvaluacion">
+            <input type="date" formControlName="fechaEvaluacion" [max]="hoy()">
             @if (hasError('fechaEvaluacion')) {
               <span class="field-error">Requerido</span>
             }
@@ -144,9 +144,40 @@
           </label>
 
           <label class="field">
-            <span class="field-label">Laboratorio / Imágenes</span>
-            <textarea formControlName="laboratorio" rows="3" placeholder="Resultados de exámenes auxiliares y diagnóstico por imágenes"></textarea>
+            <span class="field-label">Hallazgos de laboratorio e imágenes</span>
+            <textarea formControlName="laboratorio" rows="3" placeholder="Valores numéricos, resultados, interpretación clínica de exámenes auxiliares..."></textarea>
           </label>
+
+          <div class="field full-width file-upload-section">
+            <span class="field-label">Archivos adjuntos <span class="field-hint">Adjunta el informe o imagen física · JPG, PNG, PDF · máx. 20 MB c/u</span></span>
+            <label class="file-drop-zone" for="fileInput">
+              <span class="pi pi-upload file-drop-icon"></span>
+              <span class="file-drop-text">Arrastra archivos aquí o <strong>haz clic para seleccionar</strong></span>
+              <span class="file-drop-hint">JPG, PNG, GIF, WEBP, PDF</span>
+            </label>
+            <input
+              id="fileInput"
+              type="file"
+              multiple
+              accept="image/*,.pdf"
+              class="file-input-hidden"
+              (change)="onFilesSelected($event)">
+
+            @if (archivosSeleccionados.length > 0) {
+              <div class="file-list">
+                @for (file of archivosSeleccionados; track $index) {
+                  <div class="file-item">
+                    <span class="file-item-icon pi" [class.pi-image]="isImage(file)" [class.pi-file-pdf]="!isImage(file)"></span>
+                    <span class="file-item-name" [title]="file.name">{{ file.name }}</span>
+                    <span class="file-item-size">{{ formatSize(file.size) }}</span>
+                    <button type="button" class="file-item-remove" (click)="removeArchivo($index)" title="Quitar">
+                      <span class="pi pi-times"></span>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
 
         </div>
       </div>
@@ -239,32 +270,58 @@
 
           @for (ctrl of consumos.controls; track $index) {
             <div class="consumo-row" [formGroup]="consumoGroup($index)">
-              <label class="field flex-grow">
+              <div class="field flex-grow">
                 <span class="field-label">Medicamento *</span>
-                <select formControlName="medicamentoId">
-                  <option [value]="null">— Seleccionar —</option>
-                  @for (med of medicamentosActivos; track med.id) {
-                    <option [value]="med.id">{{ med.codigoSismed }} · {{ med.descripcionCorta || med.descripcionSismed }}</option>
-                  }
-                </select>
+
+                @if (medUiStates[$index].selected) {
+                  <div class="med-selected">
+                    <div class="med-info">
+                      <span class="med-name">{{ medUiStates[$index].selected!.nombre }}</span>
+                      @if (medUiStates[$index].selected!.presentacion) {
+                        <span class="med-pres">{{ medUiStates[$index].selected!.presentacion }}</span>
+                      }
+                    </div>
+                    <button type="button" class="med-clear" (click)="clearMed($index)" title="Cambiar medicamento">
+                      <span class="pi pi-times"></span>
+                    </button>
+                  </div>
+                } @else {
+                  <div class="med-search-wrap">
+                    <span class="pi pi-search med-search-icon"></span>
+                    <input
+                      type="text"
+                      class="med-input"
+                      placeholder="Buscar medicamento por nombre..."
+                      [(ngModel)]="medUiStates[$index].query"
+                      [ngModelOptions]="{ standalone: true }"
+                      (input)="onMedInput($index)"
+                      (blur)="onMedBlur($index)"
+                      autocomplete="off">
+                    @if (medUiStates[$index].showSuggestions) {
+                      <div class="med-dropdown">
+                        @for (med of medUiStates[$index].suggestions; track med.id) {
+                          <div class="med-option" (mousedown)="selectMed($index, med)">
+                            <span class="med-opt-name">{{ med.nombre }}</span>
+                            @if (med.presentacion) {
+                              <span class="med-opt-pres">{{ med.presentacion }}</span>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+
                 @if (consumoHasError($index, 'medicamentoId')) {
                   <span class="field-error">Seleccione un medicamento</span>
                 }
-              </label>
+              </div>
               <label class="field w-cant">
                 <span class="field-label">Cantidad *</span>
                 <input type="number" formControlName="cantidadConsumida" min="1">
                 @if (consumoHasError($index, 'cantidadConsumida')) {
                   <span class="field-error">Mín. 1</span>
                 }
-              </label>
-              <label class="field w-tipo">
-                <span class="field-label">Tipo consumo</span>
-                <select formControlName="tipoConsumo">
-                  @for (opt of tipoConsumoOptions; track opt.value) {
-                    <option [value]="opt.value">{{ opt.label }}</option>
-                  }
-                </select>
               </label>
               <button type="button" class="btn-remove" (click)="quitarConsumo($index)" title="Quitar">
                 <span class="pi pi-trash"></span>

@@ -145,8 +145,7 @@
           <tbody>
             @for (inv of stats.stockAlertas; track inv.id) {
               <tr>
-                <td class="code-cell">{{ inv.codigoSismed }}</td>
-                <td class="desc-cell">{{ inv.descripcionSismed }}</td>
+                <td class="desc-cell" colspan="2">{{ inv.nombreMedicamento }}</td>
                 <td class="text-right font-bold">{{ inv.stockActual }}</td>
                 <td class="text-center">
                   <span class="estado-badge" [class]="estadoInventario(inv)">

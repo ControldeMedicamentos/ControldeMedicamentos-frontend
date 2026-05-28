@@ -9,6 +9,54 @@
   </button>
 </div>
 
+@if (draft) {
+  <div class="draft-banner">
+    <div class="draft-icon-wrap">
+      <span class="pi pi-clock draft-icon"></span>
+    </div>
+    <div class="draft-info">
+      <span class="draft-title">Atención en progreso</span>
+      <span class="draft-meta">
+        <span class="pi pi-user"></span> {{ draftPacienteNombre }}
+        &nbsp;·&nbsp;
+        <span class="pi pi-list"></span> {{ draftStepLabel }}
+        &nbsp;·&nbsp; Guardado {{ draftTiempo }}
+        @if (draft.hasFiles) { &nbsp;· <span class="pi pi-paperclip"></span> Archivos seleccionados (requieren nueva selección) }
+      </span>
+    </div>
+    <div class="draft-actions">
+      <button class="btn-draft-continue" (click)="continuarDraft()">
+        <span class="pi pi-play"></span>
+        Continuar
+      </button>
+      <button class="btn-draft-discard" (click)="descartarDraft()">
+        <span class="pi pi-trash"></span>
+        Descartar
+      </button>
+    </div>
+  </div>
+}
+
+<app-modal-confirmation
+  title="Descartar atención en progreso"
+  [isOpen]="showConfirmDescartar"
+  (closed)="showConfirmDescartar = false">
+  <div class="confirm-body">
+    <span class="pi pi-exclamation-triangle confirm-icon"></span>
+    <p class="confirm-msg">
+      ¿Descartar la atención de <strong>{{ draftPacienteNombre }}</strong>?
+      <br>
+      <span class="confirm-sub">Se perderán todos los datos ingresados ({{ draftStepLabel }}). Esta acción no se puede deshacer.</span>
+    </p>
+    <div class="confirm-actions">
+      <button class="btn-cancel-confirm" (click)="showConfirmDescartar = false">Cancelar</button>
+      <button class="btn-danger-confirm" (click)="confirmarDescartar()">
+        <span class="pi pi-trash"></span> Descartar
+      </button>
+    </div>
+  </div>
+</app-modal-confirmation>
+
 <div class="filter-bar">
   <label class="filter-field">
     Desde
@@ -22,6 +70,20 @@
     <span class="pi pi-search"></span>
     Buscar
   </button>
+  <div class="search-pac-wrap">
+    <span class="pi pi-user search-pac-icon"></span>
+    <input
+      type="text"
+      class="search-pac-input"
+      placeholder="Filtrar por paciente o documento..."
+      [(ngModel)]="busquedaPaciente"
+      (ngModelChange)="onBusquedaChange()">
+    @if (busquedaPaciente) {
+      <button class="search-pac-clear" (click)="busquedaPaciente = ''; onBusquedaChange()">
+        <span class="pi pi-times"></span>
+      </button>
+    }
+  </div>
 </div>
 
 @if (errorMessage) {
@@ -175,19 +237,15 @@
         <table class="consumos-table">
           <thead>
             <tr>
-              <th>Código</th>
               <th>Medicamento</th>
               <th class="text-center">Cantidad</th>
-              <th>Tipo consumo</th>
             </tr>
           </thead>
           <tbody>
             @for (c of atencionDetalle.consumos; track c.id) {
               <tr>
-                <td class="code-cell">{{ c.codigoSismed }}</td>
                 <td>{{ c.descripcionSismed }}</td>
                 <td class="text-center font-bold">{{ c.cantidadConsumida }}</td>
-                <td>{{ tipoConsumoLabel(c.tipoConsumo) }}</td>
               </tr>
             }
           </tbody>
@@ -195,5 +253,58 @@
       </div>
     }
 
+    <div class="archivos-section">
+      <h4 class="consumos-title">
+        <span class="pi pi-paperclip"></span> Archivos adjuntos
+        @if (!isLoadingArchivos && archivosDetalle.length > 0) {
+          <span class="arch-count">{{ archivosDetalle.length }}</span>
+        }
+      </h4>
+      @if (isLoadingArchivos) {
+        <span class="arch-loading"><span class="pi pi-spinner pi-spin"></span> Cargando...</span>
+      } @else if (archivosDetalle.length === 0) {
+        <span class="arch-empty">Sin archivos adjuntos</span>
+      } @else {
+        <div class="arch-list">
+          @for (a of archivosDetalle; track a.id) {
+            <button class="arch-item" (click)="abrirArchivo(a.id, a.nombreOriginal, a.tipoContenido)" title="Abrir archivo">
+              <span class="pi arch-icon" [class.pi-image]="a.tipoContenido?.startsWith('image/')" [class.pi-file-pdf]="a.tipoContenido === 'application/pdf'" [class.pi-file]="!a.tipoContenido?.startsWith('image/') && a.tipoContenido !== 'application/pdf'"></span>
+              <span class="arch-name">{{ a.nombreOriginal }}</span>
+              @if (a.tamanio) { <span class="arch-size">{{ formatSize(a.tamanio) }}</span> }
+              <span class="pi pi-download arch-dl"></span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+
   </app-modal-confirmation>
+}
+
+@if (preview) {
+  <div class="preview-overlay" (click)="cerrarPreview()">
+    <div class="preview-panel" (click)="$event.stopPropagation()">
+      <div class="preview-header">
+        <span class="preview-nombre">{{ preview.nombre }}</span>
+        <button class="preview-close" (click)="cerrarPreview()">
+          <span class="pi pi-times"></span>
+        </button>
+      </div>
+      <div class="preview-body">
+        @if (isImagen(preview.tipo)) {
+          <img [src]="preview.url" [alt]="preview.nombre" class="preview-img">
+        } @else if (isPDF(preview.tipo)) {
+          <iframe [src]="preview.safeUrl" class="preview-pdf" title="Vista previa PDF"></iframe>
+        } @else {
+          <div class="preview-no-support">
+            <span class="pi pi-file" style="font-size:3rem;color:#94a3b8"></span>
+            <p>Vista previa no disponible.</p>
+            <a [href]="preview.url" [download]="preview.nombre" class="btn-dl">
+              <span class="pi pi-download"></span> Descargar
+            </a>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
 }

@@ -1,20 +1,28 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, inject, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnDestroy, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of, switchMap } from 'rxjs';
 import { AtencionCreate, ConsumoMedicamentoCreate, TipoConsumo, TipoDiagnostico } from '../../../../models/atencion.model';
 import { Medicamento } from '../../../../models/medicamento.model';
 import { Paciente } from '../../../../models/paciente.model';
 import { AlertMessageComponent } from '../../../../shared/components/alert-message/alert-message.component';
 import { MedicamentoService } from '../../../medicamentos/services/medicamento.service';
 import { PacienteService } from '../../../pacientes/services/paciente.service';
+import { AtencionDraftService } from '../../services/atencion-draft.service';
 import { AtencionService } from '../../services/atencion.service';
 
 interface Step {
   num: number;
   label: string;
   icon: string;
+}
+
+interface MedUiState {
+  query: string;
+  suggestions: import('../../../../models/medicamento.model').Medicamento[];
+  showSuggestions: boolean;
+  selected: import('../../../../models/medicamento.model').Medicamento | null;
 }
 
 @Component({
@@ -24,12 +32,16 @@ interface Step {
   templateUrl: './atencion-create.component.html',
   styleUrl: './atencion-create.component.scss'
 })
-export class AtencionCreateComponent implements OnInit {
+export class AtencionCreateComponent implements OnInit, OnDestroy {
   private readonly atencionService = inject(AtencionService);
   private readonly pacienteService = inject(PacienteService);
   private readonly medicamentoService = inject(MedicamentoService);
+  private readonly draftService = inject(AtencionDraftService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+
+  private submitted = false;
+  private cancelled = false;
 
   pacientes: Paciente[] = [];
   medicamentosActivos: Medicamento[] = [];
@@ -37,6 +49,12 @@ export class AtencionCreateComponent implements OnInit {
   isSaving = false;
   errorMessage = '';
   stepError = '';
+
+  archivosSeleccionados: File[] = [];
+  medUiStates: MedUiState[] = [];
+
+  readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+  readonly MAX_FILE_SIZE = 20 * 1024 * 1024;
 
   currentStep = 1;
 
@@ -105,6 +123,7 @@ export class AtencionCreateComponent implements OnInit {
         this.pacientes = pacientes.filter(p => p.activo !== false);
         this.medicamentosActivos = medicamentos.filter(m => m.activo);
         this.isLoading = false;
+        this.restoreDraft();
       },
       error: () => {
         this.errorMessage = 'Error al cargar los datos necesarios.';
@@ -113,7 +132,28 @@ export class AtencionCreateComponent implements OnInit {
     });
   }
 
-  private hoy(): string {
+  ngOnDestroy(): void {
+    if (this.submitted || this.cancelled) return;
+    const hasData = this.pacienteSeleccionado !== null
+      || Object.values(this.form.getRawValue()).some(v => v !== '' && v !== null);
+    if (!hasData) return;
+    this.draftService.save({
+      formValues: this.form.getRawValue() as Record<string, unknown>,
+      paciente: this.pacienteSeleccionado,
+      currentStep: this.currentStep,
+      hasFiles: this.archivosSeleccionados.length > 0
+    });
+  }
+
+  private restoreDraft(): void {
+    const draft = this.draftService.load();
+    if (!draft) return;
+    this.form.patchValue(draft.formValues);
+    this.pacienteSeleccionado = draft.paciente;
+    this.currentStep = draft.currentStep;
+  }
+
+  hoy(): string {
     return new Date().toISOString().split('T')[0];
   }
 
@@ -170,13 +210,42 @@ export class AtencionCreateComponent implements OnInit {
 
   agregarConsumo(): void {
     this.consumos.push(this.fb.group({
-      medicamentoId:     [null,  Validators.required],
-      cantidadConsumida: [1,     [Validators.required, Validators.min(1)]],
-      tipoConsumo:       ['SIS', Validators.required]
+      medicamentoId:     [null, Validators.required],
+      cantidadConsumida: [1,    [Validators.required, Validators.min(1)]]
     }));
+    this.medUiStates.push({ query: '', suggestions: [], showSuggestions: false, selected: null });
   }
 
-  quitarConsumo(i: number): void { this.consumos.removeAt(i); }
+  quitarConsumo(i: number): void {
+    this.consumos.removeAt(i);
+    this.medUiStates.splice(i, 1);
+  }
+
+  onMedInput(i: number): void {
+    const q = this.medUiStates[i].query.trim().toLowerCase();
+    if (!q) { this.medUiStates[i].suggestions = []; this.medUiStates[i].showSuggestions = false; return; }
+    this.medUiStates[i].suggestions = this.medicamentosActivos
+      .filter(m => m.nombre.toLowerCase().includes(q) || (m.registroSanitario ?? '').toLowerCase().includes(q))
+      .slice(0, 8);
+    this.medUiStates[i].showSuggestions = this.medUiStates[i].suggestions.length > 0;
+  }
+
+  selectMed(i: number, med: Medicamento): void {
+    this.medUiStates[i].selected = med;
+    this.medUiStates[i].query = '';
+    this.medUiStates[i].showSuggestions = false;
+    this.consumos.at(i).get('medicamentoId')!.setValue(med.id);
+  }
+
+  clearMed(i: number): void {
+    this.medUiStates[i].selected = null;
+    this.medUiStates[i].query = '';
+    this.consumos.at(i).get('medicamentoId')!.setValue(null);
+  }
+
+  onMedBlur(i: number): void {
+    setTimeout(() => { if (this.medUiStates[i]) this.medUiStates[i].showSuggestions = false; }, 150);
+  }
 
   consumoGroup(i: number): FormGroup { return this.consumos.at(i) as FormGroup; }
 
@@ -188,6 +257,38 @@ export class AtencionCreateComponent implements OnInit {
   consumoHasError(i: number, field: string): boolean {
     const ctrl = this.consumos.at(i).get(field);
     return !!(ctrl?.invalid && ctrl.touched);
+  }
+
+  onFilesSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files) return;
+    const nuevos = Array.from(input.files).filter(f => {
+      if (!this.ALLOWED_TYPES.includes(f.type)) {
+        this.stepError = `Tipo no permitido: ${f.name}. Solo imágenes y PDF.`;
+        return false;
+      }
+      if (f.size > this.MAX_FILE_SIZE) {
+        this.stepError = `Archivo demasiado grande: ${f.name}. Máximo 20 MB.`;
+        return false;
+      }
+      return true;
+    });
+    this.archivosSeleccionados = [...this.archivosSeleccionados, ...nuevos];
+    input.value = '';
+  }
+
+  removeArchivo(index: number): void {
+    this.archivosSeleccionados = this.archivosSeleccionados.filter((_, i) => i !== index);
+  }
+
+  formatSize(bytes: number): string {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  isImage(file: File): boolean {
+    return file.type.startsWith('image/');
   }
 
   submit(): void {
@@ -218,16 +319,25 @@ export class AtencionCreateComponent implements OnInit {
       conclusion:       raw.conclusion       || undefined,
       derivacion:       raw.derivacion       || undefined,
       observaciones:    raw.observaciones    || undefined,
-      consumos: this.consumos.value.map((c: { medicamentoId: string | number; cantidadConsumida: number; tipoConsumo: string }): ConsumoMedicamentoCreate => ({
-        medicamentoId:    Number(c.medicamentoId),
-        cantidadConsumida: c.cantidadConsumida,
-        tipoConsumo:       c.tipoConsumo as TipoConsumo
+      consumos: this.consumos.value.map((c: { medicamentoId: string | number; cantidadConsumida: number }): ConsumoMedicamentoCreate => ({
+        medicamentoId:     Number(c.medicamentoId),
+        cantidadConsumida: c.cantidadConsumida
       }))
     };
 
     this.isSaving = true;
-    this.atencionService.create(payload).subscribe({
-      next: () => this.router.navigate(['/atenciones']),
+    this.atencionService.create(payload).pipe(
+      switchMap(atencion => {
+        if (this.archivosSeleccionados.length === 0) return of(atencion);
+        const uploads = this.archivosSeleccionados.map(f => this.atencionService.uploadArchivo(atencion.id, f));
+        return forkJoin(uploads);
+      })
+    ).subscribe({
+      next: () => {
+        this.submitted = true;
+        this.draftService.clear();
+        this.router.navigate(['/atenciones']);
+      },
       error: (err) => {
         this.errorMessage = err?.error?.message ?? 'Error al registrar la atención.';
         this.isSaving = false;
@@ -235,5 +345,8 @@ export class AtencionCreateComponent implements OnInit {
     });
   }
 
-  cancelar(): void { this.router.navigate(['/atenciones']); }
+  cancelar(): void {
+    this.cancelled = true;
+    this.router.navigate(['/atenciones']);
+  }
 }

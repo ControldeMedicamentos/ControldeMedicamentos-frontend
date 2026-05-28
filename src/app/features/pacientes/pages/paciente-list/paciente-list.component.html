@@ -160,3 +160,24 @@
     (cancelled)="cerrarModal()"
   />
 </app-modal-confirmation>
+
+<app-modal-confirmation
+  title="Desactivar paciente"
+  [isOpen]="showConfirmToggle"
+  (closed)="showConfirmToggle = false">
+  <div class="confirm-body">
+    <span class="pi pi-exclamation-triangle confirm-icon"></span>
+    <p class="confirm-msg">
+      ¿Desactivar a <strong>{{ pacienteParaToggle?.nombresApellidos }}</strong>?
+      <br>
+      <span class="confirm-sub">El paciente no podrá tener nuevas atenciones mientras esté inactivo.</span>
+    </p>
+    <div class="confirm-actions">
+      <button class="btn-cancel-confirm" (click)="showConfirmToggle = false">Cancelar</button>
+      <button class="btn-danger-confirm" (click)="confirmarDesactivar()">
+        <span class="pi pi-eye-slash"></span> Desactivar
+      </button>
+    </div>
+  </div>
+</app-modal-confirmation>
+

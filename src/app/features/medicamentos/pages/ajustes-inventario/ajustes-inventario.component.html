@@ -1,0 +1,220 @@
+<div class="page-header">
+  <div>
+    <h2 class="page-title">Ajustes de Inventario</h2>
+    <p class="page-subtitle">Registra devoluciones, vencidos y mermas por lote</p>
+  </div>
+</div>
+
+@if (successMessage) {
+  <div class="msg-success">
+    <span class="pi pi-check-circle"></span> {{ successMessage }}
+  </div>
+}
+@if (errorMessage) {
+  <app-alert-message [message]="errorMessage" type="error" />
+}
+
+<div class="layout">
+
+  <div class="panel-izq">
+    <div class="panel-header">
+      <span class="pi pi-search panel-icon"></span>
+      <span class="panel-title">Seleccionar medicamento</span>
+    </div>
+    <div class="panel-body">
+      @if (medicamentoSeleccionado) {
+        <div class="med-selected">
+          <div class="med-info">
+            <span class="med-name">{{ medicamentoSeleccionado.nombre }}</span>
+            @if (medicamentoSeleccionado.presentacion) {
+              <span class="med-pres">{{ medicamentoSeleccionado.presentacion }}</span>
+            }
+          </div>
+          <button type="button" class="btn-clear" (click)="clearMedicamento()" title="Cambiar">
+            <span class="pi pi-times"></span>
+          </button>
+        </div>
+      } @else {
+        <div class="med-search-wrap">
+          <span class="pi pi-search search-icon"></span>
+          <input
+            type="text"
+            class="med-input"
+            placeholder="Buscar por nombre o registro sanitario..."
+            [(ngModel)]="medQuery"
+            (input)="onMedInput()"
+            (blur)="onMedBlur()"
+            autocomplete="off">
+          @if (showSuggestions) {
+            <div class="med-dropdown">
+              @for (m of medSuggestions; track m.id) {
+                <div class="med-option" (mousedown)="selectMedicamento(m)">
+                  <span class="med-opt-name">{{ m.nombre }}</span>
+                  @if (m.presentacion) {
+                    <span class="med-opt-pres">{{ m.presentacion }}</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      @if (medicamentoSeleccionado) {
+        <div class="lotes-section">
+          <h4 class="lotes-title">
+            Lotes con stock disponible
+            @if (lotes.length > 0) { <span class="lotes-count">{{ lotes.length }}</span> }
+          </h4>
+
+          @if (isLoadingLotes) {
+            <div class="state-msg"><span class="pi pi-spinner pi-spin"></span> Cargando...</div>
+          } @else if (lotes.length === 0) {
+            <div class="state-msg"><span class="pi pi-inbox"></span> Sin lotes con stock disponible</div>
+          } @else {
+            <div class="lote-list">
+              @for (lote of lotes; track lote.id) {
+                <div
+                  class="lote-card"
+                  [class.selected]="loteSeleccionado?.id === lote.id"
+                  [class.vencido]="estadoLote(lote) === 'vencido'"
+                  (click)="selectLote(lote)">
+                  <div class="lote-row">
+                    <span class="lote-num">{{ lote.lote || 'Sin N° lote' }}</span>
+                    <span class="lote-stock">{{ lote.stockActual }} uds.</span>
+                  </div>
+                  <div class="lote-dates">
+                    @if (lote.fechaIngreso) {
+                      <span><span class="pi pi-calendar"></span> Ingreso: {{ lote.fechaIngreso | date:'dd/MM/yyyy' }}</span>
+                    }
+                    @if (lote.fechaVencimiento) {
+                      <span [class.text-danger]="estadoLote(lote) === 'vencido' || estadoLote(lote) === 'por_vencer'">
+                        <span class="pi pi-clock"></span> Vence: {{ lote.fechaVencimiento | date:'dd/MM/yyyy' }}
+                      </span>
+                    }
+                  </div>
+                  @if (estadoLote(lote) === 'vencido') {
+                    <span class="estado-pill vencido">Vencido</span>
+                  } @else if (estadoLote(lote) === 'por_vencer') {
+                    <span class="estado-pill por-vencer">Por vencer</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="panel-der">
+    <div class="panel-header">
+      <span class="pi pi-sliders-h panel-icon"></span>
+      <span class="panel-title">Registrar ajuste</span>
+    </div>
+    <div class="panel-body">
+
+      @if (!medicamentoSeleccionado) {
+        <div class="placeholder-msg">
+          <span class="pi pi-arrow-left"></span>
+          Selecciona un medicamento primero
+        </div>
+      } @else if (!loteSeleccionado) {
+        <div class="placeholder-msg">
+          <span class="pi pi-list"></span>
+          Selecciona un lote para registrar el ajuste
+        </div>
+      } @else {
+        <div class="lote-seleccionado-info">
+          <span class="pi pi-box"></span>
+          Lote: <strong>{{ loteSeleccionado.lote || 'Sin N° lote' }}</strong>
+          &nbsp;·&nbsp; Stock actual: <strong>{{ loteSeleccionado.stockActual }}</strong> uds.
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="guardar()" class="ajuste-form">
+
+          <div class="tipo-group">
+            <label class="field-label">Tipo de ajuste *</label>
+            <div class="tipo-options">
+              @for (t of tiposAjuste; track t.value) {
+                <label
+                  class="tipo-option"
+                  [class.active]="form.get('tipoAjuste')?.value === t.value"
+                  [class.rei]="t.value === 'REINGRESO'"
+                  [class.dev]="t.value === 'DEVOLUCION'"
+                  [class.ven]="t.value === 'VENCIDO'"
+                  [class.mer]="t.value === 'MERMA'">
+                  <input type="radio" formControlName="tipoAjuste" [value]="t.value" style="display:none">
+                  <span class="pi {{ t.icon }} tipo-icon"></span>
+                  <span class="tipo-label">{{ t.label }}</span>
+                  <span class="tipo-desc">{{ t.desc }}</span>
+                </label>
+              }
+            </div>
+            @if (hasError('tipoAjuste')) {
+              <span class="field-error">Selecciona el tipo de ajuste</span>
+            }
+          </div>
+
+          <div class="fields-row">
+            <label class="field">
+              <span class="field-label">Cantidad *</span>
+              <input type="number" formControlName="cantidad" min="1" [max]="cantidadMax">
+              @if (!esReingreso) {
+                <span class="field-hint">Máximo disponible: {{ stockDisponible }}</span>
+              } @else {
+                <span class="field-hint" style="color:#15803d">El stock aumentará al registrar</span>
+              }
+              @if (hasError('cantidad')) {
+                <span class="field-error">Mínimo 1</span>
+              }
+            </label>
+
+            <label class="field flex-grow">
+              <span class="field-label">Observación</span>
+              <input type="text" formControlName="observacion" placeholder="Motivo o detalle del ajuste" maxlength="200">
+            </label>
+          </div>
+
+          <button type="button" class="btn-guardar" (click)="solicitarConfirmacion()" [disabled]="isSaving">
+            <span class="pi" [class.pi-check]="!isSaving" [class.pi-spinner]="isSaving" [class.pi-spin]="isSaving"></span>
+            {{ isSaving ? 'Registrando...' : 'Registrar ajuste' }}
+          </button>
+
+        </form>
+      }
+    </div>
+  </div>
+
+</div>
+
+<app-modal-confirmation
+  title="Confirmar ajuste de inventario"
+  [isOpen]="showConfirmAjuste"
+  (closed)="showConfirmAjuste = false">
+  <div class="confirm-body">
+    <span class="pi pi-exclamation-triangle confirm-icon"></span>
+    <p class="confirm-msg">
+      ¿Registrar <strong>{{ tipoAjusteLabel }}</strong> de
+      <strong>{{ form.get('cantidad')?.value }}</strong> unidades
+      del lote <strong>{{ loteSeleccionado?.lote || 'sin número' }}</strong>?
+      <br>
+      <span class="confirm-sub">
+        @if (esReingreso) {
+          El stock pasará de {{ loteSeleccionado?.stockActual }} a
+          {{ (loteSeleccionado?.stockActual ?? 0) + (form.get('cantidad')?.value ?? 0) }} unidades.
+        } @else {
+          El stock pasará de {{ loteSeleccionado?.stockActual }} a
+          {{ (loteSeleccionado?.stockActual ?? 0) - (form.get('cantidad')?.value ?? 0) }} unidades.
+        }
+        Esta acción afectará el reporte SISMED del período actual.
+      </span>
+    </p>
+    <div class="confirm-actions">
+      <button class="btn-cancel-confirm" (click)="showConfirmAjuste = false">Cancelar</button>
+      <button class="btn-danger-confirm" (click)="guardar()" [disabled]="isSaving">
+        <span class="pi pi-check"></span> Confirmar
+      </button>
+    </div>
+  </div>
+</app-modal-confirmation>

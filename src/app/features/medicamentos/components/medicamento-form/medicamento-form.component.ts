@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Medicamento, MedicamentoCreate } from '../../../../models/medicamento.model';
+import { Medicamento, MedicamentoCreate, TipoProducto } from '../../../../models/medicamento.model';
 
 @Component({
   selector: 'app-medicamento-form',
@@ -10,7 +10,7 @@ import { Medicamento, MedicamentoCreate } from '../../../../models/medicamento.m
   templateUrl: './medicamento-form.component.html',
   styleUrl: './medicamento-form.component.scss'
 })
-export class MedicamentoFormComponent implements OnInit {
+export class MedicamentoFormComponent implements OnChanges {
   @Input() medicamento?: Medicamento;
   @Input() isLoading = false;
   @Output() formSubmit = new EventEmitter<MedicamentoCreate>();
@@ -18,39 +18,58 @@ export class MedicamentoFormComponent implements OnInit {
 
   private readonly fb = inject(FormBuilder);
 
+  readonly tipoProductoOptions: { value: TipoProducto; label: string }[] = [
+    { value: 'MARCA',    label: 'Marca'    },
+    { value: 'GENERICO', label: 'Genérico' }
+  ];
+
   readonly form = this.fb.nonNullable.group({
-    codigoSismed: ['', [Validators.required, Validators.maxLength(20), Validators.pattern(/^[A-Za-z0-9\-_.]+$/)]],
-    codigoSiga: ['', Validators.maxLength(30)],
-    descripcionSismed: ['', [Validators.required, Validators.maxLength(300)]],
-    descripcionCorta: ['', Validators.maxLength(120)],
-    presentacionFrasco: ['', Validators.maxLength(80)],
-    conversion: [1, [Validators.required, Validators.min(1), Validators.max(9999)]],
-    activo: [true]
+    nombre:           ['', [Validators.required, Validators.maxLength(200)]],
+    registroSanitario:['', Validators.maxLength(30)],
+    tipoProducto:     ['' as TipoProducto | ''],
+    presentacion:     ['', Validators.maxLength(120)],
+    fabricante:       ['', Validators.maxLength(150)],
+    paisFabricacion:  ['', Validators.maxLength(80)],
+    precioUnitario:   [null as number | null],
+    stockMinimo:      [0, [Validators.required, Validators.min(0)]],
+    activo:           [true]
   });
 
   get isEditing(): boolean { return !!this.medicamento; }
 
-  ngOnInit(): void {
-    if (this.medicamento) {
-      this.form.patchValue(this.medicamento);
-      this.form.get('codigoSismed')!.disable();
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['medicamento']) {
+      if (this.medicamento) {
+        this.form.patchValue({
+          nombre:            this.medicamento.nombre,
+          registroSanitario: this.medicamento.registroSanitario ?? '',
+          tipoProducto:      this.medicamento.tipoProducto ?? '',
+          presentacion:      this.medicamento.presentacion ?? '',
+          fabricante:        this.medicamento.fabricante ?? '',
+          paisFabricacion:   this.medicamento.paisFabricacion ?? '',
+          precioUnitario:    this.medicamento.precioUnitario ?? null,
+          stockMinimo:       this.medicamento.stockMinimo ?? 0,
+          activo:            this.medicamento.activo
+        });
+      } else {
+        this.form.reset({ activo: true, tipoProducto: '' });
+      }
     }
   }
 
   submit(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      return;
-    }
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     const raw = this.form.getRawValue();
     this.formSubmit.emit({
-      codigoSismed: raw.codigoSismed.toUpperCase().trim(),
-      codigoSiga: raw.codigoSiga || undefined,
-      descripcionSismed: raw.descripcionSismed.trim(),
-      descripcionCorta: raw.descripcionCorta || undefined,
-      presentacionFrasco: raw.presentacionFrasco || undefined,
-      conversion: raw.conversion,
-      activo: raw.activo
+      nombre:            raw.nombre.trim(),
+      registroSanitario: raw.registroSanitario || undefined,
+      tipoProducto:      (raw.tipoProducto as TipoProducto) || undefined,
+      presentacion:      raw.presentacion || undefined,
+      fabricante:        raw.fabricante || undefined,
+      paisFabricacion:   raw.paisFabricacion || undefined,
+      precioUnitario:    raw.precioUnitario ?? undefined,
+      stockMinimo:       raw.stockMinimo,
+      activo:            raw.activo
     });
   }
 

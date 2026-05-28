@@ -19,7 +19,7 @@
     <input
       type="text"
       class="search-input"
-      placeholder="Buscar por código, descripción..."
+      placeholder="Buscar por nombre, registro sanitario, fabricante..."
       [(ngModel)]="searchText"
       (ngModelChange)="onSearch()"
     >
@@ -40,9 +40,11 @@
     <table class="med-table">
       <thead>
         <tr>
-          <th>Código SISMED</th>
-          <th>Descripción</th>
+          <th>Nombre</th>
+          <th>Registro Sanitario</th>
+          <th>Tipo</th>
           <th>Presentación</th>
+          <th>Fabricante</th>
           <th class="text-right">Stock</th>
           <th class="text-center">Estado</th>
           <th class="text-center">Acciones</th>
@@ -51,14 +53,19 @@
       <tbody>
         @for (med of paginados; track med.id) {
           <tr [class.inactive-row]="!med.activo">
-            <td class="code-cell">{{ med.codigoSismed }}</td>
+            <td class="name-cell">{{ med.nombre }}</td>
+            <td class="reg-cell">{{ med.registroSanitario || '—' }}</td>
             <td>
-              <span class="desc-main">{{ med.descripcionCorta || med.descripcionSismed }}</span>
-              @if (med.descripcionCorta) {
-                <span class="desc-sub">{{ med.descripcionSismed }}</span>
+              @if (med.tipoProducto) {
+                <span class="tipo-badge" [class.tipo-marca]="med.tipoProducto === 'MARCA'" [class.tipo-gen]="med.tipoProducto === 'GENERICO'">
+                  {{ tipoProductoLabel(med.tipoProducto) }}
+                </span>
+              } @else {
+                <span class="text-muted">—</span>
               }
             </td>
-            <td class="text-muted">{{ med.presentacionFrasco || '—' }}</td>
+            <td class="text-muted">{{ med.presentacion || '—' }}</td>
+            <td class="text-muted fab-cell">{{ med.fabricante || '—' }}</td>
             <td class="text-right">
               <span class="stock-badge"
                     [class.low]="isLowStock(med.id) && getStockTotal(med.id) > 0"
@@ -75,11 +82,17 @@
               <button class="btn-icon" title="Ver stock y lotes" (click)="abrirStock(med)">
                 <span class="pi pi-box"></span>
               </button>
+              <button class="btn-icon" title="Historial de movimientos" (click)="abrirHistorial(med)">
+                <span class="pi pi-history"></span>
+              </button>
               <button class="btn-icon" title="Editar" (click)="abrirEditar(med)">
                 <span class="pi pi-pencil"></span>
               </button>
               <button class="btn-icon" [title]="med.activo ? 'Desactivar' : 'Activar'" (click)="toggleActivo(med)">
                 <span class="pi" [class.pi-eye]="!med.activo" [class.pi-eye-slash]="med.activo"></span>
+              </button>
+              <button class="btn-icon btn-icon--danger" title="Eliminar" (click)="abrirEliminar(med)">
+                <span class="pi pi-trash"></span>
               </button>
             </td>
           </tr>
@@ -116,7 +129,7 @@
 </app-modal-confirmation>
 
 <app-modal-confirmation
-  [title]="medicamentoSeleccionado ? 'Stock · ' + medicamentoSeleccionado.codigoSismed : 'Stock'"
+  [title]="medicamentoSeleccionado ? 'Stock · ' + medicamentoSeleccionado.nombre : 'Stock'"
   [isOpen]="showStockModal"
   (closed)="cerrarStockModal()">
   @if (medicamentoSeleccionado) {
@@ -124,4 +137,83 @@
       [medicamento]="medicamentoSeleccionado"
       (actualizado)="onStockActualizado()" />
   }
+</app-modal-confirmation>
+
+<app-modal-confirmation
+  [title]="medicamentoSeleccionado ? 'Historial · ' + medicamentoSeleccionado.nombre : 'Historial'"
+  [isOpen]="showHistorialModal"
+  (closed)="showHistorialModal = false">
+  @if (isLoadingHistorial) {
+    <div class="hist-state"><span class="pi pi-spinner pi-spin"></span> Cargando movimientos...</div>
+  } @else if (historialMovimientos.length === 0) {
+    <div class="hist-state"><span class="pi pi-inbox"></span> Sin movimientos registrados</div>
+  } @else {
+    <table class="hist-table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Tipo</th>
+          <th class="text-right">Cantidad</th>
+          <th>Período</th>
+          <th>Observación</th>
+          <th>Usuario</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of historialMovimientos; track m.id) {
+          <tr>
+            <td class="hist-date">{{ m.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td><span class="hist-tipo" [class]="tipoMovClass(m.tipoMovimiento)">{{ tipoMovLabel(m.tipoMovimiento) }}</span></td>
+            <td class="text-right hist-cant" [class]="tipoMovClass(m.tipoMovimiento)">
+              {{ ['INGRESO','REINGRESO','SALDO_INICIAL'].includes(m.tipoMovimiento) ? '+' : '-' }}{{ m.cantidad }}
+            </td>
+            <td class="text-muted">{{ m.periodo || '—' }}</td>
+            <td class="text-muted">{{ m.observacion || '—' }}</td>
+            <td class="text-muted">{{ m.usuarioRegistro }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</app-modal-confirmation>
+
+<app-modal-confirmation
+  title="Desactivar medicamento"
+  [isOpen]="showConfirmToggle"
+  (closed)="showConfirmToggle = false">
+  <div class="delete-confirm">
+    <span class="pi pi-exclamation-triangle delete-icon"></span>
+    <p class="delete-msg">
+      ¿Desactivar <strong>{{ medicamentoParaToggle?.nombre }}</strong>?
+      <br>
+      <span class="delete-warning">No aparecerá disponible al registrar nuevas atenciones.</span>
+    </p>
+    <div class="delete-actions">
+      <button class="btn-secondary" (click)="showConfirmToggle = false">Cancelar</button>
+      <button class="btn-danger" (click)="confirmarDesactivarMed()">
+        <span class="pi pi-eye-slash"></span> Desactivar
+      </button>
+    </div>
+  </div>
+</app-modal-confirmation>
+
+<app-modal-confirmation
+  title="Eliminar medicamento"
+  [isOpen]="showDeleteConfirm"
+  (closed)="showDeleteConfirm = false">
+  <div class="delete-confirm">
+    <span class="pi pi-exclamation-triangle delete-icon"></span>
+    <p class="delete-msg">
+      ¿Eliminar <strong>{{ medicamentoSeleccionado?.nombre }}</strong>?
+      <br>
+      <span class="delete-warning">Esta acción no se puede deshacer. Solo es posible si el medicamento no tiene consumos registrados.</span>
+    </p>
+    <div class="delete-actions">
+      <button class="btn-secondary" (click)="showDeleteConfirm = false">Cancelar</button>
+      <button class="btn-danger" (click)="confirmarEliminar()">
+        <span class="pi pi-trash"></span>
+        Eliminar
+      </button>
+    </div>
+  </div>
 </app-modal-confirmation>

@@ -28,4 +28,8 @@ export class MedicamentoService {
   toggleActivo(id: number): Observable<Medicamento> {
     return this.api.patch<Medicamento>(`${this.base}/${id}/status`);
   }
+
+  delete(id: number): Observable<void> {
+    return this.api.delete<void>(`${this.base}/${id}`);
+  }
 }
