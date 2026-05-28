@@ -21,4 +21,12 @@ export class PacienteCardComponent {
     };
     return labels[this.paciente.tipoDocumento] ?? this.paciente.tipoDocumento;
   }
+
+  get tipoPacienteLabel(): string {
+    const labels: Record<string, string> = {
+      ESTUDIANTE: 'Estudiante', DOCENTE: 'Docente',
+      ADMINISTRATIVO: 'Administrativo', INVITADO: 'Invitado'
+    };
+    return labels[this.paciente.tipoPaciente] ?? '';
+  }
 }

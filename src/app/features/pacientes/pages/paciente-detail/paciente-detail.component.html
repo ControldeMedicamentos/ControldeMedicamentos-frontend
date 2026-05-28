@@ -4,9 +4,9 @@
     Pacientes
   </button>
   @if (paciente) {
-    <button type="button" class="btn-primary" (click)="modalAbierto = true">
-      <span class="pi pi-pencil"></span>
-      Editar
+    <button type="button" class="btn-primary" (click)="irANuevaAtencion()">
+      <span class="pi pi-plus"></span>
+      Nueva atención
     </button>
   }
 </div>
@@ -20,12 +20,28 @@
   </div>
 } @else if (paciente) {
   <div class="detail-card">
+
     <div class="detail-header">
       <span class="avatar pi pi-user"></span>
-      <div>
-        <h3 class="detail-name">{{ paciente.nombresApellidos }}</h3>
-        <span class="detail-dni">{{ paciente.tipoDocumento === 'CARNET_EXTRANJERIA' ? 'C.E.' : paciente.tipoDocumento }}: {{ paciente.nroDocumento }}</span>
+      <div class="detail-header-info">
+        <div class="detail-name-row">
+          <h3 class="detail-name">{{ paciente.nombresApellidos }}</h3>
+          <span class="badge-tipo badge-tipo--{{ paciente.tipoPaciente | lowercase }}">
+            {{ tipoPacienteLabel(paciente.tipoPaciente) }}
+          </span>
+          @if (paciente.activo === false) {
+            <span class="badge-inactivo">Inactivo</span>
+          }
+        </div>
+        <span class="detail-dni">
+          {{ paciente.tipoDocumento === 'CARNET_EXTRANJERIA' ? 'C.E.' : paciente.tipoDocumento }}:
+          {{ paciente.nroDocumento }}
+        </span>
       </div>
+      <button type="button" class="btn-edit" (click)="modalAbierto = true" title="Editar">
+        <span class="pi pi-pencil"></span>
+        Editar
+      </button>
     </div>
 
     <div class="detail-grid">
@@ -33,10 +49,10 @@
         <span class="detail-label">Sexo</span>
         <span class="detail-value">{{ paciente.sexo | titlecase }}</span>
       </div>
-      @if (paciente.edad) {
+      @if (paciente.fechaNacimiento) {
         <div class="detail-field">
-          <span class="detail-label">Edad</span>
-          <span class="detail-value">{{ paciente.edad }} años</span>
+          <span class="detail-label">Fecha de Nacimiento</span>
+          <span class="detail-value">{{ paciente.fechaNacimiento | date:'dd/MM/yyyy' }}</span>
         </div>
       }
       @if (paciente.carreraArea) {
@@ -60,14 +76,67 @@
     </div>
 
     <div class="detail-section">
-      <h4 class="section-title">
-        <span class="pi pi-list"></span>
-        Atenciones
-      </h4>
-      <p class="section-placeholder">
-        Las atenciones de este paciente se gestionan desde el módulo de Atenciones.
-      </p>
+      <div class="section-header">
+        <h4 class="section-title">
+          <span class="pi pi-history"></span>
+          Historial de atenciones
+        </h4>
+        @if (atenciones.length > 0) {
+          <span class="section-count">{{ atenciones.length }} registro{{ atenciones.length !== 1 ? 's' : '' }}</span>
+        }
+      </div>
+
+      @if (isLoadingAtenciones) {
+        <div class="section-loading">
+          <span class="pi pi-spinner pi-spin"></span>
+          Cargando historial...
+        </div>
+      } @else if (atenciones.length === 0) {
+        <div class="section-empty">
+          <span class="pi pi-calendar-times"></span>
+          Sin atenciones registradas para este paciente
+        </div>
+      } @else {
+        <table class="aten-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Motivo</th>
+              <th>Diagnóstico</th>
+              <th class="text-center">Medicamentos</th>
+              <th>Registrado por</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (at of atenciones; track at.id) {
+              <tr>
+                <td class="date-cell">{{ at.fechaEvaluacion | date:'dd/MM/yyyy' }}</td>
+                <td class="motivo-cell">{{ at.motivo }}</td>
+                <td class="dx-cell">
+                  @if (at.diagnostico1) {
+                    <span class="dx-text">{{ at.diagnostico1 }}</span>
+                    @if (at.diagnostico2) {
+                      <span class="dx-more">+{{ at.diagnostico3 ? 2 : 1 }} más</span>
+                    }
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+                <td class="text-center">
+                  @if (at.consumos.length > 0) {
+                    <span class="consumo-badge">{{ at.consumos.length }}</span>
+                  } @else {
+                    <span class="text-muted">—</span>
+                  }
+                </td>
+                <td class="usuario-cell">{{ at.usuarioRegistro }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
     </div>
+
   </div>
 }
 

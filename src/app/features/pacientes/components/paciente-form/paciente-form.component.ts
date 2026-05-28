@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidatorFn, Validators } from '@angular/forms';
-import { Paciente, PacienteCreate, Sexo, TipoDocumento } from '../../../../models/paciente.model';
+import { Paciente, PacienteCreate, Sexo, TipoDocumento, TipoPaciente } from '../../../../models/paciente.model';
 
 @Component({
   selector: 'app-paciente-form',
@@ -10,7 +10,7 @@ import { Paciente, PacienteCreate, Sexo, TipoDocumento } from '../../../../model
   templateUrl: './paciente-form.component.html',
   styleUrl: './paciente-form.component.scss'
 })
-export class PacienteFormComponent implements OnInit {
+export class PacienteFormComponent implements OnChanges {
   @Input() paciente?: Paciente;
   @Input() isLoading = false;
   @Output() formSubmit = new EventEmitter<PacienteCreate>();
@@ -18,45 +18,94 @@ export class PacienteFormComponent implements OnInit {
 
   private readonly fb = inject(FormBuilder);
 
+  readonly tipoPacienteOptions: { label: string; value: TipoPaciente }[] = [
+    { label: 'Estudiante',       value: 'ESTUDIANTE'     },
+    { label: 'Docente',          value: 'DOCENTE'        },
+    { label: 'Administrativo',   value: 'ADMINISTRATIVO' },
+    { label: 'Invitado',         value: 'INVITADO'       }
+  ];
+
   readonly tipoDocOptions: { label: string; value: TipoDocumento }[] = [
-    { label: 'DNI', value: 'DNI' },
+    { label: 'DNI',                value: 'DNI'                },
     { label: 'Carnet de Extranjería', value: 'CARNET_EXTRANJERIA' },
-    { label: 'Pasaporte', value: 'PASAPORTE' }
+    { label: 'Pasaporte',          value: 'PASAPORTE'          }
   ];
 
   readonly sexoOptions: { label: string; value: Sexo }[] = [
-    { label: 'Mujer', value: 'MUJER' },
+    { label: 'Mujer',  value: 'MUJER'  },
     { label: 'Hombre', value: 'HOMBRE' },
-    { label: 'Otro', value: 'OTRO' }
+    { label: 'Otro',   value: 'OTRO'   }
   ];
 
   readonly carreraOptions: string[] = [
     'Medicina Humana', 'Enfermería', 'Obstetricia', 'Odontología',
     'Farmacia y Bioquímica', 'Nutrición', 'Psicología', 'Administración',
     'Contabilidad', 'Derecho', 'Ingeniería de Sistemas', 'Ingeniería Civil',
-    'Ingeniería Industrial', 'Arquitectura', 'Educación',
-    'Personal Administrativo', 'Docente', 'Externo / Comunidad'
+    'Ingeniería Industrial', 'Arquitectura', 'Educación'
   ];
 
   readonly cicloOptions: string[] = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
 
+  readonly maxFechaNacimiento = new Date().toISOString().split('T')[0];
+  readonly minFechaNacimiento = new Date(
+    new Date().getFullYear() - 120, 0, 1
+  ).toISOString().split('T')[0];
+
   readonly form = this.fb.nonNullable.group({
-    tipoDocumento: ['DNI' as TipoDocumento, Validators.required],
-    nroDocumento: ['', this.dniValidators()],
+    tipoPaciente:     ['ESTUDIANTE' as TipoPaciente, Validators.required],
+    tipoDocumento:    ['DNI' as TipoDocumento, Validators.required],
+    nroDocumento:     ['', this.dniValidators()],
     nombresApellidos: ['', [
       Validators.required,
       Validators.minLength(3),
       Validators.maxLength(150),
       Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ\s]+$/)
     ]],
-    edad: [null as number | null, [Validators.min(0), Validators.max(120)]],
-    sexo: ['MUJER' as Sexo, Validators.required],
-    carreraArea: [''],
-    cicloAcademico: [''],
-    telefono: ['', Validators.pattern(/^\d{9}$/)]
+    fechaNacimiento:  [''],
+    sexo:             ['MUJER' as Sexo, Validators.required],
+    carreraArea:      [''],
+    cicloAcademico:   [''],
+    telefono:         ['', Validators.pattern(/^\d{9}$/)]
   });
 
   get isEditing(): boolean { return !!this.paciente; }
+
+  get tipoPacienteActual(): TipoPaciente {
+    return this.form.getRawValue().tipoPaciente;
+  }
+
+  get showCarrera(): boolean {
+    return this.tipoPacienteActual !== 'INVITADO';
+  }
+
+  get showCiclo(): boolean {
+    return this.tipoPacienteActual === 'ESTUDIANTE';
+  }
+
+  get carreraLabel(): string {
+    const labels: Record<TipoPaciente, string> = {
+      ESTUDIANTE:     'Carrera',
+      DOCENTE:        'Departamento / Área',
+      ADMINISTRATIVO: 'Área',
+      INVITADO:       ''
+    };
+    return labels[this.tipoPacienteActual];
+  }
+
+  get isCarreraSelect(): boolean {
+    return this.tipoPacienteActual === 'ESTUDIANTE';
+  }
+
+  get edadCalculada(): number | null {
+    const fn = this.form.getRawValue().fechaNacimiento;
+    if (!fn) return null;
+    const hoy = new Date();
+    const nac = new Date(fn + 'T00:00:00');
+    let edad = hoy.getFullYear() - nac.getFullYear();
+    const m = hoy.getMonth() - nac.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) edad--;
+    return edad >= 0 ? edad : null;
+  }
 
   get nroDocLabel(): string {
     const labels: Record<string, string> = {
@@ -81,14 +130,32 @@ export class PacienteFormComponent implements OnInit {
     return errors[this.form.getRawValue().tipoDocumento] ?? 'Documento inválido';
   }
 
-  ngOnInit(): void {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (!changes['paciente']) return;
     if (this.paciente) {
       this.setValidatorsForTipo(this.paciente.tipoDocumento);
-      this.form.patchValue(this.paciente);
+      this.form.patchValue({
+        tipoPaciente:     this.paciente.tipoPaciente     ?? 'ESTUDIANTE',
+        tipoDocumento:    this.paciente.tipoDocumento,
+        nroDocumento:     this.paciente.nroDocumento,
+        nombresApellidos: this.paciente.nombresApellidos,
+        fechaNacimiento:  this.paciente.fechaNacimiento  ?? '',
+        sexo:             this.paciente.sexo,
+        carreraArea:      this.paciente.carreraArea      ?? '',
+        cicloAcademico:   this.paciente.cicloAcademico   ?? '',
+        telefono:         this.paciente.telefono         ?? ''
+      });
+    } else {
+      this.form.reset({
+        tipoPaciente:  'ESTUDIANTE',
+        tipoDocumento: 'DNI',
+        sexo:          'MUJER'
+      });
+      this.setValidatorsForTipo('DNI');
     }
   }
 
-  onTipoChange(): void {
+  onTipoDocChange(): void {
     const tipo = this.form.getRawValue().tipoDocumento;
     this.setValidatorsForTipo(tipo);
     this.form.get('nroDocumento')!.reset('');
@@ -101,14 +168,15 @@ export class PacienteFormComponent implements OnInit {
     }
     const raw = this.form.getRawValue();
     const payload: PacienteCreate = {
-      tipoDocumento: raw.tipoDocumento,
-      nroDocumento: raw.nroDocumento.toUpperCase().trim(),
+      tipoPaciente:     raw.tipoPaciente,
+      tipoDocumento:    raw.tipoDocumento,
+      nroDocumento:     raw.nroDocumento.toUpperCase().trim(),
       nombresApellidos: raw.nombresApellidos.trim(),
-      sexo: raw.sexo,
-      edad: raw.edad ?? undefined,
-      carreraArea: raw.carreraArea || undefined,
-      cicloAcademico: raw.cicloAcademico || undefined,
-      telefono: raw.telefono || undefined
+      fechaNacimiento:  raw.fechaNacimiento || undefined,
+      sexo:             raw.sexo,
+      carreraArea:      raw.carreraArea   || undefined,
+      cicloAcademico:   raw.cicloAcademico || undefined,
+      telefono:         raw.telefono      || undefined
     };
     this.formSubmit.emit(payload);
   }

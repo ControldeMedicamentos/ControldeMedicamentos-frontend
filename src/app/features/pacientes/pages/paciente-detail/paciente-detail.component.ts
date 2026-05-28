@@ -4,7 +4,9 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AlertMessageComponent } from '../../../../shared/components/alert-message/alert-message.component';
 import { ModalConfirmationComponent } from '../../../../shared/components/modal-confirmation/modal-confirmation.component';
-import { Paciente, PacienteCreate } from '../../../../models/paciente.model';
+import { Atencion } from '../../../../models/atencion.model';
+import { Paciente, PacienteCreate, TipoPaciente } from '../../../../models/paciente.model';
+import { AtencionService } from '../../../atenciones/services/atencion.service';
 import { PacienteFormComponent } from '../../components/paciente-form/paciente-form.component';
 import { PacienteService } from '../../services/paciente.service';
 
@@ -22,11 +24,14 @@ import { PacienteService } from '../../services/paciente.service';
 })
 export class PacienteDetailComponent implements OnInit {
   private readonly pacienteService = inject(PacienteService);
+  private readonly atencionService = inject(AtencionService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
   paciente?: Paciente;
+  atenciones: Atencion[] = [];
   isLoading = false;
+  isLoadingAtenciones = false;
   isSaving = false;
   errorMessage = '';
   modalAbierto = false;
@@ -42,8 +47,25 @@ export class PacienteDetailComponent implements OnInit {
     this.pacienteService.getById(id)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
-        next: (data) => (this.paciente = data),
+        next: (data) => {
+          this.paciente = data;
+          this.cargarAtenciones(data.id);
+        },
         error: () => (this.errorMessage = 'No se encontró el paciente.')
+      });
+  }
+
+  cargarAtenciones(pacienteId: number): void {
+    this.isLoadingAtenciones = true;
+    this.atencionService.getByPaciente(pacienteId)
+      .pipe(finalize(() => (this.isLoadingAtenciones = false)))
+      .subscribe({
+        next: (data) => {
+          this.atenciones = data.sort((a, b) =>
+            new Date(b.fechaEvaluacion).getTime() - new Date(a.fechaEvaluacion).getTime()
+          );
+        },
+        error: () => {}
       });
   }
 
@@ -61,7 +83,19 @@ export class PacienteDetailComponent implements OnInit {
       });
   }
 
+  tipoPacienteLabel(tipo: TipoPaciente): string {
+    const labels: Record<TipoPaciente, string> = {
+      ESTUDIANTE: 'Estudiante', DOCENTE: 'Docente',
+      ADMINISTRATIVO: 'Administrativo', INVITADO: 'Invitado'
+    };
+    return labels[tipo] ?? '';
+  }
+
   volver(): void {
     this.router.navigate(['/pacientes']);
+  }
+
+  irANuevaAtencion(): void {
+    this.router.navigate(['/atenciones/nueva']);
   }
 }

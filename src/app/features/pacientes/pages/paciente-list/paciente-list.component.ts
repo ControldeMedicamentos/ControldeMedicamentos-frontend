@@ -9,6 +9,7 @@ import { Paciente, PacienteCreate, TipoDocumento } from '../../../../models/paci
 import { PacienteCardComponent } from '../../components/paciente-card/paciente-card.component';
 import { PacienteFormComponent } from '../../components/paciente-form/paciente-form.component';
 import { PacienteService } from '../../services/paciente.service';
+import { PacienteUiStateService } from '../../services/paciente-ui-state.service';
 
 @Component({
   selector: 'app-paciente-list',
@@ -26,21 +27,26 @@ import { PacienteService } from '../../services/paciente.service';
 })
 export class PacienteListComponent implements OnInit {
   private readonly pacienteService = inject(PacienteService);
+  private readonly uiState = inject(PacienteUiStateService);
   private readonly router = inject(Router);
 
   pacientes: Paciente[] = [];
   filtrados: Paciente[] = [];
-  busqueda = '';
   isLoading = false;
   isSaving = false;
   errorMessage = '';
   modalAbierto = false;
   pacienteSeleccionado?: Paciente;
 
-  viewMode: 'grid' | 'list' = 'grid';
-  page = 1;
+  get viewMode(): 'grid' | 'list' { return this.uiState.viewMode; }
+  get filtroEstado(): 'todos' | 'activos' | 'inactivos' { return this.uiState.filtroEstado; }
+  set filtroEstado(v: 'todos' | 'activos' | 'inactivos') { this.uiState.filtroEstado = v; }
+  get busqueda(): string { return this.uiState.busqueda; }
+  set busqueda(v: string) { this.uiState.busqueda = v; }
+  get page(): number { return this.uiState.page; }
+  set page(v: number) { this.uiState.page = v; }
+
   pageSize = 12;
-  filtroEstado: 'todos' | 'activos' | 'inactivos' = 'activos';
 
   get modalTitulo(): string {
     return this.pacienteSeleccionado ? 'Editar paciente' : 'Nuevo paciente';
@@ -67,6 +73,7 @@ export class PacienteListComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.pageSize = this.uiState.viewMode === 'list' ? 10 : 12;
     this.cargarPacientes();
   }
 
@@ -111,7 +118,7 @@ export class PacienteListComponent implements OnInit {
   }
 
   setViewMode(mode: 'grid' | 'list'): void {
-    this.viewMode = mode;
+    this.uiState.viewMode = mode;
     this.pageSize = mode === 'grid' ? 12 : 10;
     this.page = 1;
   }
@@ -123,6 +130,14 @@ export class PacienteListComponent implements OnInit {
   tipoDocLabel(tipo: TipoDocumento): string {
     const labels: Record<string, string> = {
       DNI: 'DNI', CARNET_EXTRANJERIA: 'C.E.', PASAPORTE: 'Pasaporte'
+    };
+    return labels[tipo] ?? tipo;
+  }
+
+  tipoPacienteLabel(tipo: string): string {
+    const labels: Record<string, string> = {
+      ESTUDIANTE: 'Estudiante', DOCENTE: 'Docente',
+      ADMINISTRATIVO: 'Administrativo', INVITADO: 'Invitado'
     };
     return labels[tipo] ?? tipo;
   }

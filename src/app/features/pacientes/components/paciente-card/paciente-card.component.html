@@ -8,15 +8,22 @@
           <span class="badge-inactivo">Inactivo</span>
         }
       </div>
-      <span class="card-dni">{{ tipoDocLabel }}: {{ paciente.nroDocumento }}</span>
+      <div class="card-sub-row">
+        <span class="card-dni">{{ tipoDocLabel }}: {{ paciente.nroDocumento }}</span>
+        @if (tipoPacienteLabel) {
+          <span class="badge-tipo badge-tipo--{{ paciente.tipoPaciente | lowercase }}">
+            {{ tipoPacienteLabel }}
+          </span>
+        }
+      </div>
     </div>
   </div>
 
   <ul class="card-details">
-    @if (paciente.edad) {
+    @if (paciente.fechaNacimiento) {
       <li>
         <span class="pi pi-calendar"></span>
-        {{ paciente.edad }} años
+        {{ paciente.fechaNacimiento | date:'dd/MM/yyyy' }}
       </li>
     }
     <li>
