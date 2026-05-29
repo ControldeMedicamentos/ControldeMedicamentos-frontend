@@ -14,6 +14,38 @@
   <app-alert-message [message]="errorMessage" type="error" />
 }
 
+@if (lotesVencidosPendientes.length > 0) {
+  <div class="vencidos-alert">
+    <div class="vencidos-header" (click)="vencidosExpanded = !vencidosExpanded">
+      <span class="pi pi-exclamation-triangle vencidos-icon"></span>
+      <span class="vencidos-title">
+        {{ lotesVencidosPendientes.length }} lote{{ lotesVencidosPendientes.length === 1 ? '' : 's' }}
+        vencido{{ lotesVencidosPendientes.length === 1 ? '' : 's' }} con stock pendiente de baja
+      </span>
+      <span class="vencidos-hint">Haz clic en un lote para ir directamente al ajuste</span>
+      <span class="pi" [class.pi-chevron-up]="vencidosExpanded" [class.pi-chevron-down]="!vencidosExpanded"></span>
+    </div>
+    @if (vencidosExpanded) {
+      <div class="vencidos-list">
+        @for (lote of lotesVencidosPendientes; track lote.id) {
+          <div class="vencidos-item" (click)="irALoteVencido(lote)">
+            <div class="vencidos-item-info">
+              <span class="vencidos-item-nombre">{{ lote.nombreMedicamento }}</span>
+              <span class="vencidos-item-meta">
+                Lote {{ lote.lote || 'S/N' }} · Venció {{ lote.fechaVencimiento | date:'dd/MM/yyyy' }}
+              </span>
+            </div>
+            <span class="vencidos-item-stock">{{ lote.stockActual }} uds.</span>
+            <span class="vencidos-item-accion">
+              <span class="pi pi-arrow-right"></span> Registrar baja
+            </span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+}
+
 <div class="layout">
 
   <div class="panel-izq">
@@ -160,7 +192,11 @@
             <label class="field">
               <span class="field-label">Cantidad *</span>
               <input type="number" formControlName="cantidad" min="1" [max]="cantidadMax">
-              @if (!esReingreso) {
+              @if (loteVencidoSeleccionado) {
+                <span class="field-hint field-hint--vencido">
+                  <span class="pi pi-info-circle"></span> Pre-completado con el stock total del lote vencido
+                </span>
+              } @else if (!esReingreso) {
                 <span class="field-hint">Máximo disponible: {{ stockDisponible }}</span>
               } @else {
                 <span class="field-hint" style="color:#15803d">El stock aumentará al registrar</span>

@@ -24,6 +24,9 @@ export class AjustesInventarioComponent implements OnInit {
   medicamentoSeleccionado: Medicamento | null = null;
   lotes: Inventario[] = [];
   loteSeleccionado: Inventario | null = null;
+  lotesVencidosPendientes: Inventario[] = [];
+  vencidosExpanded = true;
+  pendingLoteId: number | null = null;
 
   medQuery = '';
   medSuggestions: Medicamento[] = [];
@@ -55,6 +58,12 @@ export class AjustesInventarioComponent implements OnInit {
   ngOnInit(): void {
     this.medicamentoService.getAll().subscribe({
       next: (data) => (this.medicamentos = data.filter(m => m.activo))
+    });
+    this.cargarVencidosPendientes();
+    this.form.get('tipoAjuste')!.valueChanges.subscribe(tipo => {
+      if (tipo === 'VENCIDO' && this.loteSeleccionado && this.estadoLote(this.loteSeleccionado) === 'vencido') {
+        this.form.patchValue({ cantidad: this.loteSeleccionado.stockActual });
+      }
     });
   }
 
@@ -91,9 +100,40 @@ export class AjustesInventarioComponent implements OnInit {
   cargarLotes(medicamentoId: number): void {
     this.isLoadingLotes = true;
     this.inventarioService.getByMedicamento(medicamentoId).subscribe({
-      next: (data) => { this.lotes = data.filter(l => l.stockActual > 0); this.isLoadingLotes = false; },
+      next: (data) => {
+        this.lotes = data.filter(l => l.stockActual > 0);
+        this.isLoadingLotes = false;
+        if (this.pendingLoteId !== null) {
+          const lote = this.lotes.find(l => l.id === this.pendingLoteId);
+          if (lote) {
+            this.loteSeleccionado = lote;
+            this.form.patchValue({ tipoAjuste: 'VENCIDO', cantidad: lote.stockActual });
+          }
+          this.pendingLoteId = null;
+        }
+      },
       error: () => (this.isLoadingLotes = false)
     });
+  }
+
+  cargarVencidosPendientes(): void {
+    this.inventarioService.getVencidosPendientes().subscribe({
+      next: (data) => (this.lotesVencidosPendientes = data)
+    });
+  }
+
+  irALoteVencido(lote: Inventario): void {
+    const med = this.medicamentos.find(m => m.id === lote.medicamentoId);
+    if (!med) return;
+    this.pendingLoteId = lote.id;
+    this.selectMedicamento(med);
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  }
+
+  get loteVencidoSeleccionado(): boolean {
+    return !!(this.loteSeleccionado
+      && this.estadoLote(this.loteSeleccionado) === 'vencido'
+      && this.form.get('tipoAjuste')?.value === 'VENCIDO');
   }
 
   selectLote(lote: Inventario): void {
@@ -140,6 +180,7 @@ export class AjustesInventarioComponent implements OnInit {
         this.form.reset({ tipoAjuste: '', cantidad: 1, observacion: '' });
         this.loteSeleccionado = null;
         this.cargarLotes(this.medicamentoSeleccionado!.id);
+        this.cargarVencidosPendientes();
       },
       error: (err) => {
         this.errorMessage = err?.error?.message ?? 'Error al registrar el ajuste.';

@@ -13,6 +13,86 @@
   margin-bottom: 1rem;
 }
 
+.vencidos-alert {
+  background: #fffbeb;
+  border: 1px solid #fbbf24;
+  border-radius: 8px;
+  margin-bottom: 1.25rem;
+  overflow: hidden;
+}
+
+.vencidos-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  &:hover { background: #fef3c7; }
+}
+
+.vencidos-icon { color: #d97706; font-size: 0.9rem; flex-shrink: 0; }
+.vencidos-title { font-size: 0.845rem; font-weight: 600; color: #92400e; }
+.vencidos-hint { font-size: 0.75rem; color: #a16207; margin-left: 0.15rem; }
+.vencidos-header .pi-chevron-up,
+.vencidos-header .pi-chevron-down { margin-left: auto; color: #d97706; font-size: 0.8rem; }
+
+.vencidos-list { border-top: 1px solid #fde68a; }
+
+.vencidos-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid #fef3c7;
+  cursor: pointer;
+  transition: background 0.12s;
+
+  &:last-child { border-bottom: none; }
+  &:hover { background: #fef9c3; }
+  &:hover .vencidos-item-accion { opacity: 1; }
+}
+
+.vencidos-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.vencidos-item-nombre {
+  font-size: 0.845rem;
+  font-weight: 500;
+  color: $color-text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vencidos-item-meta { font-size: 0.73rem; color: #92400e; }
+.vencidos-item-stock { font-size: 0.845rem; font-weight: 700; color: #dc2626; flex-shrink: 0; }
+
+.vencidos-item-accion {
+  font-size: 0.75rem;
+  color: $color-primary;
+  font-weight: 500;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.field-hint--vencido {
+  color: #dc2626 !important;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  .pi { font-size: 0.7rem; }
+}
+
 .page-header {
   margin-bottom: 1.25rem;
 }

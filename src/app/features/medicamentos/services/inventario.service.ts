@@ -21,6 +21,10 @@ export class InventarioService {
     return this.api.get<Inventario[]>(`${this.base}/low-stock`);
   }
 
+  getVencidosPendientes(): Observable<Inventario[]> {
+    return this.api.get<Inventario[]>(`${this.base}/expired-pending`);
+  }
+
   create(data: InventarioCreate): Observable<Inventario> {
     return this.api.post<Inventario, InventarioCreate>(this.base, data);
   }

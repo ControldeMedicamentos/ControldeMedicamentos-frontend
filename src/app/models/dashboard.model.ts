@@ -9,6 +9,16 @@ export interface AtencionResumen {
   cantidadConsumos: number;
 }
 
+export interface AtencionesPorDia {
+  fecha: string;
+  cantidad: number;
+}
+
+export interface TopConsumo {
+  nombre: string;
+  total: number;
+}
+
 export interface DashboardStats {
   totalPacientesActivos: number;
   atencionesMes: number;
@@ -17,4 +27,6 @@ export interface DashboardStats {
   totalMedicamentosActivos: number;
   atencioneRecientes: AtencionResumen[];
   stockAlertas: Inventario[];
+  atencionesPorDia: AtencionesPorDia[];
+  topConsumos: TopConsumo[];
 }

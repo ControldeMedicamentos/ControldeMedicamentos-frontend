@@ -78,44 +78,6 @@
     <div class="detail-section">
       <div class="section-header">
         <h4 class="section-title">
-          <span class="pi pi-paperclip"></span>
-          Documentos del paciente
-        </h4>
-        <label class="btn-upload" [class.uploading]="isUploading">
-          <span class="pi" [class.pi-upload]="!isUploading" [class.pi-spinner]="isUploading" [class.pi-spin]="isUploading"></span>
-          {{ isUploading ? 'Subiendo...' : 'Subir documento' }}
-          <input type="file" accept="image/*,.pdf" (change)="onFileSelected($event)" style="display:none" [disabled]="isUploading">
-        </label>
-      </div>
-
-      @if (isLoadingArchivos) {
-        <div class="section-loading"><span class="pi pi-spinner pi-spin"></span> Cargando documentos...</div>
-      } @else if (archivos.length === 0) {
-        <div class="section-empty">
-          <span class="pi pi-file"></span>
-          Sin documentos. Sube el DNI, carnet SIS u otros archivos del paciente.
-        </div>
-      } @else {
-        <div class="doc-grid">
-          @for (a of archivos; track a.id) {
-            <button class="doc-card" (click)="abrirPreview(a)" title="Vista previa">
-              <span class="doc-icon pi"
-                [class.pi-image]="isImagen(a.tipoContenido)"
-                [class.pi-file-pdf]="isPDF(a.tipoContenido)"
-                [class.pi-file]="!isImagen(a.tipoContenido) && !isPDF(a.tipoContenido)">
-              </span>
-              <span class="doc-name">{{ a.nombreOriginal }}</span>
-              @if (a.tamanio) { <span class="doc-size">{{ formatSize(a.tamanio) }}</span> }
-              <span class="doc-hint"><span class="pi pi-eye"></span> Vista previa</span>
-            </button>
-          }
-        </div>
-      }
-    </div>
-
-    <div class="detail-section">
-      <div class="section-header">
-        <h4 class="section-title">
           <span class="pi pi-history"></span>
           Historial de atenciones
         </h4>
@@ -193,30 +155,3 @@
   </app-modal-confirmation>
 }
 
-@if (preview) {
-  <div class="preview-overlay" (click)="cerrarPreview()">
-    <div class="preview-panel" (click)="$event.stopPropagation()">
-      <div class="preview-header">
-        <span class="preview-nombre">{{ preview.nombre }}</span>
-        <button class="preview-close" (click)="cerrarPreview()">
-          <span class="pi pi-times"></span>
-        </button>
-      </div>
-      <div class="preview-body">
-        @if (isImagen(preview.tipo)) {
-          <img [src]="preview.url" [alt]="preview.nombre" class="preview-img">
-        } @else if (isPDF(preview.tipo)) {
-          <iframe [src]="preview.safeUrl" class="preview-pdf" title="Vista previa PDF"></iframe>
-        } @else {
-          <div class="preview-no-support">
-            <span class="pi pi-file" style="font-size:3rem;color:#94a3b8"></span>
-            <p>Vista previa no disponible para este tipo de archivo.</p>
-            <a [href]="preview.url" [download]="preview.nombre" class="btn-download-direct">
-              <span class="pi pi-download"></span> Descargar archivo
-            </a>
-          </div>
-        }
-      </div>
-    </div>
-  </div>
-}

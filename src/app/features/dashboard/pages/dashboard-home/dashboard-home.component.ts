@@ -36,6 +36,25 @@ export class DashboardHomeComponent implements OnInit {
     });
   }
 
+  barHeight(cantidad: number): number {
+    const max = Math.max(...(this.stats?.atencionesPorDia ?? []).map(d => d.cantidad), 1);
+    return Math.round((cantidad / max) * 100);
+  }
+
+  hbarWidth(total: number): number {
+    const max = Math.max(...(this.stats?.topConsumos ?? []).map(d => d.total), 1);
+    return Math.round((total / max) * 100);
+  }
+
+  diaLabel(fecha: string): string {
+    const d = new Date(fecha + 'T00:00:00');
+    return String(d.getDate());
+  }
+
+  nombreCorto(nombre: string): string {
+    return nombre.length > 22 ? nombre.substring(0, 22) + '…' : nombre;
+  }
+
   estadoInventario(inv: Inventario): 'vencido' | 'por_vencer' | 'bajo' {
     if (inv.fechaVencimiento) {
       const hoy = new Date(); hoy.setHours(0, 0, 0, 0);

@@ -69,6 +69,63 @@
 
   </div>
 
+  <div class="dash-charts">
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3 class="panel-title">
+          <span class="pi pi-chart-bar"></span>
+          Atenciones diarias
+        </h3>
+        <span class="panel-subtitle">Últimos 14 días</span>
+      </div>
+      <div class="bar-chart-wrap">
+        <div class="bar-chart">
+          @for (item of stats.atencionesPorDia; track item.fecha) {
+            <div class="bar-col" [title]="item.cantidad + ' atenciones el ' + item.fecha">
+              <div class="bar-track">
+                <div class="bar-fill" [style.height.%]="barHeight(item.cantidad)"></div>
+              </div>
+              <span class="bar-label">{{ diaLabel(item.fecha) }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <h3 class="panel-title">
+          <span class="pi pi-sort-amount-down"></span>
+          Top medicamentos
+        </h3>
+        <span class="panel-subtitle">Este mes</span>
+      </div>
+      @if (!stats.topConsumos || stats.topConsumos.length === 0) {
+        <div class="empty-state">
+          <span class="pi pi-inbox"></span>
+          Sin consumos este mes
+        </div>
+      } @else {
+        <div class="top-list">
+          @for (item of stats.topConsumos; track item.nombre; let i = $index) {
+            <div class="top-item">
+              <span class="top-rank">{{ i + 1 }}</span>
+              <div class="top-info">
+                <span class="top-name">{{ nombreCorto(item.nombre) }}</span>
+                <div class="top-track">
+                  <div class="top-fill" [style.width.%]="hbarWidth(item.total)"></div>
+                </div>
+              </div>
+              <span class="top-value">{{ item.total }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+  </div>
+
   <div class="dash-grid">
 
     <div class="panel">
