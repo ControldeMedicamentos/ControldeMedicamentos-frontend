@@ -1,0 +1,59 @@
+<div class="change-wrap">
+  <div class="change-card">
+    <div class="card-icon">
+      <span class="pi pi-lock"></span>
+    </div>
+    <h2 class="card-title">Cambiar contraseña</h2>
+    <p class="card-sub">
+      Hola, <strong>{{ nombreUsuario }}</strong>. Por seguridad debes establecer
+      una contraseña personal antes de continuar.
+    </p>
+
+    <app-alert-message [message]="errorMessage" type="error" />
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="change-form">
+
+      <label class="field">
+        <span class="field-label">Contraseña actual (tu DNI)</span>
+        <div class="pass-wrap">
+          <input [type]="showCurrent ? 'text' : 'password'" formControlName="currentPassword"
+                 placeholder="Ingresa tu DNI" autocomplete="current-password">
+          <button type="button" class="eye-btn" (click)="showCurrent = !showCurrent">
+            <span class="pi" [class.pi-eye]="!showCurrent" [class.pi-eye-slash]="showCurrent"></span>
+          </button>
+        </div>
+      </label>
+
+      <label class="field">
+        <span class="field-label">Nueva contraseña</span>
+        <div class="pass-wrap">
+          <input [type]="showNew ? 'text' : 'password'" formControlName="newPassword"
+                 placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+          <button type="button" class="eye-btn" (click)="showNew = !showNew">
+            <span class="pi" [class.pi-eye]="!showNew" [class.pi-eye-slash]="showNew"></span>
+          </button>
+        </div>
+        @if (form.get('newPassword')?.invalid && form.get('newPassword')?.touched) {
+          <span class="field-error">Mínimo 6 caracteres</span>
+        }
+      </label>
+
+      <label class="field">
+        <span class="field-label">Confirmar nueva contraseña</span>
+        <div class="pass-wrap">
+          <input [type]="showConfirm ? 'text' : 'password'" formControlName="confirmPassword"
+                 placeholder="Repite la nueva contraseña" autocomplete="new-password">
+          <button type="button" class="eye-btn" (click)="showConfirm = !showConfirm">
+            <span class="pi" [class.pi-eye]="!showConfirm" [class.pi-eye-slash]="showConfirm"></span>
+          </button>
+        </div>
+      </label>
+
+      <button type="submit" class="btn-submit" [disabled]="isLoading">
+        <span class="pi" [class.pi-check]="!isLoading" [class.pi-spinner]="isLoading" [class.pi-spin]="isLoading"></span>
+        {{ isLoading ? 'Guardando...' : 'Establecer contraseña' }}
+      </button>
+
+    </form>
+  </div>
+</div>

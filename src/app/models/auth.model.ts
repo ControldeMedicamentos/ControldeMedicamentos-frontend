@@ -25,4 +25,5 @@ export interface AuthUser {
   rol: RolUsuario;
   nombre?: string;
   exp?: number;
+  mustChangePassword?: boolean;
 }

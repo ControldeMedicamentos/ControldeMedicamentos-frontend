@@ -10,5 +10,15 @@
         {{ item.label }}
       </a>
     }
+
+    @if (isAdmin) {
+      <div class="nav-section">ADMINISTRACIÓN</div>
+      @for (item of adminItems; track item.path) {
+        <a [routerLink]="item.path" routerLinkActive="active">
+          <span [class]="item.icon"></span>
+          {{ item.label }}
+        </a>
+      }
+    }
   </nav>
 </aside>

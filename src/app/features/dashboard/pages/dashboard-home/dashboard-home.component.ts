@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AtencionResumen, DashboardStats } from '../../../../models/dashboard.model';
 import { Inventario } from '../../../../models/inventario.model';
 import { DashboardService } from '../../services/dashboard.service';
@@ -8,7 +8,7 @@ import { DashboardService } from '../../services/dashboard.service';
 @Component({
   selector: 'app-dashboard-home',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './dashboard-home.component.html',
   styleUrl: './dashboard-home.component.scss'
 })
@@ -77,4 +77,32 @@ export class DashboardHomeComponent implements OnInit {
   irAPacientes(): void { this.router.navigate(['/pacientes']); }
   irAMedicamentos(): void { this.router.navigate(['/medicamentos']); }
   irAAtenciones(): void { this.router.navigate(['/atenciones']); }
+
+  accionColor(accion: string): string {
+    if (accion.startsWith('LOGIN')) return 'dot-teal';
+    if (accion.startsWith('CREAR') || accion.startsWith('INGRESO')) return 'dot-green';
+    if (accion.startsWith('ACTUALIZAR') || accion.startsWith('GUARDAR')) return 'dot-amber';
+    if (accion.startsWith('ELIMINAR') || accion.startsWith('DESACTIVAR')) return 'dot-red';
+    if (accion === 'CAMBIO_CONTRASENA') return 'dot-purple';
+    return 'dot-blue';
+  }
+
+  accionBadgeClass(accion: string): string {
+    if (accion.startsWith('LOGIN')) return 'ab-teal';
+    if (accion.startsWith('CREAR') || accion.startsWith('INGRESO')) return 'ab-green';
+    if (accion.startsWith('ACTUALIZAR') || accion.startsWith('GUARDAR') || accion.startsWith('AJUSTE')) return 'ab-amber';
+    if (accion.startsWith('ELIMINAR') || accion.startsWith('DESACTIVAR')) return 'ab-red';
+    if (accion === 'CAMBIO_CONTRASENA') return 'ab-purple';
+    return 'ab-blue';
+  }
+
+  formatTs(ts: string): string {
+    const d = new Date(ts);
+    const hoy = new Date();
+    if (d.toDateString() === hoy.toDateString()) {
+      return d.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+    }
+    return d.toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit' })
+      + ' ' + d.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' });
+  }
 }

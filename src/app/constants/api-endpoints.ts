@@ -7,5 +7,7 @@ export const API_ENDPOINTS = {
   atenciones: '/appointments',
   medicamentos: '/medicines',
   inventario: '/inventory',
-  reportes: '/reports'
+  reportes: '/reports',
+  roles: '/admin/roles',
+  empleados: '/admin/empleados'
 } as const;

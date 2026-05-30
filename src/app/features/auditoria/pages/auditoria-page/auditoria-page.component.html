@@ -1,0 +1,115 @@
+<div class="page-header">
+  <div>
+    <h2 class="page-title">Auditoría</h2>
+    <p class="page-subtitle">Registro de todas las acciones realizadas en el sistema</p>
+  </div>
+  @if (totalElements > 0) {
+    <span class="total-badge">{{ totalElements }} registros</span>
+  }
+</div>
+
+<div class="filtros-card">
+  <div class="filtros-grid">
+    <label class="filtro-field">
+      <span class="filtro-label">Usuario (email)</span>
+      <input type="text" [(ngModel)]="filtroEmail" placeholder="correo@ejemplo.com" />
+    </label>
+    <label class="filtro-field">
+      <span class="filtro-label">Módulo</span>
+      <select [(ngModel)]="filtroModulo">
+        <option value="">Todos</option>
+        @for (m of modulos; track m) { <option [value]="m">{{ m }}</option> }
+      </select>
+    </label>
+    <label class="filtro-field">
+      <span class="filtro-label">Acción</span>
+      <select [(ngModel)]="filtroAccion">
+        <option value="">Todas</option>
+        @for (a of acciones; track a) { <option [value]="a">{{ a }}</option> }
+      </select>
+    </label>
+    <label class="filtro-field">
+      <span class="filtro-label">Desde</span>
+      <input type="date" [(ngModel)]="filtroDesde" />
+    </label>
+    <label class="filtro-field">
+      <span class="filtro-label">Hasta</span>
+      <input type="date" [(ngModel)]="filtroHasta" />
+    </label>
+    <div class="filtro-actions">
+      <button class="btn-filter" (click)="aplicarFiltros()">
+        <span class="pi pi-search"></span> Buscar
+      </button>
+      <button class="btn-clear" (click)="limpiarFiltros()">
+        <span class="pi pi-times"></span> Limpiar
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="table-card">
+  @if (isLoading) {
+    <div class="state-msg"><span class="pi pi-spinner pi-spin"></span> Cargando...</div>
+  } @else if (errorMessage) {
+    <div class="state-msg error">
+      <span class="pi pi-exclamation-triangle"></span>
+      <span>{{ errorMessage }}</span>
+    </div>
+  } @else if (logs.length === 0) {
+    <div class="state-msg empty">
+      <span class="pi pi-history"></span>
+      <span>Sin registros de auditoría</span>
+    </div>
+  } @else {
+    <table class="audit-table">
+      <thead>
+        <tr>
+          <th>Fecha / Hora</th>
+          <th>Usuario</th>
+          <th class="text-center">Módulo</th>
+          <th class="text-center">Acción</th>
+          <th>Detalle</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (log of logs; track log.id) {
+          <tr>
+            <td class="ts-cell">{{ formatTs(log.timestamp) }}</td>
+            <td>
+              <span class="user-email">{{ log.userEmail }}</span>
+              <span class="user-rol">{{ log.userRol }}</span>
+            </td>
+            <td class="text-center">
+              <span class="badge" [class]="moduloClass(log.modulo)">{{ log.modulo }}</span>
+            </td>
+            <td class="text-center">
+              <span class="badge" [class]="accionClass(log.accion)">{{ log.accion }}</span>
+            </td>
+            <td class="detalle-cell">{{ log.detalle }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (totalPages > 1) {
+      <div class="pagination">
+        <button class="page-btn" [disabled]="currentPage === 0" (click)="cargar(0)">
+          <span class="pi pi-angle-double-left"></span>
+        </button>
+        <button class="page-btn" [disabled]="currentPage === 0" (click)="cargar(currentPage - 1)">
+          <span class="pi pi-angle-left"></span>
+        </button>
+        @for (p of pageNumbers; track p) {
+          <button class="page-btn" [class.active]="p === currentPage" (click)="cargar(p)">{{ p + 1 }}</button>
+        }
+        <button class="page-btn" [disabled]="currentPage === totalPages - 1" (click)="cargar(currentPage + 1)">
+          <span class="pi pi-angle-right"></span>
+        </button>
+        <button class="page-btn" [disabled]="currentPage === totalPages - 1" (click)="cargar(totalPages - 1)">
+          <span class="pi pi-angle-double-right"></span>
+        </button>
+        <span class="page-info">Página {{ currentPage + 1 }} de {{ totalPages }}</span>
+      </div>
+    }
+  }
+</div>

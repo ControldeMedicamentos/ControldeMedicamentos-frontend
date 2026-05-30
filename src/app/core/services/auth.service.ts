@@ -49,12 +49,13 @@ export class AuthService {
   private decodeToken(token: string): AuthUser | null {
     try {
       const payload = token.split('.')[1];
-      const decoded = JSON.parse(atob(payload)) as Record<string, string | number>;
+      const decoded = JSON.parse(atob(payload)) as Record<string, unknown>;
       return {
         username: String(decoded['sub']),
         rol: decoded['rol'] as AuthUser['rol'],
         nombre: decoded['nombre'] ? String(decoded['nombre']) : undefined,
-        exp: Number(decoded['exp'])
+        exp: Number(decoded['exp']),
+        mustChangePassword: decoded['mustChangePassword'] === true
       };
     } catch {
       return null;

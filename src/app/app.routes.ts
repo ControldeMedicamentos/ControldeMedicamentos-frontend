@@ -10,6 +10,11 @@ export const routes: Routes = [
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.AUTH_ROUTES)
   },
   {
+    path: 'cambiar-contrasena',
+    component: AuthLayoutComponent,
+    loadChildren: () => import('./features/auth/cambiar-contrasena.routes').then((m) => m.CAMBIAR_CONTRASENA_ROUTES)
+  },
+  {
     path: '',
     component: MainLayoutComponent,
     canActivate: [authGuard],
@@ -38,6 +43,18 @@ export const routes: Routes = [
       {
         path: 'reportes',
         loadChildren: () => import('./features/reportes/reportes.routes').then((m) => m.REPORTES_ROUTES)
+      },
+      {
+        path: 'empleados',
+        loadChildren: () => import('./features/empleados/empleados.routes').then((m) => m.EMPLEADOS_ROUTES)
+      },
+      {
+        path: 'roles',
+        loadChildren: () => import('./features/roles/roles.routes').then((m) => m.ROLES_ROUTES)
+      },
+      {
+        path: 'auditoria',
+        loadChildren: () => import('./features/auditoria/auditoria.routes').then((m) => m.AUDITORIA_ROUTES)
       }
     ]
   },

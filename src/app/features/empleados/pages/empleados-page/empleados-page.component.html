@@ -1,0 +1,175 @@
+<div class="page-header">
+  <div>
+    <h2 class="page-title">Empleados</h2>
+    <p class="page-subtitle">Gestión del personal del tópico de salud</p>
+  </div>
+  <button class="btn-primary" (click)="abrirCrear()">
+    <span class="pi pi-user-plus"></span> Nuevo empleado
+  </button>
+</div>
+
+@if (successMessage) {
+  <div class="msg-success"><span class="pi pi-check-circle"></span> {{ successMessage }}</div>
+}
+@if (errorMessage) {
+  <app-alert-message [message]="errorMessage" type="error" />
+}
+
+<div class="table-card">
+  @if (isLoading) {
+    <div class="state-msg"><span class="pi pi-spinner pi-spin"></span> Cargando...</div>
+  } @else if (empleados.length === 0) {
+    <div class="state-msg empty">
+      <span class="pi pi-users"></span>
+      <span>Sin empleados registrados</span>
+    </div>
+  } @else {
+    <table class="emp-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Usuario</th>
+          <th>Email</th>
+          <th class="text-center">Rol</th>
+          <th class="text-center">Estado</th>
+          <th class="text-center">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (emp of empleados; track emp.id) {
+          <tr [class.inactivo]="!emp.activo">
+            <td>
+              <div class="emp-avatar">
+                <div class="avatar-circle" [class]="'avatar-' + emp.rol.toLowerCase()">
+                  {{ emp.nombre.charAt(0).toUpperCase() }}
+                </div>
+                <span class="emp-nombre">{{ emp.nombre }}</span>
+              </div>
+            </td>
+            <td class="mono">{{ emp.username }}</td>
+            <td class="text-muted">{{ emp.email }}</td>
+            <td class="text-center">
+              <span class="rol-badge" [class]="'rol-' + emp.rol.toLowerCase()">
+                {{ rolLabel(emp.rol) }}
+              </span>
+            </td>
+            <td class="text-center">
+              <span class="estado-badge" [class.activo]="emp.activo" [class.inactivo-badge]="!emp.activo">
+                {{ emp.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="text-center">
+              <div class="acciones">
+                <button class="btn-action" title="Editar" (click)="abrirEditar(emp)">
+                  <span class="pi pi-pencil"></span>
+                </button>
+                <button
+                  class="btn-action"
+                  [class.btn-deactivate]="emp.activo"
+                  [class.btn-activate]="!emp.activo"
+                  [title]="emp.activo ? 'Desactivar' : 'Activar'"
+                  (click)="confirmarToggle(emp)">
+                  <span class="pi" [class.pi-eye-slash]="emp.activo" [class.pi-eye]="!emp.activo"></span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
+
+@if (showModal) {
+  <div class="modal-overlay" (click)="showModal = false">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h3 class="modal-title">
+        {{ modoEdicion ? 'Editar empleado' : 'Nuevo empleado' }}
+      </h3>
+
+      @if (!modoEdicion) {
+        <div class="modal-grid">
+          <label class="field span-2">
+            <span class="field-label">Nombre completo *</span>
+            <input type="text" [(ngModel)]="form.nombre" placeholder="Ej: Juan Pérez Ríos" maxlength="120" />
+          </label>
+          <label class="field">
+            <span class="field-label">Correo electrónico *</span>
+            <input type="email" [(ngModel)]="form.email" placeholder="correo@ejemplo.com" maxlength="120" />
+          </label>
+          <label class="field">
+            <span class="field-label">DNI *</span>
+            <input type="text" [(ngModel)]="form.dni" placeholder="12345678" maxlength="12" />
+            <span class="field-hint">Se usará como contraseña temporal</span>
+          </label>
+          <label class="field span-2">
+            <span class="field-label">Rol *</span>
+            <select [(ngModel)]="form.rol">
+              @for (r of roles; track r.value) {
+                <option [value]="r.value">{{ r.label }}</option>
+              }
+            </select>
+          </label>
+        </div>
+      } @else {
+        <div class="modal-grid">
+          <label class="field span-2">
+            <span class="field-label">Nombre completo *</span>
+            <input type="text" [(ngModel)]="formEdit.nombre" maxlength="120" />
+          </label>
+          <label class="field">
+            <span class="field-label">Email *</span>
+            <input type="email" [(ngModel)]="formEdit.email" maxlength="120" />
+          </label>
+          <label class="field">
+            <span class="field-label">Rol *</span>
+            <select [(ngModel)]="formEdit.rol">
+              @for (r of roles; track r.value) {
+                <option [value]="r.value">{{ r.label }}</option>
+              }
+            </select>
+          </label>
+        </div>
+      }
+
+      @if (errorMessage && showModal) {
+        <p class="modal-error"><span class="pi pi-exclamation-triangle"></span> {{ errorMessage }}</p>
+      }
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showModal = false">Cancelar</button>
+        <button class="btn-confirm" (click)="guardar()" [disabled]="isSaving">
+          <span class="pi" [class.pi-save]="!isSaving" [class.pi-spinner]="isSaving" [class.pi-spin]="isSaving"></span>
+          {{ isSaving ? 'Guardando...' : (modoEdicion ? 'Guardar cambios' : 'Crear empleado') }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<app-modal-confirmation
+  title="Cambiar estado del empleado"
+  [isOpen]="showConfirmToggle"
+  (closed)="showConfirmToggle = false">
+  <div class="confirm-body">
+    <span class="pi pi-exclamation-triangle confirm-icon"></span>
+    <p class="confirm-msg">
+      ¿{{ empleadoToggle?.activo ? 'Desactivar' : 'Activar' }} a
+      <strong>{{ empleadoToggle?.nombre }}</strong>?
+      <br>
+      <span class="confirm-sub">
+        @if (empleadoToggle?.activo) {
+          El empleado no podrá iniciar sesión mientras esté inactivo.
+        } @else {
+          El empleado podrá volver a iniciar sesión.
+        }
+      </span>
+    </p>
+    <div class="confirm-actions">
+      <button class="btn-cancel-confirm" (click)="showConfirmToggle = false">Cancelar</button>
+      <button class="btn-confirm-action" (click)="ejecutarToggle()">
+        <span class="pi pi-check"></span> Confirmar
+      </button>
+    </div>
+  </div>
+</app-modal-confirmation>

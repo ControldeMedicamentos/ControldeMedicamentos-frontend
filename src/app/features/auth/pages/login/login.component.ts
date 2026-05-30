@@ -38,7 +38,14 @@ export class LoginComponent {
       .login(this.form.getRawValue())
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
-        next: () => this.router.navigate(['/dashboard']),
+        next: () => {
+          const user = this.authService.getCurrentUser();
+          if (user?.mustChangePassword) {
+            this.router.navigate(['/cambiar-contrasena']);
+          } else {
+            this.router.navigate(['/dashboard']);
+          }
+        },
         error: () => (this.errorMessage = 'Usuario o contraseña incorrectos.')
       });
   }

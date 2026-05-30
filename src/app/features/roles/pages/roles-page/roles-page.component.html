@@ -1,0 +1,207 @@
+<div class="page-header">
+  <div>
+    <h2 class="page-title">Gestión de Roles</h2>
+    <p class="page-subtitle">Administra los roles y permisos por módulo</p>
+  </div>
+  <div class="seccion-tabs">
+    <button class="tab-btn" [class.active]="seccion === 'empresa'" (click)="setSeccion('empresa')">
+      <span class="pi pi-building"></span> Roles de Empresa
+    </button>
+    <button class="tab-btn" [class.active]="seccion === 'sistema'" (click)="setSeccion('sistema')">
+      <span class="pi pi-server"></span> Roles del Sistema
+    </button>
+  </div>
+</div>
+
+@if (successMessage) {
+  <div class="msg-success"><span class="pi pi-check-circle"></span> {{ successMessage }}</div>
+}
+@if (errorMessage) {
+  <app-alert-message [message]="errorMessage" type="error" />
+}
+
+<div class="layout">
+
+  <div class="panel-izq">
+    <div class="panel-header">
+      <span class="panel-header-label">
+        {{ seccion === 'empresa' ? 'ROLES DE EMPRESA' : 'ROLES DEL SISTEMA' }}
+      </span>
+      <div class="panel-header-actions">
+        <span class="roles-count">{{ rolesActivos.length }}</span>
+        @if (seccion === 'empresa') {
+          <button class="btn-icon" (click)="abrirCrearModal()" title="Crear nuevo rol">
+            <span class="pi pi-plus"></span>
+          </button>
+        }
+      </div>
+    </div>
+
+    @if (isLoadingRoles) {
+      <div class="state-msg"><span class="pi pi-spinner pi-spin"></span> Cargando...</div>
+    } @else if (rolesActivos.length === 0) {
+      <div class="state-msg empty">
+        <span class="pi pi-shield"></span>
+        <span>Sin roles configurados</span>
+      </div>
+    } @else {
+      <div class="roles-list">
+        @for (rol of rolesActivos; track rol.id) {
+          <button
+            class="rol-item"
+            [class.selected]="rolSeleccionado?.id === rol.id"
+            (click)="selectRol(rol)">
+            <div class="rol-icon" [class.sistema]="rol.esSistema">
+              <span class="pi pi-shield"></span>
+            </div>
+            <div class="rol-info">
+              <span class="rol-name">{{ roleLabel(rol.name) }}</span>
+              @if (rol.descripcion) {
+                <span class="rol-desc">{{ rol.descripcion }}</span>
+              }
+              <span class="rol-tag">{{ rol.name }}</span>
+            </div>
+          </button>
+        }
+      </div>
+    }
+  </div>
+
+  <div class="panel-der">
+    @if (!rolSeleccionado) {
+      <div class="no-selection">
+        <div class="no-selection-icon">
+          <span class="pi pi-shield"></span>
+        </div>
+        <p class="no-selection-title">Selecciona un rol</p>
+        <p class="no-selection-sub">para ver su configuración</p>
+      </div>
+    } @else {
+      <div class="rol-detail">
+
+        <div class="detail-header">
+          <div>
+            <h3 class="detail-title">{{ roleLabel(rolSeleccionado.name) }}</h3>
+            <span class="detail-tag">{{ rolSeleccionado.name }}</span>
+          </div>
+          @if (!rolSeleccionado.esSistema) {
+            <button class="btn-danger-sm" (click)="confirmarEliminar(rolSeleccionado)">
+              <span class="pi pi-trash"></span> Eliminar
+            </button>
+          }
+        </div>
+
+        <div class="detail-meta">
+          <div class="meta-item">
+            <span class="pi pi-tag meta-icon"></span>
+            <div>
+              <p class="meta-label">IDENTIFICADOR INTERNO</p>
+              <p class="meta-value mono">{{ rolSeleccionado.name }}</p>
+            </div>
+          </div>
+          @if (rolSeleccionado.descripcion) {
+            <div class="meta-item">
+              <span class="pi pi-info-circle meta-icon"></span>
+              <div>
+                <p class="meta-label">DESCRIPCIÓN</p>
+                <p class="meta-value">{{ rolSeleccionado.descripcion }}</p>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="permisos-section">
+          <div class="permisos-header">
+            <span class="permisos-title">PERMISOS POR MÓDULO</span>
+            @if (permisosModificados) {
+              <div class="permisos-actions">
+                <button class="btn-outline-sm" (click)="descartarPermisos()">Descartar</button>
+                <button class="btn-primary-sm" (click)="guardarPermisos()" [disabled]="isSaving">
+                  <span class="pi" [class.pi-save]="!isSaving" [class.pi-spinner]="isSaving" [class.pi-spin]="isSaving"></span>
+                  {{ isSaving ? 'Guardando...' : 'Guardar permisos' }}
+                </button>
+              </div>
+            }
+          </div>
+
+          @if (isLoadingPermisos) {
+            <div class="state-msg"><span class="pi pi-spinner pi-spin"></span> Cargando permisos...</div>
+          } @else {
+            <div class="permisos-table">
+              <div class="permisos-thead">
+                <span class="col-modulo">MÓDULO</span>
+                @for (campo of CAMPOS; track campo.key) {
+                  <span class="col-perm">{{ campo.label }}</span>
+                }
+              </div>
+
+              @for (grupo of grupos; track grupo) {
+                <div class="grupo-header">{{ grupo }}</div>
+                @for (vista of vistasPorGrupo(grupo); track vista.vistaId) {
+                  <div class="permisos-row">
+                    <span class="modulo-nombre">{{ vista.nombre }}</span>
+                    @for (campo of CAMPOS; track campo.key) {
+                      <div class="col-check">
+                        <input
+                          type="checkbox"
+                          class="perm-check"
+                          [checked]="getPermiso(vista, campo.key)"
+                          [disabled]="campo.key !== 'leer' && !getPermiso(vista, 'leer')"
+                          (change)="togglePermiso(vista, campo.key)" />
+                      </div>
+                    }
+                  </div>
+                }
+              }
+            </div>
+          }
+        </div>
+
+      </div>
+    }
+  </div>
+
+</div>
+
+@if (showCreateModal) {
+  <div class="modal-overlay" (click)="showCreateModal = false">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <h3 class="modal-title">Crear Nuevo Rol</h3>
+      <div class="modal-body">
+        <label class="field">
+          <span class="field-label">Nombre *</span>
+          <input type="text" [(ngModel)]="newRoleName" placeholder="DIGITADOR, TECNICO_SALUD..." />
+          <span class="field-hint">El prefijo ROLE_ se agrega automáticamente</span>
+        </label>
+        <label class="field">
+          <span class="field-label">Descripción (opcional)</span>
+          <input type="text" [(ngModel)]="newRoleDesc" placeholder="Describe las responsabilidades..." maxlength="250" />
+        </label>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showCreateModal = false">Cancelar</button>
+        <button class="btn-confirm" (click)="crearRol()" [disabled]="!newRoleName.trim()">Crear Rol</button>
+      </div>
+    </div>
+  </div>
+}
+
+<app-modal-confirmation
+  title="Eliminar Rol"
+  [isOpen]="showConfirmEliminar"
+  (closed)="showConfirmEliminar = false">
+  <div class="confirm-body">
+    <span class="pi pi-exclamation-triangle confirm-icon"></span>
+    <p class="confirm-msg">
+      ¿Eliminar el rol <strong>{{ roleLabel(rolAEliminar?.name ?? '') }}</strong>?
+      <br>
+      <span class="confirm-sub">Se eliminarán también sus permisos configurados. Esta acción no se puede deshacer.</span>
+    </p>
+    <div class="confirm-actions">
+      <button class="btn-cancel-confirm" (click)="showConfirmEliminar = false">Cancelar</button>
+      <button class="btn-danger-confirm" (click)="eliminarRol()">
+        <span class="pi pi-trash"></span> Eliminar
+      </button>
+    </div>
+  </div>
+</app-modal-confirmation>

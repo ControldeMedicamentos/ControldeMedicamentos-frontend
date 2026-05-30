@@ -126,6 +126,31 @@
 
   </div>
 
+  @if (stats.actividadReciente && stats.actividadReciente.length) {
+    <div class="panel activity-panel">
+      <div class="panel-header">
+        <h3 class="panel-title">
+          <span class="pi pi-shield"></span>
+          Auditoría reciente
+        </h3>
+        <a class="btn-link" routerLink="/auditoria">Ver auditoría completa</a>
+      </div>
+      <div class="activity-list">
+        @for (log of stats.actividadReciente; track log.id) {
+          <div class="activity-item">
+            <div class="activity-dot" [class]="accionColor(log.accion)"></div>
+            <div class="activity-info">
+              <span class="activity-desc">{{ log.detalle }}</span>
+              <span class="activity-meta">{{ log.userEmail }} · {{ log.modulo }}</span>
+            </div>
+            <span class="activity-badge" [class]="accionBadgeClass(log.accion)">{{ log.accion }}</span>
+            <span class="activity-ts">{{ formatTs(log.timestamp) }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
   <div class="dash-grid">
 
     <div class="panel">
