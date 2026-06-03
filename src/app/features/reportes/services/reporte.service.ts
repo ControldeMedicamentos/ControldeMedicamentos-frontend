@@ -15,6 +15,10 @@ export class ReporteService {
     return this.api.get<ReporteSISMED[]>(`${API_ENDPOINTS.reportes}/sismed/${periodo}`);
   }
 
+  getEstadoPeriodo(periodo: string): Observable<{ cerrado: boolean }> {
+    return this.api.get<{ cerrado: boolean }>(`${API_ENDPOINTS.reportes}/sismed/${periodo}/cerrado`);
+  }
+
   exportarExcel(periodo: string): Observable<Blob> {
     return this.http.get(`${environment.apiUrl}/reports/sismed/export`, {
       params: { period: periodo },

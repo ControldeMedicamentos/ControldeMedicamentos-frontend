@@ -10,21 +10,39 @@
     <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Período</label>
     <input type="month" class="rounded-md border border-border bg-white px-3 py-2 text-sm text-text outline-none focus:border-primary-600 focus:ring-2 focus:ring-primary-100" [(ngModel)]="selectedPeriodo" (ngModelChange)="onPeriodoChange()" />
   </div>
-  <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="generar()" [disabled]="isLoading">
-    <span class="pi" [class.pi-refresh]="!isLoading" [class.pi-spinner]="isLoading" [class.pi-spin]="isLoading"></span>
-    Generar
-  </button>
-  @if (reporteData.length > 0) {
+
+  @if (isLoading) {
+    <span class="flex items-center gap-1.5 text-sm text-slate-400">
+      <span class="pi pi-spinner pi-spin"></span> Cargando...
+    </span>
+  }
+
+  @if (!isLoading && periodoCerrado) {
+    <span class="flex items-center gap-1.5 rounded-full border border-slate-300 bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">
+      <span class="pi pi-lock"></span>
+      Período cerrado
+    </span>
+  }
+
+  @if (!isLoading && !periodoCerrado) {
+    <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="cargarPeriodo()" [disabled]="isLoading">
+      <span class="pi pi-refresh"></span>
+      Generar
+    </button>
+  }
+
+  @if (!isLoading && reporteData.length > 0) {
     <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="exportar()" [disabled]="isExporting">
       <span class="pi" [class.pi-download]="!isExporting" [class.pi-spinner]="isExporting" [class.pi-spin]="isExporting"></span>
       Exportar Excel
     </button>
-    @if (periodoEsAnterior) {
-      <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="confirmarCierre()" [disabled]="isCerrando">
-        <span class="pi pi-lock"></span>
-        Cerrar mes
-      </button>
-    }
+  }
+
+  @if (!isLoading && !periodoCerrado && periodoEsAnterior && reporteData.length > 0) {
+    <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="confirmarCierre()" [disabled]="isCerrando">
+      <span class="pi pi-lock"></span>
+      Cerrar mes
+    </button>
   }
 </div>
 
@@ -56,7 +74,7 @@
   <div class="mb-4 flex items-center gap-2.5 rounded-md border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
     <span class="pi pi-exclamation-triangle"></span>
     {{ errorMessage }}
-    <button class="ml-auto cursor-pointer rounded border border-red-300 bg-transparent px-2.5 py-1 text-xs text-red-600 hover:bg-red-50" (click)="generar()">Reintentar</button>
+    <button class="ml-auto cursor-pointer rounded border border-red-300 bg-transparent px-2.5 py-1 text-xs text-red-600 hover:bg-red-50" (click)="cargarPeriodo()">Reintentar</button>
   </div>
 }
 
