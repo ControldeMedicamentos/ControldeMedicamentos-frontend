@@ -21,4 +21,8 @@ export class ReporteService {
       responseType: 'blob'
     });
   }
+
+  cerrarMes(periodo: string): Observable<{ periodo: string; medicamentosProcesados: number; mensaje: string }> {
+    return this.api.post(`${API_ENDPOINTS.reportes}/sismed/${periodo}/cerrar`, {});
+  }
 }

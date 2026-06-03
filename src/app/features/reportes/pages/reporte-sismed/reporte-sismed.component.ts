@@ -8,8 +8,7 @@ import { ReporteService } from '../../services/reporte.service';
   selector: 'app-reporte-sismed',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './reporte-sismed.component.html',
-  styleUrl: './reporte-sismed.component.scss'
+  templateUrl: './reporte-sismed.component.html'
 })
 export class ReporteSismedComponent implements OnInit {
   private readonly reporteService = inject(ReporteService);
@@ -18,7 +17,10 @@ export class ReporteSismedComponent implements OnInit {
   reporteData: ReporteSISMED[] = [];
   isLoading = false;
   isExporting = false;
+  isCerrando = false;
   errorMessage = '';
+  successMessage = '';
+  showConfirmCierre = false;
 
   get periodo6(): string {
     return this.selectedPeriodo.replace('-', '');
@@ -32,6 +34,38 @@ export class ReporteSismedComponent implements OnInit {
 
   ngOnInit(): void {
     this.generar();
+  }
+
+  onPeriodoChange(): void {
+    this.reporteData = [];
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.showConfirmCierre = false;
+  }
+
+  confirmarCierre(): void { this.showConfirmCierre = true; }
+  cancelarCierre(): void  { this.showConfirmCierre = false; }
+
+  cerrarMes(): void {
+    this.isCerrando = true;
+    this.showConfirmCierre = false;
+    this.errorMessage = '';
+    this.reporteService.cerrarMes(this.periodo6).subscribe({
+      next: (res) => {
+        this.successMessage = res.mensaje;
+        this.isCerrando = false;
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.message ?? 'Error al cerrar el mes.';
+        this.isCerrando = false;
+      }
+    });
+  }
+
+  get periodoEsAnterior(): boolean {
+    const [anio, mes] = this.selectedPeriodo.split('-').map(Number);
+    const hoy = new Date();
+    return anio < hoy.getFullYear() || (anio === hoy.getFullYear() && mes < hoy.getMonth() + 1);
   }
 
   generar(): void {
@@ -66,8 +100,8 @@ export class ReporteSismedComponent implements OnInit {
   }
 
   stockFinalColor(val: number): string {
-    if (val < 0) return 'neg';
-    if (val === 0) return 'zero';
-    return '';
+    if (val < 0) return 'text-red-600';
+    if (val === 0) return 'text-slate-400';
+    return 'text-text';
   }
 }

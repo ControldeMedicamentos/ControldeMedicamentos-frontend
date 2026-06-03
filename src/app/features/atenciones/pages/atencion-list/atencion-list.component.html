@@ -1,73 +1,137 @@
-<div class="page-header">
-  <div class="page-title-block">
-    <h2 class="page-title">Atenciones</h2>
-    <p class="page-subtitle">Registro de consultas, diagnósticos y consumos.</p>
+<div class="mb-5 flex items-start justify-between">
+  <div>
+    <h2 class="mb-0.5 mt-0 text-xl font-bold text-text">Atenciones</h2>
+    <p class="m-0 text-sm text-slate-500">Registro de consultas, diagnósticos y consumos.</p>
   </div>
-  <button class="btn-primary" (click)="nuevaAtencion()">
-    <span class="pi pi-plus"></span>
-    Nueva atención
-  </button>
+  @if (auth.canWrite('/atenciones')) {
+    <button class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700" (click)="nuevaAtencion()">
+      <span class="pi pi-plus"></span>
+      Nueva atención
+    </button>
+  }
 </div>
 
-<div class="filter-bar">
-  <label class="filter-field">
+@if (draft) {
+  <div class="mb-4 flex items-center gap-4 rounded-lg border border-amber-300 border-l-4 border-l-amber-500 bg-amber-50 px-4 py-3">
+    <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+      <span class="pi pi-clock text-amber-600"></span>
+    </div>
+    <div class="flex min-w-0 flex-1 flex-col gap-1">
+      <span class="text-sm font-semibold text-amber-900">Atención en progreso</span>
+      <span class="flex flex-wrap items-center gap-1 text-xs text-amber-950">
+        <span class="pi pi-user text-xs opacity-70"></span> {{ draftPacienteNombre }}
+        &nbsp;·&nbsp;
+        <span class="pi pi-list text-xs opacity-70"></span> {{ draftStepLabel }}
+        &nbsp;·&nbsp; Guardado {{ draftTiempo }}
+        @if (draft.hasFiles) { &nbsp;· <span class="pi pi-paperclip text-xs opacity-70"></span> Archivos seleccionados (requieren nueva selección) }
+      </span>
+    </div>
+    <div class="flex shrink-0 gap-2">
+      <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-amber-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-amber-600" (click)="continuarDraft()">
+        <span class="pi pi-play"></span>
+        Continuar
+      </button>
+      <button class="flex cursor-pointer items-center gap-1.5 rounded-md border border-amber-300 bg-white px-3 py-1.5 text-sm font-medium text-amber-950 hover:bg-amber-100" (click)="descartarDraft()">
+        <span class="pi pi-trash"></span>
+        Descartar
+      </button>
+    </div>
+  </div>
+}
+
+<app-modal-confirmation
+  title="Descartar atención en progreso"
+  [isOpen]="showConfirmDescartar"
+  (closed)="showConfirmDescartar = false">
+  <div class="flex flex-col items-center gap-3 px-0 pb-1 pt-2 text-center">
+    <span class="pi pi-exclamation-triangle text-3xl text-amber-500"></span>
+    <p class="m-0 text-sm leading-6 text-text">
+      ¿Descartar la atención de <strong>{{ draftPacienteNombre }}</strong>?
+      <br>
+      <span class="text-sm text-slate-500">Se perderán todos los datos ingresados ({{ draftStepLabel }}). Esta acción no se puede deshacer.</span>
+    </p>
+    <div class="flex justify-center gap-3">
+      <button class="cursor-pointer rounded-md border border-border bg-white px-4 py-2 text-sm text-text hover:bg-surface-50" (click)="showConfirmDescartar = false">Cancelar</button>
+      <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600" (click)="confirmarDescartar()">
+        <span class="pi pi-trash"></span> Descartar
+      </button>
+    </div>
+  </div>
+</app-modal-confirmation>
+
+<div class="mb-4 flex flex-wrap items-end gap-3">
+  <label class="flex flex-col gap-1 text-sm font-medium text-text">
     Desde
-    <input type="date" class="filter-input" [(ngModel)]="desde">
+    <input type="date" class="rounded-md border border-border bg-white px-2.5 py-1.5 text-sm text-text focus:border-primary-600 focus:outline-none" [(ngModel)]="desde">
   </label>
-  <label class="filter-field">
+  <label class="flex flex-col gap-1 text-sm font-medium text-text">
     Hasta
-    <input type="date" class="filter-input" [(ngModel)]="hasta">
+    <input type="date" class="rounded-md border border-border bg-white px-2.5 py-1.5 text-sm text-text focus:border-primary-600 focus:outline-none" [(ngModel)]="hasta">
   </label>
-  <button class="btn-buscar" (click)="buscar()" [disabled]="isLoading">
+  <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="buscar()" [disabled]="isLoading">
     <span class="pi pi-search"></span>
     Buscar
   </button>
+  <div class="relative min-w-search-small flex-1">
+    <span class="pi pi-user pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-slate-400"></span>
+    <input
+      type="text"
+      class="w-full rounded-md border border-border bg-white py-2 pl-8 pr-8 text-sm text-text focus:border-primary-600 focus:outline-none"
+      placeholder="Filtrar por paciente o documento..."
+      [(ngModel)]="busquedaPaciente"
+      (ngModelChange)="onBusquedaChange()">
+    @if (busquedaPaciente) {
+      <button class="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer border-0 bg-transparent p-0.5 text-xs text-slate-400 hover:text-text" (click)="busquedaPaciente = ''; onBusquedaChange()">
+        <span class="pi pi-times"></span>
+      </button>
+    }
+  </div>
 </div>
 
 @if (errorMessage) {
   <app-alert-message [message]="errorMessage" type="error" />
 }
 
-<div class="table-wrapper">
+<div class="overflow-hidden rounded-lg border border-border bg-white">
   @if (isLoading) {
-    <div class="state-msg">
+    <div class="flex items-center justify-center gap-2 p-10 text-sm text-slate-400">
       <span class="pi pi-spinner pi-spin"></span> Cargando atenciones...
     </div>
   } @else if (atenciones.length === 0) {
-    <div class="state-msg">
+    <div class="flex items-center justify-center gap-2 p-10 text-sm text-slate-400">
       <span class="pi pi-calendar-times"></span>
       Sin atenciones en el período seleccionado
     </div>
   } @else {
-    <table class="aten-table">
+    <table class="w-full border-collapse text-sm">
       <thead>
         <tr>
-          <th>Fecha</th>
-          <th>Paciente</th>
-          <th>Documento</th>
-          <th>Motivo</th>
-          <th class="text-center">Medicamentos</th>
-          <th>Registrado por</th>
-          <th class="text-center">Acciones</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Fecha</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Paciente</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Documento</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Motivo</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">Medicamentos</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Registrado por</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">Acciones</th>
         </tr>
       </thead>
       <tbody>
         @for (at of paginados; track at.id) {
           <tr>
-            <td class="date-cell">{{ at.fechaEvaluacion | date:'dd/MM/yyyy' }}</td>
-            <td class="name-cell">{{ at.pacienteNombre }}</td>
-            <td class="doc-cell">{{ at.pacienteNroDocumento }}</td>
-            <td class="motivo-cell">{{ at.motivo }}</td>
-            <td class="text-center">
+            <td class="whitespace-nowrap border-b border-slate-100 px-3.5 py-3 font-semibold text-text">{{ at.fechaEvaluacion | date:'dd/MM/yyyy' }}</td>
+            <td class="border-b border-slate-100 px-3.5 py-3 font-medium text-text">{{ at.pacienteNombre }}</td>
+            <td class="border-b border-slate-100 px-3.5 py-3 font-mono text-sm text-primary-600">{{ at.pacienteNroDocumento }}</td>
+            <td class="max-w-motivo border-b border-slate-100 px-3.5 py-3 text-text">{{ at.motivo }}</td>
+            <td class="border-b border-slate-100 px-3.5 py-3 text-center">
               @if (at.consumos.length > 0) {
-                <span class="consumo-badge">{{ at.consumos.length }}</span>
+                <span class="inline-flex h-5.5 min-w-5.5 items-center justify-center rounded-full bg-blue-100 px-1.5 text-xs font-bold text-blue-700">{{ at.consumos.length }}</span>
               } @else {
-                <span class="text-muted">—</span>
+                <span class="text-slate-400">—</span>
               }
             </td>
-            <td class="text-muted user-cell">{{ at.usuarioRegistro }}</td>
-            <td class="text-center">
-              <button class="btn-icon" title="Ver detalle" (click)="verDetalle(at)">
+            <td class="border-b border-slate-100 px-3.5 py-3 text-sm text-slate-400">{{ at.usuarioRegistro }}</td>
+            <td class="border-b border-slate-100 px-3.5 py-3 text-center">
+              <button class="inline-flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-md border border-border bg-white text-sm text-text transition-colors hover:border-primary-600 hover:bg-primary-600 hover:text-white" title="Ver detalle" (click)="verDetalle(at)">
                 <span class="pi pi-eye"></span>
               </button>
             </td>
@@ -77,17 +141,17 @@
     </table>
 
     @if (totalPages > 1) {
-      <div class="pagination">
-        <button class="page-btn" [disabled]="page === 1" (click)="setPage(page - 1)">
+      <div class="flex items-center gap-1 border-t border-border px-3.5 py-3">
+        <button class="inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-md border border-border px-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-40" [disabled]="page === 1" (click)="setPage(page - 1)">
           <span class="pi pi-chevron-left"></span>
         </button>
         @for (p of pageNumbers; track p) {
-          <button class="page-btn" [class.active]="p === page" (click)="setPage(p)">{{ p }}</button>
+          <button class="inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-md border px-1.5 text-sm" [ngClass]="p === page ? 'border-primary-600 bg-primary-600 font-semibold text-white' : 'border-border bg-white text-text hover:bg-surface-50'" (click)="setPage(p)">{{ p }}</button>
         }
-        <button class="page-btn" [disabled]="page === totalPages" (click)="setPage(page + 1)">
+        <button class="inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-md border border-border px-1.5 text-sm disabled:cursor-not-allowed disabled:opacity-40" [disabled]="page === totalPages" (click)="setPage(page + 1)">
           <span class="pi pi-chevron-right"></span>
         </button>
-        <span class="page-info">{{ page }} / {{ totalPages }} · {{ atenciones.length }} registros</span>
+        <span class="ml-2 text-sm text-slate-400">{{ page }} / {{ totalPages }} · {{ totalElements }} registros</span>
       </div>
     }
   }
@@ -99,95 +163,91 @@
     [isOpen]="showDetail"
     (closed)="showDetail = false">
 
-    <div class="detail-grid">
-      <div class="detail-block">
-        <span class="detail-label">Paciente</span>
-        <span class="detail-value">{{ atencionDetalle.pacienteNombre }}</span>
+    <div class="mb-4 grid grid-cols-2 gap-3">
+      <div class="flex flex-col gap-1">
+        <span class="text-xs font-semibold uppercase tracking-section text-slate-400">Paciente</span>
+        <span class="text-sm font-medium text-text">{{ atencionDetalle.pacienteNombre }}</span>
       </div>
-      <div class="detail-block">
-        <span class="detail-label">Documento</span>
-        <span class="detail-value">{{ atencionDetalle.pacienteNroDocumento }}</span>
+      <div class="flex flex-col gap-1">
+        <span class="text-xs font-semibold uppercase tracking-section text-slate-400">Documento</span>
+        <span class="text-sm font-medium text-text">{{ atencionDetalle.pacienteNroDocumento }}</span>
       </div>
-      <div class="detail-block full-col">
-        <span class="detail-label">Motivo</span>
-        <span class="detail-value">{{ atencionDetalle.motivo }}</span>
+      <div class="col-span-2 flex flex-col gap-1">
+        <span class="text-xs font-semibold uppercase tracking-section text-slate-400">Motivo</span>
+        <span class="text-sm font-medium text-text">{{ atencionDetalle.motivo }}</span>
       </div>
 
       @if (atencionDetalle.diagnostico1) {
-        <div class="detail-block full-col">
-          <span class="detail-label">Diagnóstico 1</span>
-          <span class="detail-value">
+        <div class="col-span-2 flex flex-col gap-1">
+          <span class="text-xs font-semibold uppercase tracking-section text-slate-400">Diagnóstico 1</span>
+          <span class="text-sm font-medium text-text">
             {{ atencionDetalle.diagnostico1 }}
-            @if (atencionDetalle.cie101) { · <code>{{ atencionDetalle.cie101 }}</code> }
+            @if (atencionDetalle.cie101) { · <code class="rounded bg-surface-50 px-1 py-0.5 font-mono text-xs">{{ atencionDetalle.cie101 }}</code> }
             @if (atencionDetalle.tipoDiagnostico1) {
-              <span class="dx-badge">{{ tipoDxLabel(atencionDetalle.tipoDiagnostico1) }}</span>
+              <span class="ml-1.5 inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">{{ tipoDxLabel(atencionDetalle.tipoDiagnostico1) }}</span>
             }
           </span>
         </div>
       }
       @if (atencionDetalle.diagnostico2) {
-        <div class="detail-block full-col">
-          <span class="detail-label">Diagnóstico 2</span>
-          <span class="detail-value">
+        <div class="col-span-2 flex flex-col gap-1">
+          <span class="text-xs font-semibold uppercase tracking-section text-slate-400">Diagnóstico 2</span>
+          <span class="text-sm font-medium text-text">
             {{ atencionDetalle.diagnostico2 }}
-            @if (atencionDetalle.cie102) { · <code>{{ atencionDetalle.cie102 }}</code> }
+            @if (atencionDetalle.cie102) { · <code class="rounded bg-surface-50 px-1 py-0.5 font-mono text-xs">{{ atencionDetalle.cie102 }}</code> }
             @if (atencionDetalle.tipoDiagnostico2) {
-              <span class="dx-badge">{{ tipoDxLabel(atencionDetalle.tipoDiagnostico2) }}</span>
+              <span class="ml-1.5 inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">{{ tipoDxLabel(atencionDetalle.tipoDiagnostico2) }}</span>
             }
           </span>
         </div>
       }
       @if (atencionDetalle.diagnostico3) {
-        <div class="detail-block full-col">
-          <span class="detail-label">Diagnóstico 3</span>
-          <span class="detail-value">
+        <div class="col-span-2 flex flex-col gap-1">
+          <span class="text-xs font-semibold uppercase tracking-section text-slate-400">Diagnóstico 3</span>
+          <span class="text-sm font-medium text-text">
             {{ atencionDetalle.diagnostico3 }}
-            @if (atencionDetalle.cie103) { · <code>{{ atencionDetalle.cie103 }}</code> }
+            @if (atencionDetalle.cie103) { · <code class="rounded bg-surface-50 px-1 py-0.5 font-mono text-xs">{{ atencionDetalle.cie103 }}</code> }
             @if (atencionDetalle.tipoDiagnostico3) {
-              <span class="dx-badge">{{ tipoDxLabel(atencionDetalle.tipoDiagnostico3) }}</span>
+              <span class="ml-1.5 inline-block rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">{{ tipoDxLabel(atencionDetalle.tipoDiagnostico3) }}</span>
             }
           </span>
         </div>
       }
 
       @if (atencionDetalle.conclusion) {
-        <div class="detail-block full-col">
-          <span class="detail-label">Conclusión</span>
-          <span class="detail-value">{{ atencionDetalle.conclusion }}</span>
+        <div class="col-span-2 flex flex-col gap-1">
+          <span class="text-xs font-semibold uppercase tracking-section text-slate-400">Conclusión</span>
+          <span class="text-sm font-medium text-text">{{ atencionDetalle.conclusion }}</span>
         </div>
       }
       @if (atencionDetalle.observaciones) {
-        <div class="detail-block full-col">
-          <span class="detail-label">Observaciones</span>
-          <span class="detail-value">{{ atencionDetalle.observaciones }}</span>
+        <div class="col-span-2 flex flex-col gap-1">
+          <span class="text-xs font-semibold uppercase tracking-section text-slate-400">Observaciones</span>
+          <span class="text-sm font-medium text-text">{{ atencionDetalle.observaciones }}</span>
         </div>
       }
 
-      <div class="detail-block">
-        <span class="detail-label">Registrado por</span>
-        <span class="detail-value">{{ atencionDetalle.usuarioRegistro }}</span>
+      <div class="flex flex-col gap-1">
+        <span class="text-xs font-semibold uppercase tracking-section text-slate-400">Registrado por</span>
+        <span class="text-sm font-medium text-text">{{ atencionDetalle.usuarioRegistro }}</span>
       </div>
     </div>
 
     @if (atencionDetalle.consumos.length > 0) {
-      <div class="consumos-section">
-        <h4 class="consumos-title">Medicamentos consumidos</h4>
-        <table class="consumos-table">
+      <div class="border-t border-border pt-3">
+        <h4 class="mb-2.5 mt-0 text-sm font-semibold text-text">Medicamentos consumidos</h4>
+        <table class="w-full border-collapse text-sm">
           <thead>
             <tr>
-              <th>Código</th>
-              <th>Medicamento</th>
-              <th class="text-center">Cantidad</th>
-              <th>Tipo consumo</th>
+              <th class="border-b border-border px-2.5 py-1.5 text-left text-xs font-semibold uppercase text-slate-400">Medicamento</th>
+              <th class="border-b border-border px-2.5 py-1.5 text-center text-xs font-semibold uppercase text-slate-400">Cantidad</th>
             </tr>
           </thead>
           <tbody>
             @for (c of atencionDetalle.consumos; track c.id) {
               <tr>
-                <td class="code-cell">{{ c.codigoSismed }}</td>
-                <td>{{ c.descripcionSismed }}</td>
-                <td class="text-center font-bold">{{ c.cantidadConsumida }}</td>
-                <td>{{ tipoConsumoLabel(c.tipoConsumo) }}</td>
+                <td class="border-b border-slate-100 px-2.5 py-2 text-text">{{ c.descripcionSismed }}</td>
+                <td class="border-b border-slate-100 px-2.5 py-2 text-center font-semibold text-text">{{ c.cantidadConsumida }}</td>
               </tr>
             }
           </tbody>
@@ -195,5 +255,58 @@
       </div>
     }
 
+    <div class="mt-4 border-t border-border pt-3">
+      <h4 class="mb-2.5 mt-0 text-sm font-semibold text-text">
+        <span class="pi pi-paperclip"></span> Archivos adjuntos
+        @if (!isLoadingArchivos && archivosDetalle.length > 0) {
+          <span class="ml-1 inline-flex h-4.5 w-4.5 items-center justify-center rounded-full bg-primary-600 align-middle text-xs font-bold text-white">{{ archivosDetalle.length }}</span>
+        }
+      </h4>
+      @if (isLoadingArchivos) {
+        <span class="flex items-center gap-1.5 text-sm text-slate-400"><span class="pi pi-spinner pi-spin"></span> Cargando...</span>
+      } @else if (archivosDetalle.length === 0) {
+        <span class="flex items-center gap-1.5 text-sm text-slate-400">Sin archivos adjuntos</span>
+      } @else {
+        <div class="mt-2 flex flex-col gap-1.5">
+          @for (a of archivosDetalle; track a.id) {
+            <button class="flex w-full cursor-pointer items-center gap-2 rounded-md border border-border bg-surface-50 px-3 py-2 text-left hover:border-primary-600 hover:bg-blue-50" (click)="abrirArchivo(a.id, a.nombreOriginal, a.tipoContenido)" title="Abrir archivo">
+              <span class="pi shrink-0 text-sm text-primary-600" [class.pi-image]="a.tipoContenido?.startsWith('image/')" [class.pi-file-pdf]="a.tipoContenido === 'application/pdf'" [class.pi-file]="!a.tipoContenido?.startsWith('image/') && a.tipoContenido !== 'application/pdf'"></span>
+              <span class="flex-1 truncate text-sm text-text">{{ a.nombreOriginal }}</span>
+              @if (a.tamanio) { <span class="shrink-0 font-mono text-xs text-slate-400">{{ formatSize(a.tamanio) }}</span> }
+              <span class="pi pi-download shrink-0 text-xs text-slate-400"></span>
+            </button>
+          }
+        </div>
+      }
+    </div>
+
   </app-modal-confirmation>
+}
+
+@if (preview) {
+  <div class="fixed inset-0 z-modal flex items-center justify-center bg-black/65 p-6" (click)="cerrarPreview()">
+    <div class="flex max-h-modal w-full max-w-4xl flex-col overflow-hidden rounded-modal bg-white shadow-modal" (click)="$event.stopPropagation()">
+      <div class="flex shrink-0 items-center justify-between border-b border-border bg-surface-50 px-5 py-3.5">
+        <span class="truncate text-sm font-semibold text-text">{{ preview.nombre }}</span>
+        <button class="shrink-0 cursor-pointer border-0 bg-transparent p-1 text-base text-slate-400 hover:text-text" (click)="cerrarPreview()">
+          <span class="pi pi-times"></span>
+        </button>
+      </div>
+      <div class="flex min-h-panel flex-1 items-center justify-center overflow-hidden bg-slate-800">
+        @if (isImagen(preview.tipo)) {
+          <img [src]="preview.url" [alt]="preview.nombre" class="max-h-preview max-w-full object-contain">
+        } @else if (isPDF(preview.tipo)) {
+          <iframe [src]="preview.safeUrl" class="h-preview w-full border-0" title="Vista previa PDF"></iframe>
+        } @else {
+          <div class="flex flex-col items-center gap-4 p-8 text-center text-slate-400">
+            <span class="pi pi-file text-5xl text-slate-400"></span>
+            <p>Vista previa no disponible.</p>
+            <a [href]="preview.url" [download]="preview.nombre" class="flex items-center gap-1.5 rounded-md bg-primary-600 px-5 py-2 text-sm text-white no-underline">
+              <span class="pi pi-download"></span> Descargar
+            </a>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
 }

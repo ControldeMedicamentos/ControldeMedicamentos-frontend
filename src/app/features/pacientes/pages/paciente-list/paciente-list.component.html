@@ -1,152 +1,133 @@
-<div class="page-header">
+<div class="mb-5 flex items-start justify-between gap-4">
   <div>
-    <h2 class="page-title">Pacientes</h2>
-    <p class="page-subtitle">Registro y consulta de pacientes</p>
+    <h2 class="mb-1 mt-0 text-xl font-bold text-text">Pacientes</h2>
+    <p class="m-0 text-sm text-slate-500">Registro y consulta de pacientes</p>
   </div>
-  <button type="button" class="btn-primary" (click)="abrirModalNuevo()">
-    <span class="pi pi-plus"></span>
-    Nuevo paciente
-  </button>
+  @if (auth.canWrite('/pacientes')) {
+    <button type="button" class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700" (click)="abrirModalNuevo()">
+      <span class="pi pi-plus"></span>
+      Nuevo paciente
+    </button>
+  }
 </div>
 
 <app-alert-message [message]="errorMessage" type="error" />
 
-<div class="toolbar">
-  <div class="search-bar">
-    <span class="pi pi-search"></span>
+<div class="mb-4 flex items-center gap-3 rounded-modal border border-border bg-white px-4 py-3">
+  <div class="relative flex-1">
+    <span class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400"></span>
     <input
+      class="w-full rounded-md border border-border bg-white py-2 pl-8 pr-3 text-sm text-text focus:border-primary-600 focus:outline-none"
       type="text"
       placeholder="Buscar por documento o nombre..."
       [(ngModel)]="busqueda"
       (ngModelChange)="filtrar()"
     >
   </div>
-  <select class="estado-filter" [(ngModel)]="filtroEstado" (ngModelChange)="filtrar()">
+  <select class="shrink-0 cursor-pointer rounded-md border border-border bg-white px-3 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" [(ngModel)]="filtroEstado" (ngModelChange)="filtrar()">
     <option value="activos">Solo activos</option>
     <option value="inactivos">Solo inactivos</option>
     <option value="todos">Todos</option>
   </select>
-  <div class="view-toggle">
-    <button type="button" [class.active]="viewMode === 'grid'" (click)="setViewMode('grid')" title="Cuadrícula">
-      <span class="pi pi-th-large"></span>
-    </button>
-    <button type="button" [class.active]="viewMode === 'list'" (click)="setViewMode('list')" title="Lista">
-      <span class="pi pi-list"></span>
-    </button>
-  </div>
+  <span class="shrink-0 rounded-full border border-border bg-surface-50 px-3 py-1 text-xs font-semibold text-slate-500">
+    {{ totalElements }} registro{{ totalElements !== 1 ? 's' : '' }}
+  </span>
 </div>
 
-@if (isLoading) {
-  <div class="state-message">
-    <span class="pi pi-spinner pi-spin"></span>
-    Cargando pacientes...
-  </div>
-} @else if (filtrados.length === 0) {
-  <div class="state-message">
-    <span class="pi pi-users"></span>
-    @if (busqueda) {
-      No se encontraron pacientes con "{{ busqueda }}"
-    } @else {
-      No hay pacientes registrados aún
-    }
-  </div>
-} @else {
-  @if (viewMode === 'grid') {
-    <div class="cards-grid">
-      @for (paciente of paginados; track paciente.id) {
-        <app-paciente-card
-          [paciente]="paciente"
-          (verDetalle)="verDetalle($event)"
-          (editar)="abrirModalEditar($event)"
-          (toggleActivo)="toggleActivo($event)"
-        />
+<div class="overflow-hidden rounded-modal border border-border bg-white">
+  @if (isLoading) {
+    <div class="flex items-center justify-center gap-2 p-10 text-sm text-slate-400">
+      <span class="pi pi-spinner pi-spin"></span>
+      Cargando pacientes...
+    </div>
+  } @else if (filtrados.length === 0) {
+    <div class="flex flex-col items-center justify-center gap-2 p-12 text-center text-sm text-slate-400">
+      <span class="pi pi-users text-3xl"></span>
+      @if (busqueda) {
+        No se encontraron pacientes con "{{ busqueda }}"
+      } @else {
+        No hay pacientes registrados aún
       }
     </div>
   } @else {
-    <div class="table-wrapper">
-      <table class="pac-table">
-        <thead>
-          <tr>
-            <th>Paciente</th>
-            <th>Tipo</th>
-            <th>Carrera / Área</th>
-            <th>Ciclo</th>
-            <th>Fecha Nac.</th>
-            <th>Teléfono</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (paciente of paginados; track paciente.id) {
-            <tr [class.row-inactive]="paciente.activo === false">
-              <td>
-                <span class="pac-name">{{ paciente.nombresApellidos }}</span>
-                <span class="pac-doc">{{ tipoDocLabel(paciente.tipoDocumento) }}: {{ paciente.nroDocumento }}</span>
-              </td>
-              <td>
-                <span class="badge-tipo badge-tipo--{{ paciente.tipoPaciente | lowercase }}">
-                  {{ tipoPacienteLabel(paciente.tipoPaciente) }}
-                </span>
-                @if (paciente.activo === false) {
-                  <span class="badge-inactivo">Inactivo</span>
-                }
-              </td>
-              <td class="text-muted-empty">{{ paciente.carreraArea || '—' }}</td>
-              <td class="text-muted-empty">{{ paciente.cicloAcademico || '—' }}</td>
-              <td class="text-muted-empty">{{ paciente.fechaNacimiento ? (paciente.fechaNacimiento | date:'dd/MM/yyyy') : '—' }}</td>
-              <td class="text-muted-empty">{{ paciente.telefono || '—' }}</td>
-              <td>
-                <div class="row-actions">
-                  <button type="button" class="btn-icon"
+    <table class="w-full border-collapse text-sm">
+      <thead>
+        <tr>
+          <th class="border-b border-border bg-surface-50 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Paciente</th>
+          <th class="border-b border-border bg-surface-50 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Tipo</th>
+          <th class="border-b border-border bg-surface-50 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Carrera / Área</th>
+          <th class="border-b border-border bg-surface-50 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Ciclo</th>
+          <th class="border-b border-border bg-surface-50 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Fecha Nac.</th>
+          <th class="border-b border-border bg-surface-50 px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Teléfono</th>
+          <th class="border-b border-border bg-surface-50 px-4 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (paciente of paginados; track paciente.id) {
+          <tr class="hover:bg-slate-50" [class.opacity-55]="paciente.activo === false">
+            <td class="border-b border-slate-100 px-4 py-3 text-text">
+              <span class="block text-sm font-semibold text-text">{{ paciente.nombresApellidos }}</span>
+              <span class="block font-mono text-xs text-slate-500">{{ tipoDocLabel(paciente.tipoDocumento) }}: {{ paciente.nroDocumento }}</span>
+            </td>
+            <td class="border-b border-slate-100 px-4 py-3">
+              <span class="inline-block shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold" [ngClass]="tipoPacienteClass(paciente.tipoPaciente)">
+                {{ tipoPacienteLabel(paciente.tipoPaciente) }}
+              </span>
+              @if (paciente.activo === false) {
+                <span class="ml-1 inline-block shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">Inactivo</span>
+              }
+            </td>
+            <td class="border-b border-slate-100 px-4 py-3 text-slate-500">{{ paciente.carreraArea || '—' }}</td>
+            <td class="border-b border-slate-100 px-4 py-3 text-slate-500">{{ paciente.cicloAcademico || '—' }}</td>
+            <td class="border-b border-slate-100 px-4 py-3 text-slate-500">{{ paciente.fechaNacimiento ? (paciente.fechaNacimiento | date:'dd/MM/yyyy') : '—' }}</td>
+            <td class="border-b border-slate-100 px-4 py-3 text-slate-500">{{ paciente.telefono || '—' }}</td>
+            <td class="border-b border-slate-100 px-4 py-3">
+              <div class="flex justify-center gap-1.5">
+                @if (auth.canDelete('/pacientes')) {
+                  <button type="button" class="inline-flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-md border border-border bg-white text-xs text-slate-500 hover:border-primary-600 hover:bg-surface-50 hover:text-primary-600"
                           [title]="paciente.activo !== false ? 'Desactivar' : 'Activar'"
                           (click)="toggleActivo(paciente)">
                     <span class="pi" [class.pi-eye-slash]="paciente.activo !== false" [class.pi-eye]="paciente.activo === false"></span>
                   </button>
-                  <button type="button" class="btn-icon" (click)="abrirModalEditar(paciente)" title="Editar">
+                }
+                @if (auth.canEdit('/pacientes')) {
+                  <button type="button" class="inline-flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-md border border-border bg-white text-xs text-slate-500 hover:border-primary-600 hover:bg-surface-50 hover:text-primary-600" (click)="abrirModalEditar(paciente)" title="Editar">
                     <span class="pi pi-pencil"></span>
                   </button>
-                  <button type="button" class="btn-icon btn-icon--primary" (click)="verDetalle(paciente.id)" title="Ver detalle">
-                    <span class="pi pi-eye"></span>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
+                }
+                <button type="button" class="inline-flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-md border border-primary-600 bg-primary-600 text-xs text-white hover:border-primary-700 hover:bg-primary-700" (click)="verDetalle(paciente.id)" title="Ver detalle">
+                  <span class="pi pi-eye"></span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
 
-      @if (totalPages > 1) {
-        <div class="table-pagination">
-          <button type="button" class="page-btn" (click)="setPage(page - 1)" [disabled]="page === 1">
-            <span class="pi pi-chevron-left"></span>
-          </button>
-          @for (p of pageNumbers; track p) {
-            <button type="button" class="page-btn" [class.active]="p === page" (click)="setPage(p)">{{ p }}</button>
-          }
-          <button type="button" class="page-btn" (click)="setPage(page + 1)" [disabled]="page === totalPages">
-            <span class="pi pi-chevron-right"></span>
-          </button>
-          <span class="page-info">Página {{ page }} de {{ totalPages }}</span>
-        </div>
-      }
-    </div>
+    @if (totalPages > 1) {
+      <div class="flex items-center gap-1 border-t border-border px-4 py-3">
+        <button type="button" class="flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-md border border-border bg-white px-2 text-sm text-text hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-40" (click)="setPage(page - 1)" [disabled]="page === 1">
+          <span class="pi pi-chevron-left"></span>
+        </button>
+        @for (p of pageNumbers; track p) {
+          <button type="button" class="flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-md border px-2 text-sm"
+                  [class.border-primary-600]="p === page"
+                  [class.bg-primary-600]="p === page"
+                  [class.text-white]="p === page"
+                  [class.border-border]="p !== page"
+                  [class.bg-white]="p !== page"
+                  [class.text-text]="p !== page"
+                  (click)="setPage(p)">{{ p }}</button>
+        }
+        <button type="button" class="flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-md border border-border bg-white px-2 text-sm text-text hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-40" (click)="setPage(page + 1)" [disabled]="page === totalPages">
+          <span class="pi pi-chevron-right"></span>
+        </button>
+        <span class="ml-2 text-sm text-slate-500">Página {{ page }} de {{ totalPages }}</span>
+      </div>
+    }
   }
-
-  @if (totalPages > 1) {
-    <div class="pagination">
-      <button type="button" class="page-btn" (click)="setPage(page - 1)" [disabled]="page === 1">
-        <span class="pi pi-chevron-left"></span>
-      </button>
-      @for (p of pageNumbers; track p) {
-        <button type="button" class="page-btn" [class.active]="p === page" (click)="setPage(p)">{{ p }}</button>
-      }
-      <button type="button" class="page-btn" (click)="setPage(page + 1)" [disabled]="page === totalPages">
-        <span class="pi pi-chevron-right"></span>
-      </button>
-      <span class="page-info">Página {{ page }} de {{ totalPages }}</span>
-    </div>
-  }
-}
+</div>
 
 <app-modal-confirmation
   [title]="modalTitulo"
@@ -159,4 +140,24 @@
     (formSubmit)="guardar($event)"
     (cancelled)="cerrarModal()"
   />
+</app-modal-confirmation>
+
+<app-modal-confirmation
+  title="Desactivar paciente"
+  [isOpen]="showConfirmToggle"
+  (closed)="showConfirmToggle = false">
+  <div class="flex flex-col items-center gap-3 px-0 pb-1 pt-2 text-center">
+    <span class="pi pi-exclamation-triangle text-3xl text-amber-500"></span>
+    <p class="m-0 text-sm leading-6 text-text">
+      ¿Desactivar a <strong>{{ pacienteParaToggle?.nombresApellidos }}</strong>?
+      <br>
+      <span class="text-xs text-slate-500">El paciente no podrá tener nuevas atenciones mientras esté inactivo.</span>
+    </p>
+    <div class="flex justify-center gap-3">
+      <button class="cursor-pointer rounded-md border border-border bg-white px-4 py-2 text-sm text-text hover:bg-surface-50" (click)="showConfirmToggle = false">Cancelar</button>
+      <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600" (click)="confirmarDesactivar()">
+        <span class="pi pi-eye-slash"></span> Desactivar
+      </button>
+    </div>
+  </div>
 </app-modal-confirmation>

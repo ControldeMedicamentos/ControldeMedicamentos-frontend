@@ -25,7 +25,7 @@ export interface ConsumoMedicamento {
 export interface ConsumoMedicamentoCreate {
   medicamentoId: number;
   cantidadConsumida: number;
-  tipoConsumo: TipoConsumo;
+  tipoConsumo?: TipoConsumo;
 }
 
 export interface Atencion {
@@ -56,6 +56,15 @@ export interface Atencion {
   consumos: ConsumoMedicamento[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface AtencionArchivo {
+  id: number;
+  atencionId: number;
+  nombreOriginal: string;
+  tipoContenido?: string;
+  tamanio?: number;
+  createdAt?: string;
 }
 
 export interface AtencionCreate {

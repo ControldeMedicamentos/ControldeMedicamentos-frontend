@@ -1,3 +1,4 @@
+import { AuditLog } from './audit-log.model';
 import { Inventario } from './inventario.model';
 
 export interface AtencionResumen {
@@ -9,6 +10,16 @@ export interface AtencionResumen {
   cantidadConsumos: number;
 }
 
+export interface AtencionesPorDia {
+  fecha: string;
+  cantidad: number;
+}
+
+export interface TopConsumo {
+  nombre: string;
+  total: number;
+}
+
 export interface DashboardStats {
   totalPacientesActivos: number;
   atencionesMes: number;
@@ -17,4 +28,7 @@ export interface DashboardStats {
   totalMedicamentosActivos: number;
   atencioneRecientes: AtencionResumen[];
   stockAlertas: Inventario[];
+  atencionesPorDia: AtencionesPorDia[];
+  topConsumos: TopConsumo[];
+  actividadReciente: AuditLog[];
 }

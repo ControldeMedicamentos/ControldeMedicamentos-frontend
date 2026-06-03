@@ -18,11 +18,14 @@ export interface AuthResponse {
   expiresIn: number;
   username: string;
   rol: RolUsuario;
+  permisos: string[];
 }
 
 export interface AuthUser {
   username: string;
   rol: RolUsuario;
+  permisos: string[];
   nombre?: string;
   exp?: number;
+  mustChangePassword?: boolean;
 }

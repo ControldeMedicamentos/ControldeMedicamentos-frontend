@@ -1,5 +1,13 @@
 @if (message) {
-  <div class="alert" [class.error]="type === 'error'">
+  <div
+    class="flex items-center gap-2 rounded border px-3 py-2.5"
+    [class.border-primary-200]="type !== 'error'"
+    [class.bg-primary-50]="type !== 'error'"
+    [class.text-primary-700]="type !== 'error'"
+    [class.border-rose-200]="type === 'error'"
+    [class.bg-rose-50]="type === 'error'"
+    [class.text-rose-800]="type === 'error'"
+  >
     <span class="pi" [class.pi-exclamation-triangle]="type === 'error'" [class.pi-info-circle]="type === 'info'"></span>
     {{ message }}
   </div>

@@ -1,86 +1,113 @@
-<div class="page-header">
-  <div class="page-title-block">
-    <h2 class="page-title">Medicamentos</h2>
-    <p class="page-subtitle">Inventario, lotes y stock disponible.</p>
+<div class="mb-5 flex items-start justify-between">
+  <div>
+    <h2 class="mb-1 mt-0 text-xl font-bold text-text">Medicamentos</h2>
+    <p class="m-0 text-sm text-slate-500">Inventario, lotes y stock disponible.</p>
   </div>
-  <button class="btn-primary" (click)="abrirNuevo()">
-    <span class="pi pi-plus"></span>
-    Nuevo medicamento
-  </button>
+  @if (auth.canWrite('/medicamentos')) {
+    <button class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700" (click)="abrirNuevo()">
+      <span class="pi pi-plus"></span>
+      Nuevo medicamento
+    </button>
+  }
 </div>
 
 @if (errorMessage) {
   <app-alert-message [message]="errorMessage" type="error" />
 }
 
-<div class="toolbar">
-  <div class="search-box">
-    <span class="pi pi-search search-icon"></span>
+<div class="mb-4 flex items-center gap-3 rounded-modal border border-border bg-white px-4 py-3">
+  <div class="relative flex-1">
+    <span class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400"></span>
     <input
       type="text"
-      class="search-input"
-      placeholder="Buscar por código, descripción..."
+      class="w-full rounded-md border border-border bg-white py-2 pl-8 pr-3 text-sm text-text outline-none focus:border-primary-600"
+      placeholder="Buscar por nombre, registro sanitario, fabricante..."
       [(ngModel)]="searchText"
       (ngModelChange)="onSearch()"
     >
   </div>
+  <select class="shrink-0 cursor-pointer rounded-md border border-border bg-white px-3 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" [(ngModel)]="filtroEstado" (ngModelChange)="onFiltroEstadoChange()">
+    <option value="activos">Solo activos</option>
+    <option value="inactivos">Solo inactivos</option>
+    <option value="todos">Todos</option>
+  </select>
+  <span class="shrink-0 rounded-full border border-border bg-surface-50 px-3 py-1 text-xs font-semibold text-slate-500">
+    {{ totalElements }} registro{{ totalElements !== 1 ? 's' : '' }}
+  </span>
 </div>
 
-<div class="table-wrapper">
+<div class="overflow-hidden rounded-modal border border-border bg-white">
   @if (isLoading) {
-    <div class="state-msg">
+    <div class="flex items-center justify-center gap-2 p-10 text-sm text-slate-400">
       <span class="pi pi-spinner pi-spin"></span> Cargando medicamentos...
     </div>
   } @else if (filtrados.length === 0) {
-    <div class="state-msg">
+    <div class="flex items-center justify-center gap-2 p-10 text-sm text-slate-400">
       <span class="pi pi-inbox"></span>
       No se encontraron medicamentos
     </div>
   } @else {
-    <table class="med-table">
+    <table class="w-full border-collapse text-sm">
       <thead>
         <tr>
-          <th>Código SISMED</th>
-          <th>Descripción</th>
-          <th>Presentación</th>
-          <th class="text-right">Stock</th>
-          <th class="text-center">Estado</th>
-          <th class="text-center">Acciones</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Nombre</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Registro Sanitario</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Tipo</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Presentación</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Fabricante</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-slate-400">Stock</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">Estado</th>
+          <th class="border-b border-border bg-surface-50 px-3.5 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">Acciones</th>
         </tr>
       </thead>
       <tbody>
         @for (med of paginados; track med.id) {
-          <tr [class.inactive-row]="!med.activo">
-            <td class="code-cell">{{ med.codigoSismed }}</td>
-            <td>
-              <span class="desc-main">{{ med.descripcionCorta || med.descripcionSismed }}</span>
-              @if (med.descripcionCorta) {
-                <span class="desc-sub">{{ med.descripcionSismed }}</span>
+          <tr [class.opacity-55]="!med.activo">
+            <td class="max-w-med-name border-b border-slate-100 px-3.5 py-3 font-medium text-text">{{ med.nombre }}</td>
+            <td class="whitespace-nowrap border-b border-slate-100 px-3.5 py-3 font-mono text-xs text-primary-600">{{ med.registroSanitario || '—' }}</td>
+            <td class="border-b border-slate-100 px-3.5 py-3">
+              @if (med.tipoProducto) {
+                <span class="inline-block whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold" [ngClass]="tipoProductoClass(med.tipoProducto)">
+                  {{ tipoProductoLabel(med.tipoProducto) }}
+                </span>
+              } @else {
+                <span class="text-slate-400">—</span>
               }
             </td>
-            <td class="text-muted">{{ med.presentacionFrasco || '—' }}</td>
-            <td class="text-right">
-              <span class="stock-badge"
-                    [class.low]="isLowStock(med.id) && getStockTotal(med.id) > 0"
-                    [class.no-stock]="getStockTotal(med.id) === 0">
+            <td class="border-b border-slate-100 px-3.5 py-3 text-slate-400">{{ med.presentacion || '—' }}</td>
+            <td class="max-w-dx-text overflow-hidden text-ellipsis whitespace-nowrap border-b border-slate-100 px-3.5 py-3 text-slate-400">{{ med.fabricante || '—' }}</td>
+            <td class="border-b border-slate-100 px-3.5 py-3 text-right">
+              <span class="inline-block rounded-full px-2.5 py-1 text-sm font-bold" [ngClass]="stockClass(med.id)">
                 {{ getStockTotal(med.id) }}
               </span>
             </td>
-            <td class="text-center">
-              <span class="status-badge" [class.inactive]="!med.activo">
+            <td class="border-b border-slate-100 px-3.5 py-3 text-center">
+              <span class="inline-block rounded-full px-2.5 py-1 text-xs font-semibold"
+                    [class.bg-green-100]="med.activo"
+                    [class.text-green-800]="med.activo"
+                    [class.bg-slate-100]="!med.activo"
+                    [class.text-slate-500]="!med.activo">
                 {{ med.activo ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
-            <td class="actions-cell">
-              <button class="btn-icon" title="Ver stock y lotes" (click)="abrirStock(med)">
-                <span class="pi pi-box"></span>
-              </button>
-              <button class="btn-icon" title="Editar" (click)="abrirEditar(med)">
-                <span class="pi pi-pencil"></span>
-              </button>
-              <button class="btn-icon" [title]="med.activo ? 'Desactivar' : 'Activar'" (click)="toggleActivo(med)">
-                <span class="pi" [class.pi-eye]="!med.activo" [class.pi-eye-slash]="med.activo"></span>
-              </button>
+            <td class="border-b border-slate-100 px-3.5 py-3 text-center">
+              <div class="flex justify-center gap-1">
+                <button class="flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-md border border-border bg-white text-xs text-text hover:border-primary-600 hover:bg-primary-600 hover:text-white" title="Ver stock y lotes" (click)="abrirStock(med)">
+                  <span class="pi pi-box"></span>
+                </button>
+                <button class="flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-md border border-border bg-white text-xs text-text hover:border-primary-600 hover:bg-primary-600 hover:text-white" title="Historial de movimientos" (click)="abrirHistorial(med)">
+                  <span class="pi pi-history"></span>
+                </button>
+                <button class="flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-md border border-border bg-white text-xs text-text hover:border-primary-600 hover:bg-primary-600 hover:text-white" title="Editar" (click)="abrirEditar(med)">
+                  <span class="pi pi-pencil"></span>
+                </button>
+                <button class="flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-md border border-border bg-white text-xs text-text hover:border-primary-600 hover:bg-primary-600 hover:text-white" [title]="med.activo ? 'Desactivar' : 'Activar'" (click)="toggleActivo(med)">
+                  <span class="pi" [class.pi-eye]="!med.activo" [class.pi-eye-slash]="med.activo"></span>
+                </button>
+                <button class="flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-md border border-red-200 bg-white text-xs text-red-500 hover:border-red-500 hover:bg-red-500 hover:text-white" title="Eliminar" (click)="abrirEliminar(med)">
+                  <span class="pi pi-trash"></span>
+                </button>
+              </div>
             </td>
           </tr>
         }
@@ -88,17 +115,25 @@
     </table>
 
     @if (totalPages > 1) {
-      <div class="pagination">
-        <button class="page-btn" [disabled]="page === 1" (click)="setPage(page - 1)">
+      <div class="flex items-center gap-1 border-t border-border px-3.5 py-3">
+        <button class="flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-md border border-border bg-white px-2 text-xs text-text hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-40" [disabled]="page === 1" (click)="setPage(page - 1)">
           <span class="pi pi-chevron-left"></span>
         </button>
         @for (p of pageNumbers; track p) {
-          <button class="page-btn" [class.active]="p === page" (click)="setPage(p)">{{ p }}</button>
+          <button class="flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-md border px-2 text-xs"
+                  [class.border-primary-600]="p === page"
+                  [class.bg-primary-600]="p === page"
+                  [class.font-semibold]="p === page"
+                  [class.text-white]="p === page"
+                  [class.border-border]="p !== page"
+                  [class.bg-white]="p !== page"
+                  [class.text-text]="p !== page"
+                  (click)="setPage(p)">{{ p }}</button>
         }
-        <button class="page-btn" [disabled]="page === totalPages" (click)="setPage(page + 1)">
+        <button class="flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-md border border-border bg-white px-2 text-xs text-text hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-40" [disabled]="page === totalPages" (click)="setPage(page + 1)">
           <span class="pi pi-chevron-right"></span>
         </button>
-        <span class="page-info">{{ page }} / {{ totalPages }}</span>
+        <span class="ml-2 text-xs text-slate-400">{{ page }} / {{ totalPages }}</span>
       </div>
     }
   }
@@ -116,7 +151,7 @@
 </app-modal-confirmation>
 
 <app-modal-confirmation
-  [title]="medicamentoSeleccionado ? 'Stock · ' + medicamentoSeleccionado.codigoSismed : 'Stock'"
+  [title]="medicamentoSeleccionado ? 'Stock · ' + medicamentoSeleccionado.nombre : 'Stock'"
   [isOpen]="showStockModal"
   (closed)="cerrarStockModal()">
   @if (medicamentoSeleccionado) {
@@ -124,4 +159,83 @@
       [medicamento]="medicamentoSeleccionado"
       (actualizado)="onStockActualizado()" />
   }
+</app-modal-confirmation>
+
+<app-modal-confirmation
+  [title]="medicamentoSeleccionado ? 'Historial · ' + medicamentoSeleccionado.nombre : 'Historial'"
+  [isOpen]="showHistorialModal"
+  (closed)="showHistorialModal = false">
+  @if (isLoadingHistorial) {
+    <div class="flex items-center justify-center gap-2 py-6 text-sm text-slate-400"><span class="pi pi-spinner pi-spin"></span> Cargando movimientos...</div>
+  } @else if (historialMovimientos.length === 0) {
+    <div class="flex items-center justify-center gap-2 py-6 text-sm text-slate-400"><span class="pi pi-inbox"></span> Sin movimientos registrados</div>
+  } @else {
+    <table class="w-full border-collapse text-xs">
+      <thead>
+        <tr>
+          <th class="whitespace-nowrap border-b border-border bg-surface-50 px-2.5 py-2 text-left font-semibold text-text">Fecha</th>
+          <th class="whitespace-nowrap border-b border-border bg-surface-50 px-2.5 py-2 text-left font-semibold text-text">Tipo</th>
+          <th class="whitespace-nowrap border-b border-border bg-surface-50 px-2.5 py-2 text-right font-semibold text-text">Cantidad</th>
+          <th class="whitespace-nowrap border-b border-border bg-surface-50 px-2.5 py-2 text-left font-semibold text-text">Período</th>
+          <th class="whitespace-nowrap border-b border-border bg-surface-50 px-2.5 py-2 text-left font-semibold text-text">Observación</th>
+          <th class="whitespace-nowrap border-b border-border bg-surface-50 px-2.5 py-2 text-left font-semibold text-text">Usuario</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (m of historialMovimientos; track m.id) {
+          <tr>
+            <td class="whitespace-nowrap border-b border-slate-100 px-2.5 py-2 text-slate-500">{{ m.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
+            <td><span class="inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs font-semibold" [ngClass]="tipoMovClass(m.tipoMovimiento)">{{ tipoMovLabel(m.tipoMovimiento) }}</span></td>
+            <td class="border-b border-slate-100 px-2.5 py-2 text-right font-bold" [ngClass]="tipoMovClass(m.tipoMovimiento)">
+              {{ ['INGRESO','REINGRESO','SALDO_INICIAL'].includes(m.tipoMovimiento) ? '+' : '-' }}{{ m.cantidad }}
+            </td>
+            <td class="border-b border-slate-100 px-2.5 py-2 text-slate-400">{{ m.periodo || '—' }}</td>
+            <td class="border-b border-slate-100 px-2.5 py-2 text-slate-400">{{ m.observacion || '—' }}</td>
+            <td class="border-b border-slate-100 px-2.5 py-2 text-slate-400">{{ m.usuarioRegistro }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</app-modal-confirmation>
+
+<app-modal-confirmation
+  title="Desactivar medicamento"
+  [isOpen]="showConfirmToggle"
+  (closed)="showConfirmToggle = false">
+  <div class="flex flex-col items-center gap-4 px-0 pb-1 pt-2 text-center">
+    <span class="pi pi-exclamation-triangle text-3xl text-amber-500"></span>
+    <p class="m-0 text-sm leading-6 text-text">
+      ¿Desactivar <strong>{{ medicamentoParaToggle?.nombre }}</strong>?
+      <br>
+      <span class="text-xs text-slate-400">No aparecerá disponible al registrar nuevas atenciones.</span>
+    </p>
+    <div class="flex justify-center gap-3">
+      <button class="cursor-pointer rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-text hover:bg-surface-50" (click)="showConfirmToggle = false">Cancelar</button>
+      <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600" (click)="confirmarDesactivarMed()">
+        <span class="pi pi-eye-slash"></span> Desactivar
+      </button>
+    </div>
+  </div>
+</app-modal-confirmation>
+
+<app-modal-confirmation
+  title="Eliminar medicamento"
+  [isOpen]="showDeleteConfirm"
+  (closed)="showDeleteConfirm = false">
+  <div class="flex flex-col items-center gap-4 px-0 pb-1 pt-2 text-center">
+    <span class="pi pi-exclamation-triangle text-3xl text-amber-500"></span>
+    <p class="m-0 text-sm leading-6 text-text">
+      ¿Eliminar <strong>{{ medicamentoSeleccionado?.nombre }}</strong>?
+      <br>
+      <span class="text-xs text-slate-400">Esta acción no se puede deshacer. Solo es posible si el medicamento no tiene consumos registrados.</span>
+    </p>
+    <div class="flex justify-center gap-3">
+      <button class="cursor-pointer rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-text hover:bg-surface-50" (click)="showDeleteConfirm = false">Cancelar</button>
+      <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-red-500 px-4 py-2 text-sm font-medium text-white hover:bg-red-600" (click)="confirmarEliminar()">
+        <span class="pi pi-trash"></span>
+        Eliminar
+      </button>
+    </div>
+  </div>
 </app-modal-confirmation>

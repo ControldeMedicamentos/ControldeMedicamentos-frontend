@@ -7,8 +7,7 @@ import { Paciente, PacienteCreate, Sexo, TipoDocumento, TipoPaciente } from '../
   selector: 'app-paciente-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './paciente-form.component.html',
-  styleUrl: './paciente-form.component.scss'
+  templateUrl: './paciente-form.component.html'
 })
 export class PacienteFormComponent implements OnChanges {
   @Input() paciente?: Paciente;
@@ -121,6 +120,19 @@ export class PacienteFormComponent implements OnChanges {
     return ph[this.form.getRawValue().tipoDocumento] ?? '';
   }
 
+  get nroDocMaxLength(): number {
+    const max: Record<string, number> = {
+      DNI: 8,
+      CARNET_EXTRANJERIA: 12,
+      PASAPORTE: 15
+    };
+    return max[this.form.getRawValue().tipoDocumento] ?? 15;
+  }
+
+  get nroDocInputMode(): 'numeric' | 'text' {
+    return this.form.getRawValue().tipoDocumento === 'DNI' ? 'numeric' : 'text';
+  }
+
   get nroDocError(): string {
     const errors: Record<string, string> = {
       DNI: 'El DNI debe tener exactamente 8 dígitos numéricos',
@@ -159,6 +171,24 @@ export class PacienteFormComponent implements OnChanges {
     const tipo = this.form.getRawValue().tipoDocumento;
     this.setValidatorsForTipo(tipo);
     this.form.get('nroDocumento')!.reset('');
+  }
+
+  onDocumentoInput(): void {
+    const tipo = this.form.getRawValue().tipoDocumento;
+    const ctrl = this.form.get('nroDocumento')!;
+    let value = (ctrl.value ?? '').toString();
+    if (tipo === 'DNI') {
+      value = value.replace(/\D/g, '').slice(0, 8);
+    } else {
+      value = value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, this.nroDocMaxLength);
+    }
+    ctrl.setValue(value, { emitEvent: false });
+  }
+
+  onTelefonoInput(): void {
+    const ctrl = this.form.get('telefono')!;
+    const value = (ctrl.value ?? '').toString().replace(/\D/g, '').slice(0, 9);
+    ctrl.setValue(value, { emitEvent: false });
   }
 
   submit(): void {

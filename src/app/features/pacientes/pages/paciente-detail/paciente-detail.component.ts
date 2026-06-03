@@ -19,8 +19,7 @@ import { PacienteService } from '../../services/paciente.service';
     ModalConfirmationComponent,
     PacienteFormComponent
   ],
-  templateUrl: './paciente-detail.component.html',
-  styleUrl: './paciente-detail.component.scss'
+  templateUrl: './paciente-detail.component.html'
 })
 export class PacienteDetailComponent implements OnInit {
   private readonly pacienteService = inject(PacienteService);
@@ -75,10 +74,7 @@ export class PacienteDetailComponent implements OnInit {
     this.pacienteService.update(this.paciente.id, data)
       .pipe(finalize(() => (this.isSaving = false)))
       .subscribe({
-        next: (updated) => {
-          this.paciente = updated;
-          this.modalAbierto = false;
-        },
+        next: (updated) => { this.paciente = updated; this.modalAbierto = false; },
         error: () => (this.errorMessage = 'Error al actualizar el paciente.')
       });
   }
@@ -91,11 +87,16 @@ export class PacienteDetailComponent implements OnInit {
     return labels[tipo] ?? '';
   }
 
-  volver(): void {
-    this.router.navigate(['/pacientes']);
+  tipoPacienteClass(tipo: TipoPaciente): string {
+    const classes: Record<TipoPaciente, string> = {
+      ESTUDIANTE: 'bg-blue-100 text-blue-800',
+      DOCENTE: 'bg-violet-100 text-violet-700',
+      ADMINISTRATIVO: 'bg-emerald-100 text-emerald-800',
+      INVITADO: 'bg-orange-50 text-orange-700'
+    };
+    return classes[tipo] ?? 'bg-slate-100 text-slate-500';
   }
 
-  irANuevaAtencion(): void {
-    this.router.navigate(['/atenciones/nueva']);
-  }
+  volver(): void { this.router.navigate(['/pacientes']); }
+  irANuevaAtencion(): void { this.router.navigate(['/atenciones/nueva']); }
 }

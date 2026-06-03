@@ -1,19 +1,13 @@
 export interface ReporteSISMED {
   periodo: string;
-  codigoSismed: string;
-  descripcionSismed: string;
+  nombreMedicamento: string;
   saldoInicial: number;
   ingresos: number;
   reingresos: number;
-  venta: number;
-  sis: number;
-  intersanidad: number;
-  factoresPerdida: number;
-  defuncionNacimiento: number;
-  exonerado: number;
-  soat: number;
-  creditoHospitalario: number;
-  otroConvenio: number;
+  alumno: number;
+  docente: number;
+  administrativo: number;
+  invitado: number;
   consumos: number;
   devoluciones: number;
   vencidos: number;
