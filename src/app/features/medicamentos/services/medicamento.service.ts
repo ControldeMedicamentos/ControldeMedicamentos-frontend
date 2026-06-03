@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { API_ENDPOINTS } from '../../../constants/api-endpoints';
 import { ApiService } from '../../../core/services/api.service';
 import { Medicamento, MedicamentoCreate } from '../../../models/medicamento.model';
+import { PageResponse } from '../../../models/page-response.model';
 
 @Injectable({ providedIn: 'root' })
 export class MedicamentoService {
@@ -11,6 +12,10 @@ export class MedicamentoService {
 
   getAll(): Observable<Medicamento[]> {
     return this.api.get<Medicamento[]>(this.base);
+  }
+
+  getPage(page: number, size: number, search: string, estado: string): Observable<PageResponse<Medicamento>> {
+    return this.api.get<PageResponse<Medicamento>>(`${this.base}/page`, { page, size, search, estado });
   }
 
   getById(id: number): Observable<Medicamento> {

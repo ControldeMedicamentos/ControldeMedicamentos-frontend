@@ -3,7 +3,6 @@ import { Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
-import { AuthResponse } from '../../../../models/auth.model';
 import { ApiService } from '../../../../core/services/api.service';
 import { AuthService } from '../../../../core/services/auth.service';
 import { AlertMessageComponent } from '../../../../shared/components/alert-message/alert-message.component';
@@ -12,8 +11,7 @@ import { AlertMessageComponent } from '../../../../shared/components/alert-messa
   selector: 'app-cambiar-contrasena',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, AlertMessageComponent],
-  templateUrl: './cambiar-contrasena.component.html',
-  styleUrl: './cambiar-contrasena.component.scss'
+  templateUrl: './cambiar-contrasena.component.html'
 })
 export class CambiarContrasenaComponent {
   private readonly api = inject(ApiService);
@@ -46,14 +44,16 @@ export class CambiarContrasenaComponent {
     }
     this.isLoading = true;
     this.errorMessage = '';
-    this.api.patch<AuthResponse, { currentPassword: string; newPassword: string }>(
+    this.api.patch<unknown, { currentPassword: string; newPassword: string }>(
       '/auth/change-password',
       { currentPassword, newPassword }
     ).pipe(finalize(() => (this.isLoading = false)))
     .subscribe({
-      next: (response) => {
-        localStorage.setItem('control_medicamentos_token', response.token);
-        this.router.navigate(['/dashboard']);
+      next: () => {
+        this.authService.clearSession();
+        this.router.navigate(['/login'], {
+          queryParams: { passwordChanged: '1' }
+        });
       },
       error: (err) => {
         this.errorMessage = err?.error?.message ?? 'Error al cambiar la contraseña.';

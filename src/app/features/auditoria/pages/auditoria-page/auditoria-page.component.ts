@@ -8,8 +8,7 @@ import { AuditoriaService } from '../../services/auditoria.service';
   selector: 'app-auditoria-page',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './auditoria-page.component.html',
-  styleUrl: './auditoria-page.component.scss'
+  templateUrl: './auditoria-page.component.html'
 })
 export class AuditoriaPageComponent implements OnInit {
   private readonly auditoriaService = inject(AuditoriaService);
@@ -93,22 +92,27 @@ export class AuditoriaPageComponent implements OnInit {
   }
 
   accionClass(accion: string): string {
-    if (accion.startsWith('LOGIN')) return 'badge-teal';
-    if (accion.startsWith('CREAR')) return 'badge-green';
-    if (accion.startsWith('ACTUALIZAR') || accion.startsWith('GUARDAR')) return 'badge-amber';
-    if (accion.startsWith('ELIMINAR') || accion.startsWith('DESACTIVAR') || accion === 'AJUSTE_INVENTARIO') return 'badge-red';
-    if (accion.startsWith('ACTIVAR') || accion.startsWith('INGRESO')) return 'badge-blue';
-    if (accion === 'CAMBIO_CONTRASENA') return 'badge-purple';
-    return 'badge-gray';
+    if (accion.startsWith('LOGIN')) return 'bg-teal-50 border-teal-200 text-teal-700';
+    if (accion.startsWith('CREAR')) return 'bg-green-50 border-green-200 text-green-700';
+    if (accion.startsWith('ACTUALIZAR') || accion.startsWith('GUARDAR')) return 'bg-amber-50 border-amber-200 text-amber-800';
+    if (accion.startsWith('ELIMINAR') || accion.startsWith('DESACTIVAR') || accion === 'AJUSTE_INVENTARIO') return 'bg-red-50 border-red-200 text-red-600';
+    if (accion.startsWith('ACTIVAR') || accion.startsWith('INGRESO')) return 'bg-blue-50 border-blue-200 text-blue-700';
+    if (accion === 'CAMBIO_CONTRASENA') return 'bg-purple-50 border-purple-200 text-purple-700';
+    return 'bg-slate-50 border-slate-200 text-slate-600';
   }
 
   moduloClass(modulo: string): string {
     const map: Record<string, string> = {
-      'Seguridad': 'badge-red', 'Empleados': 'badge-amber', 'Roles': 'badge-purple',
-      'Pacientes': 'badge-blue', 'Atenciones': 'badge-teal', 'Medicamentos': 'badge-green',
-      'Inventario': 'badge-orange', 'Reportes': 'badge-gray'
+      'Seguridad': 'bg-red-50 border-red-200 text-red-600',
+      'Empleados': 'bg-amber-50 border-amber-200 text-amber-800',
+      'Roles': 'bg-purple-50 border-purple-200 text-purple-700',
+      'Pacientes': 'bg-blue-50 border-blue-200 text-blue-700',
+      'Atenciones': 'bg-teal-50 border-teal-200 text-teal-700',
+      'Medicamentos': 'bg-green-50 border-green-200 text-green-700',
+      'Inventario': 'bg-orange-50 border-orange-200 text-orange-700',
+      'Reportes': 'bg-slate-50 border-slate-200 text-slate-600'
     };
-    return map[modulo] ?? 'badge-gray';
+    return map[modulo] ?? 'bg-slate-50 border-slate-200 text-slate-600';
   }
 
   formatTs(ts: string): string {

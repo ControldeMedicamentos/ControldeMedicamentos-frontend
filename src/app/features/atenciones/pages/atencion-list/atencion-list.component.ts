@@ -10,13 +10,13 @@ import { AlertMessageComponent } from '../../../../shared/components/alert-messa
 import { ModalConfirmationComponent } from '../../../../shared/components/modal-confirmation/modal-confirmation.component';
 import { AtencionDraft, AtencionDraftService } from '../../services/atencion-draft.service';
 import { AtencionService } from '../../services/atencion.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-atencion-list',
   standalone: true,
   imports: [CommonModule, FormsModule, AlertMessageComponent, ModalConfirmationComponent],
-  templateUrl: './atencion-list.component.html',
-  styleUrl: './atencion-list.component.scss'
+  templateUrl: './atencion-list.component.html'
 })
 export class AtencionListComponent implements OnInit {
   private readonly atencionService = inject(AtencionService);
@@ -24,6 +24,7 @@ export class AtencionListComponent implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly sanitizer = inject(DomSanitizer);
   private readonly router = inject(Router);
+  readonly auth = inject(AuthService);
 
   atenciones: Atencion[] = [];
   isLoading = false;
@@ -34,6 +35,8 @@ export class AtencionListComponent implements OnInit {
   busquedaPaciente = '';
 
   page = 1;
+  totalElements = 0;
+  totalPages = 1;
   readonly pageSize = 15;
 
   showDetail = false;
@@ -92,11 +95,17 @@ export class AtencionListComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     this.page = 1;
-    this.atencionService.getByFecha(this.desde, this.hasta).subscribe({
+    this.cargarPagina();
+  }
+
+  private cargarPagina(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.atencionService.getPage(this.desde, this.hasta, this.page - 1, this.pageSize, this.busquedaPaciente).subscribe({
       next: (data) => {
-        this.atenciones = data.sort((a, b) =>
-          new Date(b.fechaEvaluacion).getTime() - new Date(a.fechaEvaluacion).getTime()
-        );
+        this.atenciones = data.content;
+        this.totalElements = data.totalElements;
+        this.totalPages = Math.max(1, data.totalPages);
         this.isLoading = false;
       },
       error: () => {
@@ -107,23 +116,16 @@ export class AtencionListComponent implements OnInit {
   }
 
   get filtrados(): Atencion[] {
-    const q = this.busquedaPaciente.trim().toLowerCase();
-    if (!q) return this.atenciones;
-    return this.atenciones.filter(a =>
-      a.pacienteNombre.toLowerCase().includes(q) ||
-      a.pacienteNroDocumento.toLowerCase().includes(q)
-    );
+    return this.atenciones;
   }
 
-  onBusquedaChange(): void { this.page = 1; }
-
-  get totalPages(): number {
-    return Math.max(1, Math.ceil(this.filtrados.length / this.pageSize));
+  onBusquedaChange(): void {
+    this.page = 1;
+    this.cargarPagina();
   }
 
   get paginados(): Atencion[] {
-    const start = (this.page - 1) * this.pageSize;
-    return this.filtrados.slice(start, start + this.pageSize);
+    return this.atenciones;
   }
 
   get pageNumbers(): number[] {
@@ -135,7 +137,9 @@ export class AtencionListComponent implements OnInit {
   }
 
   setPage(p: number): void {
-    if (p >= 1 && p <= this.totalPages) this.page = p;
+    if (p < 1 || p > this.totalPages) return;
+    this.page = p;
+    this.cargarPagina();
   }
 
   verDetalle(atencion: Atencion): void {

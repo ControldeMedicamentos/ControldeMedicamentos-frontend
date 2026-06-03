@@ -12,8 +12,7 @@ import { InventarioService } from '../../services/inventario.service';
   selector: 'app-ajustes-inventario',
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, AlertMessageComponent, ModalConfirmationComponent],
-  templateUrl: './ajustes-inventario.component.html',
-  styleUrl: './ajustes-inventario.component.scss'
+  templateUrl: './ajustes-inventario.component.html'
 })
 export class AjustesInventarioComponent implements OnInit {
   private readonly medicamentoService = inject(MedicamentoService);
@@ -148,13 +147,30 @@ export class AjustesInventarioComponent implements OnInit {
 
   get cantidadMax(): number { return this.esReingreso ? 9999 : this.stockDisponible; }
 
+  get cantidadValida(): boolean {
+    const cantidad = Number(this.form.get('cantidad')?.value);
+    if (!Number.isFinite(cantidad) || cantidad < 1) return false;
+    return this.esReingreso || cantidad <= this.stockDisponible;
+  }
+
+  onCantidadInput(): void {
+    const ctrl = this.form.get('cantidad');
+    const value = Number(ctrl?.value);
+    if (!Number.isFinite(value)) return;
+    let next = Math.max(1, Math.floor(value));
+    if (!this.esReingreso && this.stockDisponible > 0) {
+      next = Math.min(next, this.stockDisponible);
+    }
+    if (next !== value) ctrl?.setValue(next, { emitEvent: false });
+  }
+
   solicitarConfirmacion(): void {
-    if (this.form.invalid || !this.loteSeleccionado) {
+    if (this.form.invalid || !this.loteSeleccionado || !this.cantidadValida) {
       this.form.markAllAsTouched();
       return;
     }
     const raw = this.form.getRawValue();
-    if (raw.cantidad > this.stockDisponible) {
+    if (!this.esReingreso && raw.cantidad > this.stockDisponible) {
       this.errorMessage = `La cantidad (${raw.cantidad}) supera el stock disponible (${this.stockDisponible}).`;
       return;
     }
@@ -163,7 +179,10 @@ export class AjustesInventarioComponent implements OnInit {
 
   guardar(): void {
     this.showConfirmAjuste = false;
-    if (!this.loteSeleccionado) return;
+    if (this.form.invalid || !this.loteSeleccionado || !this.cantidadValida) {
+      this.form.markAllAsTouched();
+      return;
+    }
     const raw = this.form.getRawValue();
     const payload: AjusteInventario = {
       inventarioId: this.loteSeleccionado.id,
@@ -197,6 +216,24 @@ export class AjustesInventarioComponent implements OnInit {
   get tipoAjusteLabel(): string {
     const tipo = this.form.get('tipoAjuste')?.value;
     return this.tiposAjuste.find(t => t.value === tipo)?.label ?? '';
+  }
+
+  tipoOptionClass(tipo: TipoAjuste): string {
+    const active = this.form.get('tipoAjuste')?.value === tipo;
+    if (!active) return 'border-border text-text hover:border-slate-400';
+    const classes: Record<TipoAjuste, string> = {
+      REINGRESO: 'border-green-600 bg-green-50 text-green-700',
+      DEVOLUCION: 'border-blue-600 bg-blue-50 text-blue-700',
+      VENCIDO: 'border-red-600 bg-red-50 text-red-600',
+      MERMA: 'border-amber-600 bg-amber-50 text-amber-700'
+    };
+    return classes[tipo];
+  }
+
+  loteClass(lote: Inventario): string {
+    if (this.loteSeleccionado?.id === lote.id) return 'border-primary-600 bg-blue-50';
+    if (this.estadoLote(lote) === 'vencido') return 'border-red-300 bg-red-50';
+    return 'border-border';
   }
 
   private clearMessages(): void {

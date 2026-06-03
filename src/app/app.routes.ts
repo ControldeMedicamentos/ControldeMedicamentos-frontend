@@ -15,9 +15,15 @@ export const routes: Routes = [
     loadChildren: () => import('./features/auth/cambiar-contrasena.routes').then((m) => m.CAMBIAR_CONTRASENA_ROUTES)
   },
   {
+    path: 'restablecer-contrasena',
+    component: AuthLayoutComponent,
+    loadChildren: () => import('./features/auth/restablecer-contrasena.routes').then((m) => m.RESTABLECER_CONTRASENA_ROUTES)
+  },
+  {
     path: '',
     component: MainLayoutComponent,
     canActivate: [authGuard],
+    canActivateChild: [authGuard],
     children: [
       {
         path: '',

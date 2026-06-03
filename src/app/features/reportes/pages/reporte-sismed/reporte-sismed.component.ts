@@ -8,8 +8,7 @@ import { ReporteService } from '../../services/reporte.service';
   selector: 'app-reporte-sismed',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './reporte-sismed.component.html',
-  styleUrl: './reporte-sismed.component.scss'
+  templateUrl: './reporte-sismed.component.html'
 })
 export class ReporteSismedComponent implements OnInit {
   private readonly reporteService = inject(ReporteService);
@@ -101,8 +100,8 @@ export class ReporteSismedComponent implements OnInit {
   }
 
   stockFinalColor(val: number): string {
-    if (val < 0) return 'neg';
-    if (val === 0) return 'zero';
-    return '';
+    if (val < 0) return 'text-red-600';
+    if (val === 0) return 'text-slate-400';
+    return 'text-text';
   }
 }

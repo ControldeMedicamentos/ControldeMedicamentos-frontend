@@ -1,26 +1,26 @@
-<div class="rep-header">
+<div class="mb-6 flex items-start justify-between">
   <div>
-    <h2 class="rep-title">Reporte SISMED</h2>
-    <p class="rep-subtitle">Tópico de Salud · Consolidado mensual de movimientos</p>
+    <h2 class="mb-1 mt-0 text-xl font-bold text-text">Reporte SISMED</h2>
+    <p class="m-0 text-sm text-slate-500">Tópico de Salud · Consolidado mensual de movimientos</p>
   </div>
 </div>
 
-<div class="filter-bar">
-  <div class="filter-group">
-    <label class="filter-label">Período</label>
-    <input type="month" class="filter-input" [(ngModel)]="selectedPeriodo" (ngModelChange)="onPeriodoChange()" />
+<div class="mb-5 flex flex-wrap items-end gap-3">
+  <div class="flex flex-col gap-1">
+    <label class="text-xs font-semibold uppercase tracking-wide text-slate-500">Período</label>
+    <input type="month" class="rounded-md border border-border bg-white px-3 py-2 text-sm text-text outline-none focus:border-primary-600 focus:ring-2 focus:ring-primary-100" [(ngModel)]="selectedPeriodo" (ngModelChange)="onPeriodoChange()" />
   </div>
-  <button class="btn-primary" (click)="generar()" [disabled]="isLoading">
+  <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="generar()" [disabled]="isLoading">
     <span class="pi" [class.pi-refresh]="!isLoading" [class.pi-spinner]="isLoading" [class.pi-spin]="isLoading"></span>
     Generar
   </button>
   @if (reporteData.length > 0) {
-    <button class="btn-export" (click)="exportar()" [disabled]="isExporting">
+    <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="exportar()" [disabled]="isExporting">
       <span class="pi" [class.pi-download]="!isExporting" [class.pi-spinner]="isExporting" [class.pi-spin]="isExporting"></span>
       Exportar Excel
     </button>
     @if (periodoEsAnterior) {
-      <button class="btn-cierre" (click)="confirmarCierre()" [disabled]="isCerrando">
+      <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="confirmarCierre()" [disabled]="isCerrando">
         <span class="pi pi-lock"></span>
         Cerrar mes
       </button>
@@ -29,15 +29,15 @@
 </div>
 
 @if (showConfirmCierre) {
-  <div class="cierre-confirm">
-    <span class="pi pi-exclamation-triangle cierre-icon"></span>
-    <div class="cierre-body">
-      <strong>¿Cerrar {{ periodoLabel }}?</strong>
-      <p>Se calcularán los stocks finales de cada medicamento y se generarán los saldos iniciales para el período siguiente. Esta acción no se puede deshacer.</p>
+  <div class="mb-4 flex items-start gap-4 rounded-lg border border-l-4 border-purple-300 border-l-purple-600 bg-purple-50 px-5 py-4">
+    <span class="pi pi-exclamation-triangle mt-0.5 shrink-0 text-xl text-purple-600"></span>
+    <div class="flex-1 text-sm text-text">
+      <strong class="mb-1 block">¿Cerrar {{ periodoLabel }}?</strong>
+      <p class="m-0 text-xs leading-6 text-slate-500">Se calcularán los stocks finales de cada medicamento y se generarán los saldos iniciales para el período siguiente. Esta acción no se puede deshacer.</p>
     </div>
-    <div class="cierre-actions">
-      <button class="btn-cancel-cierre" (click)="cancelarCierre()">Cancelar</button>
-      <button class="btn-do-cierre" (click)="cerrarMes()" [disabled]="isCerrando">
+    <div class="flex shrink-0 items-center gap-2">
+      <button class="cursor-pointer rounded-md border border-border bg-white px-3.5 py-1.5 text-xs text-text hover:bg-surface-50" (click)="cancelarCierre()">Cancelar</button>
+      <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-purple-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="cerrarMes()" [disabled]="isCerrando">
         <span class="pi" [class.pi-lock]="!isCerrando" [class.pi-spinner]="isCerrando" [class.pi-spin]="isCerrando"></span>
         {{ isCerrando ? 'Cerrando...' : 'Confirmar cierre' }}
       </button>
@@ -46,103 +46,103 @@
 }
 
 @if (successMessage) {
-  <div class="success-bar">
+  <div class="mb-4 flex items-center gap-2.5 rounded-md border border-green-200 bg-green-50 px-4 py-2.5 text-sm text-green-700">
     <span class="pi pi-check-circle"></span>
     {{ successMessage }}
   </div>
 }
 
 @if (errorMessage) {
-  <div class="error-bar">
+  <div class="mb-4 flex items-center gap-2.5 rounded-md border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
     <span class="pi pi-exclamation-triangle"></span>
     {{ errorMessage }}
-    <button class="btn-retry" (click)="generar()">Reintentar</button>
+    <button class="ml-auto cursor-pointer rounded border border-red-300 bg-transparent px-2.5 py-1 text-xs text-red-600 hover:bg-red-50" (click)="generar()">Reintentar</button>
   </div>
 }
 
 @if (!isLoading && reporteData.length === 0 && !errorMessage) {
-  <div class="empty-state">
-    <span class="pi pi-file-excel"></span>
+  <div class="flex flex-col items-center justify-center gap-3 rounded-modal border border-border bg-white p-14 text-sm text-slate-400">
+    <span class="pi pi-file-excel text-3xl text-slate-300"></span>
     <span>Sin movimientos registrados para <strong>{{ periodoLabel }}</strong></span>
   </div>
 }
 
 @if (reporteData.length > 0) {
-  <div class="panel">
-    <div class="panel-info">
-      <span class="pi pi-calendar"></span>
+  <div class="overflow-hidden rounded-modal border border-border bg-white">
+    <div class="flex items-center gap-2 border-b border-border bg-surface-50 px-4 py-3 text-sm text-text">
+      <span class="pi pi-calendar text-primary-600"></span>
       <strong>{{ periodoLabel | titlecase }}</strong>
-      <span class="info-sep">·</span>
+      <span class="text-slate-400">·</span>
       <span>{{ reporteData.length }} medicamento{{ reporteData.length !== 1 ? 's' : '' }}</span>
     </div>
 
-    <div class="table-scroll">
-      <table class="rep-table">
+    <div class="w-full overflow-x-auto">
+      <table class="min-w-report-table w-full border-collapse text-xs">
         <thead>
-          <tr class="thead-groups">
-            <th colspan="1" class="th-group th-group--base">Medicamento</th>
-            <th colspan="3" class="th-group th-group--ingreso">Entradas</th>
-            <th colspan="4" class="th-group th-group--consumo">Consumos por tipo de paciente</th>
-            <th colspan="1" class="th-group th-group--total-c">Total</th>
-            <th colspan="5" class="th-group th-group--salida">Salidas</th>
-            <th colspan="1" class="th-group th-group--stock">Stock</th>
+          <tr>
+            <th colspan="1" class="border-b border-black/10 bg-slate-50 px-2 py-1.5 text-center text-xs font-bold uppercase tracking-wide text-slate-600">Medicamento</th>
+            <th colspan="3" class="border-b border-black/10 bg-blue-100 px-2 py-1.5 text-center text-xs font-bold uppercase tracking-wide text-blue-800">Entradas</th>
+            <th colspan="4" class="border-b border-black/10 bg-amber-100 px-2 py-1.5 text-center text-xs font-bold uppercase tracking-wide text-amber-800">Consumos por tipo de paciente</th>
+            <th colspan="1" class="border-b border-black/10 bg-orange-200 px-2 py-1.5 text-center text-xs font-bold uppercase tracking-wide text-orange-800">Total</th>
+            <th colspan="5" class="border-b border-black/10 bg-red-100 px-2 py-1.5 text-center text-xs font-bold uppercase tracking-wide text-red-800">Salidas</th>
+            <th colspan="1" class="border-b border-black/10 bg-emerald-100 px-2 py-1.5 text-center text-xs font-bold uppercase tracking-wide text-emerald-800">Stock</th>
           </tr>
-          <tr class="thead-cols">
-            <th class="col-desc">Nombre</th>
-            <th class="col-num">Saldo<br>Inicial</th>
-            <th class="col-num">Ingresos</th>
-            <th class="col-num">Reingresos</th>
-            <th class="col-num">Alumno</th>
-            <th class="col-num">Docente</th>
-            <th class="col-num">Admin.</th>
-            <th class="col-num">Invitado</th>
-            <th class="col-num col-total-c">Consumos</th>
-            <th class="col-num">Devoluc.</th>
-            <th class="col-num">Vencidos</th>
-            <th class="col-num">Merma</th>
-            <th class="col-num">Distrib.</th>
-            <th class="col-num">Transf.</th>
-            <th class="col-num col-stock">Stock<br>Final</th>
+          <tr>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-left text-xs font-semibold leading-tight text-slate-500">Nombre</th>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-center text-xs font-semibold leading-tight text-slate-500">Saldo<br>Inicial</th>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-center text-xs font-semibold leading-tight text-slate-500">Ingresos</th>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-center text-xs font-semibold leading-tight text-slate-500">Reingresos</th>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-center text-xs font-semibold leading-tight text-slate-500">Alumno</th>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-center text-xs font-semibold leading-tight text-slate-500">Docente</th>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-center text-xs font-semibold leading-tight text-slate-500">Admin.</th>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-center text-xs font-semibold leading-tight text-slate-500">Invitado</th>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-center text-xs font-semibold leading-tight text-slate-500">Consumos</th>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-center text-xs font-semibold leading-tight text-slate-500">Devoluc.</th>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-center text-xs font-semibold leading-tight text-slate-500">Vencidos</th>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-center text-xs font-semibold leading-tight text-slate-500">Merma</th>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-center text-xs font-semibold leading-tight text-slate-500">Distrib.</th>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-center text-xs font-semibold leading-tight text-slate-500">Transf.</th>
+            <th class="border-b-2 border-border bg-slate-50 px-2 py-1.5 text-center text-xs font-semibold leading-tight text-slate-500">Stock<br>Final</th>
           </tr>
         </thead>
         <tbody>
           @for (r of reporteData; track r.nombreMedicamento) {
-            <tr>
-              <td class="col-desc">{{ r.nombreMedicamento }}</td>
-              <td class="col-num">{{ r.saldoInicial }}</td>
-              <td class="col-num">{{ r.ingresos }}</td>
-              <td class="col-num">{{ r.reingresos }}</td>
-              <td class="col-num">{{ r.alumno }}</td>
-              <td class="col-num">{{ r.docente }}</td>
-              <td class="col-num">{{ r.administrativo }}</td>
-              <td class="col-num">{{ r.invitado }}</td>
-              <td class="col-num col-total-c">{{ r.consumos }}</td>
-              <td class="col-num">{{ r.devoluciones }}</td>
-              <td class="col-num">{{ r.vencidos }}</td>
-              <td class="col-num">{{ r.merma }}</td>
-              <td class="col-num">{{ r.distribucion }}</td>
-              <td class="col-num">{{ r.transferencia }}</td>
-              <td class="col-num col-stock" [class]="stockFinalColor(r.stockFinal)">{{ r.stockFinal }}</td>
+            <tr class="hover:bg-slate-50">
+              <td class="max-w-motivo overflow-hidden text-ellipsis whitespace-nowrap border-b border-slate-100 px-2 py-2 text-left text-text">{{ r.nombreMedicamento }}</td>
+              <td class="border-b border-slate-100 px-2 py-2 text-center tabular-nums text-text">{{ r.saldoInicial }}</td>
+              <td class="border-b border-slate-100 px-2 py-2 text-center tabular-nums text-text">{{ r.ingresos }}</td>
+              <td class="border-b border-slate-100 px-2 py-2 text-center tabular-nums text-text">{{ r.reingresos }}</td>
+              <td class="border-b border-slate-100 px-2 py-2 text-center tabular-nums text-text">{{ r.alumno }}</td>
+              <td class="border-b border-slate-100 px-2 py-2 text-center tabular-nums text-text">{{ r.docente }}</td>
+              <td class="border-b border-slate-100 px-2 py-2 text-center tabular-nums text-text">{{ r.administrativo }}</td>
+              <td class="border-b border-slate-100 px-2 py-2 text-center tabular-nums text-text">{{ r.invitado }}</td>
+              <td class="border-b border-slate-100 bg-amber-50 px-2 py-2 text-center font-bold tabular-nums text-amber-800">{{ r.consumos }}</td>
+              <td class="border-b border-slate-100 px-2 py-2 text-center tabular-nums text-text">{{ r.devoluciones }}</td>
+              <td class="border-b border-slate-100 px-2 py-2 text-center tabular-nums text-text">{{ r.vencidos }}</td>
+              <td class="border-b border-slate-100 px-2 py-2 text-center tabular-nums text-text">{{ r.merma }}</td>
+              <td class="border-b border-slate-100 px-2 py-2 text-center tabular-nums text-text">{{ r.distribucion }}</td>
+              <td class="border-b border-slate-100 px-2 py-2 text-center tabular-nums text-text">{{ r.transferencia }}</td>
+              <td class="border-b border-slate-100 px-2 py-2 text-center font-bold tabular-nums" [ngClass]="stockFinalColor(r.stockFinal)">{{ r.stockFinal }}</td>
             </tr>
           }
         </tbody>
         <tfoot>
-          <tr class="totals-row">
-            <td class="totals-label">TOTALES</td>
-            <td class="col-num">{{ total('saldoInicial') }}</td>
-            <td class="col-num">{{ total('ingresos') }}</td>
-            <td class="col-num">{{ total('reingresos') }}</td>
-            <td class="col-num">{{ total('alumno') }}</td>
-            <td class="col-num">{{ total('docente') }}</td>
-            <td class="col-num">{{ total('administrativo') }}</td>
-            <td class="col-num">{{ total('invitado') }}</td>
-            <td class="col-num col-total-c">{{ total('consumos') }}</td>
-            <td class="col-num">{{ total('devoluciones') }}</td>
-            <td class="col-num">{{ total('vencidos') }}</td>
-            <td class="col-num">{{ total('merma') }}</td>
-            <td class="col-num">{{ total('distribucion') }}</td>
-            <td class="col-num">{{ total('transferencia') }}</td>
-            <td class="col-num col-stock">{{ total('stockFinal') }}</td>
+          <tr>
+            <td class="border-t-2 border-border bg-slate-100 px-2 py-2 text-left text-xs font-bold uppercase tracking-wide text-slate-600">TOTALES</td>
+            <td class="border-t-2 border-border bg-slate-100 px-2 py-2 text-center font-bold tabular-nums">{{ total('saldoInicial') }}</td>
+            <td class="border-t-2 border-border bg-slate-100 px-2 py-2 text-center font-bold tabular-nums">{{ total('ingresos') }}</td>
+            <td class="border-t-2 border-border bg-slate-100 px-2 py-2 text-center font-bold tabular-nums">{{ total('reingresos') }}</td>
+            <td class="border-t-2 border-border bg-slate-100 px-2 py-2 text-center font-bold tabular-nums">{{ total('alumno') }}</td>
+            <td class="border-t-2 border-border bg-slate-100 px-2 py-2 text-center font-bold tabular-nums">{{ total('docente') }}</td>
+            <td class="border-t-2 border-border bg-slate-100 px-2 py-2 text-center font-bold tabular-nums">{{ total('administrativo') }}</td>
+            <td class="border-t-2 border-border bg-slate-100 px-2 py-2 text-center font-bold tabular-nums">{{ total('invitado') }}</td>
+            <td class="border-t-2 border-border bg-orange-200 px-2 py-2 text-center font-bold tabular-nums text-orange-800">{{ total('consumos') }}</td>
+            <td class="border-t-2 border-border bg-slate-100 px-2 py-2 text-center font-bold tabular-nums">{{ total('devoluciones') }}</td>
+            <td class="border-t-2 border-border bg-slate-100 px-2 py-2 text-center font-bold tabular-nums">{{ total('vencidos') }}</td>
+            <td class="border-t-2 border-border bg-slate-100 px-2 py-2 text-center font-bold tabular-nums">{{ total('merma') }}</td>
+            <td class="border-t-2 border-border bg-slate-100 px-2 py-2 text-center font-bold tabular-nums">{{ total('distribucion') }}</td>
+            <td class="border-t-2 border-border bg-slate-100 px-2 py-2 text-center font-bold tabular-nums">{{ total('transferencia') }}</td>
+            <td class="border-t-2 border-border bg-emerald-100 px-2 py-2 text-center font-bold tabular-nums text-emerald-800">{{ total('stockFinal') }}</td>
           </tr>
         </tfoot>
       </table>

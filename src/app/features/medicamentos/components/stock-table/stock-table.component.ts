@@ -10,8 +10,7 @@ import { InventarioService } from '../../services/inventario.service';
   selector: 'app-stock-table',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './stock-table.component.html',
-  styleUrl: './stock-table.component.scss'
+  templateUrl: './stock-table.component.html'
 })
 export class StockTableComponent implements OnInit, OnChanges {
   @Input({ required: true }) medicamento!: Medicamento;
@@ -77,9 +76,26 @@ export class StockTableComponent implements OnInit, OnChanges {
     return labels[estado] ?? estado;
   }
 
+  estadoClass(estado: string): string {
+    const classes: Record<string, string> = {
+      vencido: 'bg-red-50 text-red-600',
+      por_vencer: 'bg-yellow-50 text-yellow-800',
+      bajo: 'bg-orange-50 text-orange-700',
+      ok: 'bg-green-100 text-green-800'
+    };
+    return classes[estado] ?? 'bg-slate-100 text-slate-500';
+  }
+
   abrirForm(): void {
     this.form.reset({ lote: '', fechaIngreso: '', fechaVencimiento: '', stockActual: 1 });
     this.showForm = true;
+  }
+
+  onStockActualInput(): void {
+    const ctrl = this.form.get('stockActual');
+    const value = Number(ctrl?.value);
+    if (!Number.isFinite(value)) return;
+    if (value < 1) ctrl?.setValue(1, { emitEvent: false });
   }
 
   guardarLote(): void {

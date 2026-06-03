@@ -10,6 +10,7 @@ import { MedicamentoFormComponent } from '../../components/medicamento-form/medi
 import { StockTableComponent } from '../../components/stock-table/stock-table.component';
 import { InventarioService } from '../../services/inventario.service';
 import { MedicamentoService } from '../../services/medicamento.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-medicamentos-list',
@@ -22,12 +23,12 @@ import { MedicamentoService } from '../../services/medicamento.service';
     MedicamentoFormComponent,
     StockTableComponent
   ],
-  templateUrl: './medicamentos-list.component.html',
-  styleUrl: './medicamentos-list.component.scss'
+  templateUrl: './medicamentos-list.component.html'
 })
 export class MedicamentosListComponent implements OnInit {
   private readonly medicamentoService = inject(MedicamentoService);
   private readonly inventarioService = inject(InventarioService);
+  readonly auth = inject(AuthService);
 
   medicamentos: Medicamento[] = [];
   inventarios: Inventario[] = [];
@@ -36,7 +37,10 @@ export class MedicamentosListComponent implements OnInit {
   errorMessage = '';
 
   searchText = '';
+  filtroEstado: 'todos' | 'activos' | 'inactivos' = 'activos';
   page = 1;
+  totalElements = 0;
+  totalPages = 1;
   readonly pageSize = 15;
 
   showFormModal = false;
@@ -57,11 +61,13 @@ export class MedicamentosListComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     forkJoin([
-      this.medicamentoService.getAll(),
+      this.medicamentoService.getPage(this.page - 1, this.pageSize, this.searchText, this.filtroEstado),
       this.inventarioService.getAll()
     ]).subscribe({
-      next: ([meds, invs]) => {
-        this.medicamentos = meds;
+      next: ([medPage, invs]) => {
+        this.medicamentos = medPage.content;
+        this.totalElements = medPage.totalElements;
+        this.totalPages = Math.max(1, medPage.totalPages);
         this.inventarios = invs;
         this.isLoading = false;
       },
@@ -73,14 +79,7 @@ export class MedicamentosListComponent implements OnInit {
   }
 
   get filtrados(): Medicamento[] {
-    const q = this.searchText.trim().toLowerCase();
-    if (!q) return this.medicamentos;
-    return this.medicamentos.filter(m =>
-      m.nombre.toLowerCase().includes(q) ||
-      (m.registroSanitario ?? '').toLowerCase().includes(q) ||
-      (m.fabricante ?? '').toLowerCase().includes(q) ||
-      (m.codigoSismed ?? '').toLowerCase().includes(q)
-    );
+    return this.medicamentos;
   }
 
   tipoProductoLabel(tipo?: string): string {
@@ -89,13 +88,21 @@ export class MedicamentosListComponent implements OnInit {
     return '';
   }
 
-  get totalPages(): number {
-    return Math.max(1, Math.ceil(this.filtrados.length / this.pageSize));
+  tipoProductoClass(tipo?: string): string {
+    if (tipo === 'MARCA') return 'bg-violet-100 text-violet-700';
+    if (tipo === 'GENERICO') return 'bg-sky-100 text-sky-700';
+    return 'bg-slate-100 text-slate-500';
+  }
+
+  stockClass(medicamentoId: number): string {
+    const stock = this.getStockTotal(medicamentoId);
+    if (stock === 0) return 'bg-slate-100 text-slate-400';
+    if (this.isLowStock(medicamentoId)) return 'bg-orange-50 text-orange-700';
+    return 'bg-green-100 text-green-800';
   }
 
   get paginados(): Medicamento[] {
-    const start = (this.page - 1) * this.pageSize;
-    return this.filtrados.slice(start, start + this.pageSize);
+    return this.medicamentos;
   }
 
   get pageNumbers(): number[] {
@@ -107,11 +114,19 @@ export class MedicamentosListComponent implements OnInit {
   }
 
   setPage(p: number): void {
-    if (p >= 1 && p <= this.totalPages) this.page = p;
+    if (p < 1 || p > this.totalPages) return;
+    this.page = p;
+    this.cargar();
   }
 
   onSearch(): void {
     this.page = 1;
+    this.cargar();
+  }
+
+  onFiltroEstadoChange(): void {
+    this.page = 1;
+    this.cargar();
   }
 
   getStockTotal(medicamentoId: number): number {
@@ -223,9 +238,9 @@ export class MedicamentosListComponent implements OnInit {
   }
 
   tipoMovClass(tipo: string): string {
-    if (['INGRESO','REINGRESO','SALDO_INICIAL'].includes(tipo)) return 'mov-entrada';
-    if (tipo === 'CONSUMO') return 'mov-consumo';
-    return 'mov-salida';
+    if (['INGRESO','REINGRESO','SALDO_INICIAL'].includes(tipo)) return 'bg-green-100 text-green-800';
+    if (tipo === 'CONSUMO') return 'bg-violet-100 text-violet-700';
+    return 'bg-red-50 text-red-600';
   }
 
   abrirEliminar(med: Medicamento): void {

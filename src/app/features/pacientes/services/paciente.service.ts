@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { API_ENDPOINTS } from '../../../constants/api-endpoints';
 import { ApiService } from '../../../core/services/api.service';
 import { Paciente, PacienteArchivo, PacienteCreate } from '../../../models/paciente.model';
+import { PageResponse } from '../../../models/page-response.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -14,6 +15,10 @@ export class PacienteService {
 
   getAll(): Observable<Paciente[]> {
     return this.api.get<Paciente[]>(this.base);
+  }
+
+  getPage(page: number, size: number, search: string, estado: string): Observable<PageResponse<Paciente>> {
+    return this.api.get<PageResponse<Paciente>>(`${this.base}/page`, { page, size, search, estado });
   }
 
   getById(id: number): Observable<Paciente> {

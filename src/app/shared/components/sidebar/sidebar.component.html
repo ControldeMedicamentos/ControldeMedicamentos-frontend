@@ -1,20 +1,29 @@
-<aside class="sidebar">
-  <div class="brand">
+<aside class="sticky top-0 h-screen w-sidebar shrink-0 overflow-y-auto bg-surface-900 text-slate-200">
+  <div class="flex h-16 items-center gap-2.5 border-b border-sidebar-border px-5">
     <span class="pi pi-shield"></span>
     <strong>SISMED</strong>
   </div>
-  <nav>
-    @for (item of items; track item.path) {
-      <a [routerLink]="item.path" routerLinkActive="active">
+
+  <nav class="flex flex-col gap-1 p-3.5">
+    @for (item of visibleItems; track item.path) {
+      <a
+        class="flex items-center gap-2.5 rounded px-3 py-2.5 text-slate-300 no-underline hover:bg-slate-800 hover:text-white"
+        routerLinkActive="bg-slate-800 !text-white"
+        [routerLink]="item.path"
+      >
         <span [class]="item.icon"></span>
         {{ item.label }}
       </a>
     }
 
     @if (isAdmin) {
-      <div class="nav-section">ADMINISTRACIÓN</div>
+      <div class="px-3 pb-1 pt-3 text-section font-bold uppercase tracking-section text-slate-600">ADMINISTRACIÓN</div>
       @for (item of adminItems; track item.path) {
-        <a [routerLink]="item.path" routerLinkActive="active">
+        <a
+          class="flex items-center gap-2.5 rounded px-3 py-2.5 text-slate-300 no-underline hover:bg-slate-800 hover:text-white"
+          routerLinkActive="bg-slate-800 !text-white"
+          [routerLink]="item.path"
+        >
           <span [class]="item.icon"></span>
           {{ item.label }}
         </a>

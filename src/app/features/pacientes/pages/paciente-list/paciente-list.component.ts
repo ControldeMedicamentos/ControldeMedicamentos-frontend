@@ -6,10 +6,10 @@ import { finalize } from 'rxjs';
 import { AlertMessageComponent } from '../../../../shared/components/alert-message/alert-message.component';
 import { ModalConfirmationComponent } from '../../../../shared/components/modal-confirmation/modal-confirmation.component';
 import { Paciente, PacienteCreate, TipoDocumento } from '../../../../models/paciente.model';
-import { PacienteCardComponent } from '../../components/paciente-card/paciente-card.component';
 import { PacienteFormComponent } from '../../components/paciente-form/paciente-form.component';
 import { PacienteService } from '../../services/paciente.service';
 import { PacienteUiStateService } from '../../services/paciente-ui-state.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-paciente-list',
@@ -19,19 +19,20 @@ import { PacienteUiStateService } from '../../services/paciente-ui-state.service
     FormsModule,
     AlertMessageComponent,
     ModalConfirmationComponent,
-    PacienteCardComponent,
     PacienteFormComponent
   ],
-  templateUrl: './paciente-list.component.html',
-  styleUrl: './paciente-list.component.scss'
+  templateUrl: './paciente-list.component.html'
 })
 export class PacienteListComponent implements OnInit {
   private readonly pacienteService = inject(PacienteService);
   private readonly uiState = inject(PacienteUiStateService);
   private readonly router = inject(Router);
+  readonly auth = inject(AuthService);
 
   pacientes: Paciente[] = [];
   filtrados: Paciente[] = [];
+  totalElements = 0;
+  totalPages = 1;
   isLoading = false;
   isSaving = false;
   errorMessage = '';
@@ -48,19 +49,14 @@ export class PacienteListComponent implements OnInit {
   get page(): number { return this.uiState.page; }
   set page(v: number) { this.uiState.page = v; }
 
-  pageSize = 12;
+  pageSize = 10;
 
   get modalTitulo(): string {
     return this.pacienteSeleccionado ? 'Editar paciente' : 'Nuevo paciente';
   }
 
-  get totalPages(): number {
-    return Math.max(1, Math.ceil(this.filtrados.length / this.pageSize));
-  }
-
   get paginados(): Paciente[] {
-    const start = (this.page - 1) * this.pageSize;
-    return this.filtrados.slice(start, start + this.pageSize);
+    return this.filtrados;
   }
 
   get pageNumbers(): number[] {
@@ -75,37 +71,28 @@ export class PacienteListComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.pageSize = this.uiState.viewMode === 'list' ? 10 : 12;
     this.cargarPacientes();
   }
 
   cargarPacientes(): void {
     this.isLoading = true;
     this.errorMessage = '';
-    this.pacienteService.getAll()
+    this.pacienteService.getPage(this.page - 1, this.pageSize, this.busqueda, this.filtroEstado)
       .pipe(finalize(() => (this.isLoading = false)))
       .subscribe({
-        next: (data) => { this.pacientes = data; this.filtrar(); },
+        next: (data) => {
+          this.pacientes = data.content;
+          this.filtrados = data.content;
+          this.totalElements = data.totalElements;
+          this.totalPages = Math.max(1, data.totalPages);
+        },
         error: () => (this.errorMessage = 'No se pudieron cargar los pacientes.')
       });
   }
 
   filtrar(): void {
-    const termino = this.busqueda.toLowerCase().trim();
-    let resultado = termino
-      ? this.pacientes.filter(p =>
-          p.nroDocumento.toLowerCase().includes(termino) ||
-          p.nombresApellidos.toLowerCase().includes(termino))
-      : [...this.pacientes];
-
-    if (this.filtroEstado === 'activos') {
-      resultado = resultado.filter(p => p.activo !== false);
-    } else if (this.filtroEstado === 'inactivos') {
-      resultado = resultado.filter(p => p.activo === false);
-    }
-
-    this.filtrados = resultado;
     this.page = 1;
+    this.cargarPacientes();
   }
 
   toggleActivo(paciente: Paciente): void {
@@ -137,12 +124,14 @@ export class PacienteListComponent implements OnInit {
 
   setViewMode(mode: 'grid' | 'list'): void {
     this.uiState.viewMode = mode;
-    this.pageSize = mode === 'grid' ? 12 : 10;
+    this.pageSize = 10;
     this.page = 1;
   }
 
   setPage(p: number): void {
-    if (p >= 1 && p <= this.totalPages) this.page = p;
+    if (p < 1 || p > this.totalPages) return;
+    this.page = p;
+    this.cargarPacientes();
   }
 
   tipoDocLabel(tipo: TipoDocumento): string {
@@ -158,6 +147,16 @@ export class PacienteListComponent implements OnInit {
       ADMINISTRATIVO: 'Administrativo', INVITADO: 'Invitado'
     };
     return labels[tipo] ?? tipo;
+  }
+
+  tipoPacienteClass(tipo: string): string {
+    const classes: Record<string, string> = {
+      ESTUDIANTE: 'bg-blue-100 text-blue-800',
+      DOCENTE: 'bg-violet-100 text-violet-700',
+      ADMINISTRATIVO: 'bg-emerald-100 text-emerald-800',
+      INVITADO: 'bg-orange-50 text-orange-700'
+    };
+    return classes[tipo] ?? 'bg-slate-100 text-slate-500';
   }
 
   abrirModalNuevo(): void {

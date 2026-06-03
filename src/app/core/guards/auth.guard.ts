@@ -10,9 +10,10 @@ export const authGuard: CanActivateFn = (_route, state) => {
     return router.createUrlTree(['/login']);
   }
 
-  const user = authService.getCurrentUser();
-  if (user?.mustChangePassword && state.url !== '/cambiar-contrasena') {
-    return router.createUrlTree(['/cambiar-contrasena']);
+  authService.refreshPermisos();
+
+  if (!authService.canReadPath(state.url)) {
+    return router.createUrlTree([authService.firstAccessiblePath()]);
   }
 
   return true;

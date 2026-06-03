@@ -6,8 +6,7 @@ import { Paciente } from '../../../../models/paciente.model';
   selector: 'app-paciente-card',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './paciente-card.component.html',
-  styleUrl: './paciente-card.component.scss'
+  templateUrl: './paciente-card.component.html'
 })
 export class PacienteCardComponent {
   @Input({ required: true }) paciente!: Paciente;
@@ -28,5 +27,15 @@ export class PacienteCardComponent {
       ADMINISTRATIVO: 'Administrativo', INVITADO: 'Invitado'
     };
     return labels[this.paciente.tipoPaciente] ?? '';
+  }
+
+  get tipoPacienteClass(): string {
+    const classes: Record<string, string> = {
+      ESTUDIANTE: 'bg-blue-100 text-blue-800',
+      DOCENTE: 'bg-violet-100 text-violet-700',
+      ADMINISTRATIVO: 'bg-emerald-100 text-emerald-800',
+      INVITADO: 'bg-orange-50 text-orange-700'
+    };
+    return classes[this.paciente.tipoPaciente] ?? 'bg-slate-100 text-slate-500';
   }
 }

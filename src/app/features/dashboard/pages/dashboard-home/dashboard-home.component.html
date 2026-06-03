@@ -1,123 +1,139 @@
-<div class="dash-header">
+<div class="mb-6 flex items-start justify-between">
   <div>
-    <h2 class="dash-title">Panel de control</h2>
-    <p class="dash-subtitle">Tópico de Salud · {{ mesActual | titlecase }}</p>
+    <h2 class="mb-1 mt-0 text-xl font-bold text-text">Panel de control</h2>
+    <p class="m-0 text-sm text-slate-500">Tópico de Salud · {{ mesActual | titlecase }}</p>
   </div>
-  <button class="btn-primary" (click)="irANuevaAtencion()">
-    <span class="pi pi-plus"></span>
-    Nueva atención
-  </button>
+  @if (auth.canWrite('/atenciones')) {
+    <button class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700" (click)="irANuevaAtencion()">
+      <span class="pi pi-plus"></span>
+      Nueva atención
+    </button>
+  }
 </div>
 
 @if (errorMessage) {
-  <div class="error-bar">
+  <div class="mb-4 flex items-center gap-2.5 rounded-md border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
     <span class="pi pi-exclamation-triangle"></span>
     {{ errorMessage }}
-    <button class="btn-retry" (click)="cargar()">Reintentar</button>
+    <button class="ml-auto cursor-pointer rounded border border-red-300 bg-transparent px-2.5 py-1 text-xs text-red-600 hover:bg-red-50" (click)="cargar()">Reintentar</button>
   </div>
 }
 
 @if (isLoading) {
-  <div class="loading-state">
+  <div class="flex items-center justify-center gap-2 p-12 text-sm text-slate-400">
     <span class="pi pi-spinner pi-spin"></span> Cargando estadísticas...
   </div>
 } @else if (stats) {
 
-  <div class="stat-cards">
+  <div class="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
 
-    <div class="stat-card" (click)="irAPacientes()">
-      <div class="stat-icon stat-icon--blue">
+    <div class="flex cursor-pointer items-center gap-4 rounded-modal border border-border bg-white px-5 py-4 transition-shadow hover:shadow-card-hover" (click)="irAPacientes()">
+      <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-modal bg-blue-100 text-xl text-primary-600">
         <span class="pi pi-users"></span>
       </div>
-      <div class="stat-body">
-        <span class="stat-value">{{ stats.totalPacientesActivos }}</span>
-        <span class="stat-label">Pacientes activos</span>
+      <div class="flex min-w-0 flex-col">
+        <span class="text-3xl font-bold leading-none text-text">{{ stats.totalPacientesActivos }}</span>
+        <span class="whitespace-nowrap text-xs text-slate-500">Pacientes activos</span>
       </div>
     </div>
 
-    <div class="stat-card" (click)="irAAtenciones()">
-      <div class="stat-icon stat-icon--teal">
+    <div class="flex cursor-pointer items-center gap-4 rounded-modal border border-border bg-white px-5 py-4 transition-shadow hover:shadow-card-hover" (click)="irAAtenciones()">
+      <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-modal bg-emerald-100 text-xl text-emerald-600">
         <span class="pi pi-calendar-plus"></span>
       </div>
-      <div class="stat-body">
-        <span class="stat-value">{{ stats.atencionesMes }}</span>
-        <span class="stat-label">Atenciones este mes</span>
+      <div class="flex min-w-0 flex-col">
+        <span class="text-3xl font-bold leading-none text-text">{{ stats.atencionesMes }}</span>
+        <span class="whitespace-nowrap text-xs text-slate-500">Atenciones este mes</span>
       </div>
     </div>
 
-    <div class="stat-card" [class.stat-card--warn]="stats.medicamentosConBajoStock > 0" (click)="irAMedicamentos()">
-      <div class="stat-icon" [class.stat-icon--blue]="stats.medicamentosConBajoStock === 0"
-                              [class.stat-icon--orange]="stats.medicamentosConBajoStock > 0">
+    <div class="flex cursor-pointer items-center gap-4 rounded-modal border bg-white px-5 py-4 transition-shadow hover:shadow-card-hover"
+         [class.border-orange-200]="stats.medicamentosConBajoStock > 0"
+         [class.bg-orange-50]="stats.medicamentosConBajoStock > 0"
+         [class.border-border]="stats.medicamentosConBajoStock === 0"
+         (click)="irAMedicamentos()">
+      <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-modal text-xl"
+           [class.bg-blue-100]="stats.medicamentosConBajoStock === 0"
+           [class.text-primary-600]="stats.medicamentosConBajoStock === 0"
+           [class.bg-orange-100]="stats.medicamentosConBajoStock > 0"
+           [class.text-orange-600]="stats.medicamentosConBajoStock > 0">
         <span class="pi pi-exclamation-triangle"></span>
       </div>
-      <div class="stat-body">
-        <span class="stat-value">{{ stats.medicamentosConBajoStock }}</span>
-        <span class="stat-label">Lotes con stock bajo</span>
+      <div class="flex min-w-0 flex-col">
+        <span class="text-3xl font-bold leading-none text-text">{{ stats.medicamentosConBajoStock }}</span>
+        <span class="whitespace-nowrap text-xs text-slate-500">Lotes con stock bajo</span>
       </div>
     </div>
 
-    <div class="stat-card" [class.stat-card--danger]="stats.inventariosAlertaVencimiento > 0" (click)="irAMedicamentos()">
-      <div class="stat-icon" [class.stat-icon--blue]="stats.inventariosAlertaVencimiento === 0"
-                              [class.stat-icon--red]="stats.inventariosAlertaVencimiento > 0">
+    <div class="flex cursor-pointer items-center gap-4 rounded-modal border bg-white px-5 py-4 transition-shadow hover:shadow-card-hover"
+         [class.border-red-200]="stats.inventariosAlertaVencimiento > 0"
+         [class.bg-red-50]="stats.inventariosAlertaVencimiento > 0"
+         [class.border-border]="stats.inventariosAlertaVencimiento === 0"
+         (click)="irAMedicamentos()">
+      <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-modal text-xl"
+           [class.bg-blue-100]="stats.inventariosAlertaVencimiento === 0"
+           [class.text-primary-600]="stats.inventariosAlertaVencimiento === 0"
+           [class.bg-red-100]="stats.inventariosAlertaVencimiento > 0"
+           [class.text-red-600]="stats.inventariosAlertaVencimiento > 0">
         <span class="pi pi-clock"></span>
       </div>
-      <div class="stat-body">
-        <span class="stat-value">{{ stats.inventariosAlertaVencimiento }}</span>
-        <span class="stat-label">Lotes próx. a vencer / vencidos</span>
+      <div class="flex min-w-0 flex-col">
+        <span class="text-3xl font-bold leading-none text-text">{{ stats.inventariosAlertaVencimiento }}</span>
+        <span class="whitespace-nowrap text-xs text-slate-500">Lotes próx. a vencer / vencidos</span>
       </div>
     </div>
 
   </div>
 
-  <div class="dash-charts">
+  <div class="mb-4 grid grid-cols-1 gap-4 xl:grid-cols-[3fr_2fr]">
 
-    <div class="panel">
-      <div class="panel-header">
-        <h3 class="panel-title">
-          <span class="pi pi-chart-bar"></span>
+    <div class="overflow-hidden rounded-modal border border-border bg-white">
+      <div class="flex items-center justify-between border-b border-border bg-surface-50 px-4 py-3">
+        <h3 class="m-0 flex items-center gap-2 text-sm font-semibold text-text">
+          <span class="pi pi-chart-bar text-primary-600"></span>
           Atenciones diarias
         </h3>
-        <span class="panel-subtitle">Últimos 14 días</span>
+        <span class="text-xs text-slate-400">Últimos 14 días</span>
       </div>
-      <div class="bar-chart-wrap">
-        <div class="bar-chart">
+      <div class="px-4 pb-2.5 pt-4">
+        <div class="flex h-chart items-end gap-1">
           @for (item of stats.atencionesPorDia; track item.fecha) {
-            <div class="bar-col" [title]="item.cantidad + ' atenciones el ' + item.fecha">
-              <div class="bar-track">
-                <div class="bar-fill" [style.height.%]="barHeight(item.cantidad)"></div>
+            <div class="flex h-full flex-1 cursor-default flex-col items-center gap-1" [title]="item.cantidad + ' atenciones el ' + item.fecha">
+              <div class="flex w-full flex-1 items-end overflow-hidden rounded-t bg-slate-100">
+                <div class="min-h-0.5 w-full rounded-t bg-primary-600 transition-[height] duration-500 hover:bg-primary-700" [style.height.%]="barHeight(item.cantidad)"></div>
               </div>
-              <span class="bar-label">{{ diaLabel(item.fecha) }}</span>
+              <span class="select-none text-section leading-none text-slate-400">{{ diaLabel(item.fecha) }}</span>
             </div>
           }
         </div>
       </div>
     </div>
 
-    <div class="panel">
-      <div class="panel-header">
-        <h3 class="panel-title">
-          <span class="pi pi-sort-amount-down"></span>
+    <div class="overflow-hidden rounded-modal border border-border bg-white">
+      <div class="flex items-center justify-between border-b border-border bg-surface-50 px-4 py-3">
+        <h3 class="m-0 flex items-center gap-2 text-sm font-semibold text-text">
+          <span class="pi pi-sort-amount-down text-primary-600"></span>
           Top medicamentos
         </h3>
-        <span class="panel-subtitle">Este mes</span>
+        <span class="text-xs text-slate-400">Este mes</span>
       </div>
       @if (!stats.topConsumos || stats.topConsumos.length === 0) {
-        <div class="empty-state">
-          <span class="pi pi-inbox"></span>
+        <div class="flex flex-col items-center gap-2 p-8 text-center text-sm text-slate-400">
+          <span class="pi pi-inbox text-2xl"></span>
           Sin consumos este mes
         </div>
       } @else {
-        <div class="top-list">
+        <div class="flex flex-col">
           @for (item of stats.topConsumos; track item.nombre; let i = $index) {
-            <div class="top-item">
-              <span class="top-rank">{{ i + 1 }}</span>
-              <div class="top-info">
-                <span class="top-name">{{ nombreCorto(item.nombre) }}</span>
-                <div class="top-track">
-                  <div class="top-fill" [style.width.%]="hbarWidth(item.total)"></div>
+            <div class="flex items-center gap-3 border-b border-slate-100 px-4 py-2.5 last:border-b-0">
+              <span class="w-3.5 shrink-0 text-center text-xs font-bold text-slate-300">{{ i + 1 }}</span>
+              <div class="flex min-w-0 flex-1 flex-col gap-1">
+                <span class="truncate text-xs font-medium text-text">{{ nombreCorto(item.nombre) }}</span>
+                <div class="h-1.5 overflow-hidden rounded bg-slate-100">
+                  <div class="h-full rounded bg-emerald-600 transition-[width] duration-500" [style.width.%]="hbarWidth(item.total)"></div>
                 </div>
               </div>
-              <span class="top-value">{{ item.total }}</span>
+              <span class="shrink-0 text-sm font-bold text-text">{{ item.total }}</span>
             </div>
           }
         </div>
@@ -126,71 +142,70 @@
 
   </div>
 
-  @if (stats.actividadReciente && stats.actividadReciente.length) {
-    <div class="panel activity-panel">
-      <div class="panel-header">
-        <h3 class="panel-title">
-          <span class="pi pi-shield"></span>
+  @if (isAdmin && stats.actividadReciente && stats.actividadReciente.length) {
+    <div class="mb-4 max-h-56 overflow-hidden rounded-modal border border-border bg-white xl:hidden">
+      <div class="flex items-center justify-between border-b border-border bg-surface-50 px-4 py-3">
+        <h3 class="m-0 flex items-center gap-2 text-sm font-semibold text-text">
+          <span class="pi pi-shield text-primary-600"></span>
           Auditoría reciente
         </h3>
-        <a class="btn-link" routerLink="/auditoria">Ver auditoría completa</a>
+        <a class="text-xs font-medium text-primary-600 hover:underline" routerLink="/auditoria">Ver auditoría completa</a>
       </div>
-      <div class="activity-list">
-        @for (log of stats.actividadReciente; track log.id) {
-          <div class="activity-item">
-            <div class="activity-dot" [class]="accionColor(log.accion)"></div>
-            <div class="activity-info">
-              <span class="activity-desc">{{ log.detalle }}</span>
-              <span class="activity-meta">{{ log.userEmail }} · {{ log.modulo }}</span>
+      <div class="flex flex-col">
+        @for (log of stats.actividadReciente.slice(0, 4); track log.id) {
+          <div class="flex items-center gap-3 border-b border-slate-100 px-4 py-2 last:border-b-0 hover:bg-slate-50">
+            <div class="h-2 w-2 shrink-0 rounded-full" [ngClass]="accionColor(log.accion)"></div>
+            <div class="flex min-w-0 flex-1 flex-col">
+              <span class="truncate text-xs font-medium text-text">{{ log.modulo }} · {{ log.accion }}</span>
+              <span class="text-xs text-slate-400">{{ log.userEmail }} · {{ log.modulo }}</span>
             </div>
-            <span class="activity-badge" [class]="accionBadgeClass(log.accion)">{{ log.accion }}</span>
-            <span class="activity-ts">{{ formatTs(log.timestamp) }}</span>
+            <span class="shrink-0 font-mono text-xs text-slate-400">{{ formatTs(log.timestamp) }}</span>
           </div>
         }
       </div>
     </div>
   }
 
-  <div class="dash-grid">
+  <div class="grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
 
-    <div class="panel">
-      <div class="panel-header">
-        <h3 class="panel-title">
-          <span class="pi pi-history"></span>
+    <div class="overflow-hidden rounded-modal border border-border bg-white">
+      <div class="flex items-center justify-between border-b border-border bg-surface-50 px-4 py-3">
+        <h3 class="m-0 flex items-center gap-2 text-sm font-semibold text-text">
+          <span class="pi pi-history text-primary-600"></span>
           Últimas atenciones
         </h3>
-        <button class="btn-link" (click)="irAAtenciones()">Ver todas</button>
+        <button class="cursor-pointer border-0 bg-transparent p-0 text-xs font-medium text-primary-600 hover:underline" (click)="irAAtenciones()">Ver todas</button>
       </div>
 
       @if (stats.atencioneRecientes.length === 0) {
-        <div class="empty-state">
-          <span class="pi pi-calendar-times"></span>
+        <div class="flex flex-col items-center gap-2 p-8 text-center text-sm text-slate-400">
+          <span class="pi pi-calendar-times text-2xl"></span>
           Sin atenciones registradas
         </div>
       } @else {
-        <table class="panel-table">
+        <table class="w-full border-collapse text-sm">
           <thead>
             <tr>
-              <th>Fecha</th>
-              <th>Paciente</th>
-              <th>Motivo</th>
-              <th class="text-center">Medicamentos</th>
+              <th class="border-b border-border px-3.5 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Fecha</th>
+              <th class="border-b border-border px-3.5 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Paciente</th>
+              <th class="border-b border-border px-3.5 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Motivo</th>
+              <th class="border-b border-border px-3.5 py-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">Medicamentos</th>
             </tr>
           </thead>
           <tbody>
             @for (at of stats.atencioneRecientes; track at.id) {
-              <tr>
-                <td class="date-cell">{{ at.fechaEvaluacion | date:'dd/MM/yyyy' }}</td>
-                <td>
-                  <span class="patient-name">{{ at.pacienteNombre }}</span>
-                  <span class="patient-doc">{{ at.pacienteNroDocumento }}</span>
+              <tr class="hover:bg-slate-50">
+                <td class="whitespace-nowrap border-b border-slate-100 px-3.5 py-2 font-semibold text-slate-600">{{ at.fechaEvaluacion | date:'dd/MM/yyyy' }}</td>
+                <td class="border-b border-slate-100 px-3.5 py-2">
+                  <span class="block font-medium text-text">{{ at.pacienteNombre }}</span>
+                  <span class="block font-mono text-xs text-slate-400">{{ at.pacienteNroDocumento }}</span>
                 </td>
-                <td class="motivo-cell">{{ at.motivo }}</td>
-                <td class="text-center">
+                <td class="max-w-dx-text border-b border-slate-100 px-3.5 py-2 text-slate-600">{{ at.motivo }}</td>
+                <td class="border-b border-slate-100 px-3.5 py-2 text-center">
                   @if (at.cantidadConsumos > 0) {
-                    <span class="consumo-badge">{{ at.cantidadConsumos }}</span>
+                    <span class="inline-flex h-5.5 min-w-5.5 items-center justify-center rounded-full bg-blue-100 px-1.5 text-xs font-bold text-blue-700">{{ at.cantidadConsumos }}</span>
                   } @else {
-                    <span class="text-muted">—</span>
+                    <span class="text-slate-400">—</span>
                   }
                 </td>
               </tr>
@@ -200,37 +215,38 @@
       }
     </div>
 
-    <div class="panel">
-      <div class="panel-header">
-        <h3 class="panel-title">
-          <span class="pi pi-bell"></span>
+    <div class="flex flex-col gap-4">
+    <div class="overflow-hidden rounded-modal border border-border bg-white">
+      <div class="flex items-center justify-between border-b border-border bg-surface-50 px-4 py-3">
+        <h3 class="m-0 flex items-center gap-2 text-sm font-semibold text-text">
+          <span class="pi pi-bell text-primary-600"></span>
           Alertas de stock
         </h3>
-        <button class="btn-link" (click)="irAMedicamentos()">Ver medicamentos</button>
+        <button class="cursor-pointer border-0 bg-transparent p-0 text-xs font-medium text-primary-600 hover:underline" (click)="irAMedicamentos()">Ver medicamentos</button>
       </div>
 
       @if (stats.stockAlertas.length === 0) {
-        <div class="empty-state">
-          <span class="pi pi-check-circle"></span>
+        <div class="flex flex-col items-center gap-2 p-8 text-center text-sm text-slate-400">
+          <span class="pi pi-check-circle text-2xl"></span>
           Sin alertas de stock
         </div>
       } @else {
-        <table class="panel-table">
+        <table class="w-full border-collapse text-sm">
           <thead>
             <tr>
-              <th>Código</th>
-              <th>Medicamento</th>
-              <th class="text-right">Stock</th>
-              <th class="text-center">Estado</th>
+              <th class="border-b border-border px-3.5 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Código</th>
+              <th class="border-b border-border px-3.5 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Medicamento</th>
+              <th class="border-b border-border px-3.5 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-400">Stock</th>
+              <th class="border-b border-border px-3.5 py-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">Estado</th>
             </tr>
           </thead>
           <tbody>
             @for (inv of stats.stockAlertas; track inv.id) {
-              <tr>
-                <td class="desc-cell" colspan="2">{{ inv.nombreMedicamento }}</td>
-                <td class="text-right font-bold">{{ inv.stockActual }}</td>
-                <td class="text-center">
-                  <span class="estado-badge" [class]="estadoInventario(inv)">
+              <tr class="hover:bg-slate-50">
+                <td class="max-w-dx border-b border-slate-100 px-3.5 py-2 text-text" colspan="2">{{ inv.nombreMedicamento }}</td>
+                <td class="border-b border-slate-100 px-3.5 py-2 text-right font-semibold text-text">{{ inv.stockActual }}</td>
+                <td class="border-b border-slate-100 px-3.5 py-2 text-center">
+                  <span class="inline-block rounded-full px-2.5 py-1 text-xs font-semibold" [ngClass]="estadoInventarioClass(estadoInventario(inv))">
                     {{ estadoLabel(estadoInventario(inv)) }}
                   </span>
                 </td>
@@ -238,6 +254,38 @@
             }
           </tbody>
         </table>
+      }
+    </div>
+
+      @if (isAdmin && stats.actividadReciente && stats.actividadReciente.length) {
+        <div class="hidden overflow-hidden rounded-modal border border-border bg-white xl:block">
+          <div class="flex items-center justify-between border-b border-border bg-surface-50 px-4 py-3">
+            <div class="flex items-center gap-3">
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-modal bg-blue-50 text-primary-600">
+                <span class="pi pi-history"></span>
+              </div>
+              <div>
+                <h3 class="m-0 text-sm font-bold uppercase tracking-wide text-text">Auditoria actividad</h3>
+                <p class="m-0 text-xs text-slate-400">Ultimos movimientos del sistema</p>
+              </div>
+            </div>
+            <a class="text-xs font-bold uppercase text-primary-600 no-underline hover:underline" routerLink="/auditoria">Logs</a>
+          </div>
+
+          <div class="px-4 py-3">
+            @for (log of stats.actividadReciente.slice(0, 5); track log.id) {
+              <div class="relative border-l border-blue-100 pb-3 pl-4 last:border-transparent last:pb-0">
+                <span class="absolute -left-1 top-1.5 h-2 w-2 rounded-full" [ngClass]="accionColor(log.accion)"></span>
+                <div class="mb-1 flex items-start justify-between gap-2">
+                  <span class="rounded bg-blue-50 px-2 py-0.5 text-section font-bold uppercase text-primary-600">{{ log.accion }}</span>
+                  <span class="shrink-0 font-mono text-section text-slate-400">{{ formatTs(log.timestamp) }}</span>
+                </div>
+                <p class="mb-1 mt-0 truncate text-xs font-semibold text-text">{{ log.userEmail }}</p>
+                <p class="m-0 rounded-md border border-border bg-surface-50 px-3 py-2 text-xs text-slate-500">{{ log.detalle }}</p>
+              </div>
+            }
+          </div>
+        </div>
       }
     </div>
 

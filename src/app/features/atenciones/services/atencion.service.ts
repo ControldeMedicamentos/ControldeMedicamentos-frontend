@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { API_ENDPOINTS } from '../../../constants/api-endpoints';
 import { ApiService } from '../../../core/services/api.service';
 import { Atencion, AtencionArchivo, AtencionCreate } from '../../../models/atencion.model';
+import { PageResponse } from '../../../models/page-response.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -26,6 +27,10 @@ export class AtencionService {
 
   getByFecha(desde: string, hasta: string): Observable<Atencion[]> {
     return this.api.get<Atencion[]>(`${this.base}/search?desde=${desde}&hasta=${hasta}`);
+  }
+
+  getPage(desde: string, hasta: string, page: number, size: number, search: string): Observable<PageResponse<Atencion>> {
+    return this.api.get<PageResponse<Atencion>>(`${this.base}/page`, { desde, hasta, page, size, search });
   }
 
   create(data: AtencionCreate): Observable<Atencion> {

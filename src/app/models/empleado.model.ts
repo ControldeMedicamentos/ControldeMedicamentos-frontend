@@ -5,6 +5,7 @@ export interface Empleado {
   username: string;
   nombre: string;
   email: string;
+  dni?: string;
   rol: RolUsuario;
   activo: boolean;
   createdAt?: string;
@@ -20,5 +21,6 @@ export interface EmpleadoCreate {
 export interface EmpleadoUpdate {
   nombre: string;
   email: string;
+  dni: string;
   rol: RolUsuario;
 }

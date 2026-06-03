@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
@@ -7,20 +7,18 @@ interface MenuItem {
   label: string;
   path: string;
   icon: string;
-  adminOnly?: boolean;
 }
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
-  templateUrl: './sidebar.component.html',
-  styleUrl: './sidebar.component.scss'
+  templateUrl: './sidebar.component.html'
 })
-export class SidebarComponent {
+export class SidebarComponent implements OnInit {
   private readonly authService = inject(AuthService);
 
-  readonly items: MenuItem[] = [
+  private readonly allItems: MenuItem[] = [
     { label: 'Dashboard',    path: '/dashboard',           icon: 'pi pi-home' },
     { label: 'Pacientes',    path: '/pacientes',            icon: 'pi pi-users' },
     { label: 'Atenciones',   path: '/atenciones',           icon: 'pi pi-clipboard' },
@@ -35,7 +33,15 @@ export class SidebarComponent {
     { label: 'Auditoría',  path: '/auditoria',  icon: 'pi pi-history' }
   ];
 
+  visibleItems: MenuItem[] = [];
+
   get isAdmin(): boolean {
-    return this.authService.getCurrentUser()?.rol === 'ADMIN';
+    return this.authService.isAdmin();
+  }
+
+  ngOnInit(): void {
+    this.authService.permisos$.subscribe(() => {
+      this.visibleItems = this.allItems.filter(item => this.authService.canReadPath(item.path));
+    });
   }
 }

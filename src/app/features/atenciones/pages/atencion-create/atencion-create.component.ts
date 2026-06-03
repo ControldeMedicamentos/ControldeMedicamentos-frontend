@@ -29,8 +29,7 @@ interface MedUiState {
   selector: 'app-atencion-create',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, FormsModule, AlertMessageComponent],
-  templateUrl: './atencion-create.component.html',
-  styleUrl: './atencion-create.component.scss'
+  templateUrl: './atencion-create.component.html'
 })
 export class AtencionCreateComponent implements OnInit, OnDestroy {
   private readonly atencionService = inject(AtencionService);
@@ -65,6 +64,19 @@ export class AtencionCreateComponent implements OnInit, OnDestroy {
     { num: 4, label: 'Plan',         icon: 'pi-check-square' },
     { num: 5, label: 'Medicamentos', icon: 'pi-box'          }
   ];
+
+  stepCircleClass(stepNum: number): string {
+    if (this.currentStep >= stepNum) {
+      return 'cursor-pointer border-primary-600 bg-primary-600 text-white hover:bg-primary-700';
+    }
+    return 'cursor-default border-border bg-white text-slate-400';
+  }
+
+  stepLabelClass(stepNum: number): string {
+    if (this.currentStep === stepNum) return 'font-semibold text-primary-600';
+    if (this.currentStep > stepNum) return 'text-text';
+    return 'text-slate-400';
+  }
 
   pacienteQuery = '';
   pacienteSuggestions: Paciente[] = [];
@@ -257,6 +269,13 @@ export class AtencionCreateComponent implements OnInit, OnDestroy {
   consumoHasError(i: number, field: string): boolean {
     const ctrl = this.consumos.at(i).get(field);
     return !!(ctrl?.invalid && ctrl.touched);
+  }
+
+  onCantidadConsumoInput(i: number): void {
+    const ctrl = this.consumos.at(i).get('cantidadConsumida');
+    const value = Number(ctrl?.value);
+    if (!Number.isFinite(value)) return;
+    if (value < 1) ctrl?.setValue(1, { emitEvent: false });
   }
 
   onFilesSelected(event: Event): void {

@@ -5,8 +5,7 @@ import { Component, EventEmitter, HostListener, Input, Output } from '@angular/c
   selector: 'app-modal-confirmation',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './modal-confirmation.component.html',
-  styleUrl: './modal-confirmation.component.scss'
+  templateUrl: './modal-confirmation.component.html'
 })
 export class ModalConfirmationComponent {
   @Input() title = '';
@@ -19,7 +18,7 @@ export class ModalConfirmationComponent {
   }
 
   onOverlayClick(event: MouseEvent): void {
-    if ((event.target as HTMLElement).classList.contains('modal-overlay')) {
+    if (event.target === event.currentTarget) {
       this.closed.emit();
     }
   }

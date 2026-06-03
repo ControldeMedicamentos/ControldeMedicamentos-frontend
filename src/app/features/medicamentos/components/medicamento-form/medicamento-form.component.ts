@@ -7,8 +7,7 @@ import { Medicamento, MedicamentoCreate, TipoProducto } from '../../../../models
   selector: 'app-medicamento-form',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './medicamento-form.component.html',
-  styleUrl: './medicamento-form.component.scss'
+  templateUrl: './medicamento-form.component.html'
 })
 export class MedicamentoFormComponent implements OnChanges {
   @Input() medicamento?: Medicamento;
@@ -30,12 +29,20 @@ export class MedicamentoFormComponent implements OnChanges {
     presentacion:     ['', Validators.maxLength(120)],
     fabricante:       ['', Validators.maxLength(150)],
     paisFabricacion:  ['', Validators.maxLength(80)],
-    precioUnitario:   [null as number | null],
+    precioUnitario:   [null as number | null, Validators.min(0)],
     stockMinimo:      [0, [Validators.required, Validators.min(0)]],
     activo:           [true]
   });
 
   get isEditing(): boolean { return !!this.medicamento; }
+
+  onPrecioInput(): void {
+    this.clampNumber('precioUnitario', 0);
+  }
+
+  onStockMinimoInput(): void {
+    this.clampNumber('stockMinimo', 0);
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['medicamento']) {
@@ -76,5 +83,13 @@ export class MedicamentoFormComponent implements OnChanges {
   hasError(field: string): boolean {
     const ctrl = this.form.get(field);
     return !!(ctrl?.invalid && ctrl.touched);
+  }
+
+  private clampNumber(field: 'precioUnitario' | 'stockMinimo', min: number): void {
+    const ctrl = this.form.get(field);
+    if (field === 'precioUnitario' && ctrl?.value === null) return;
+    const value = Number(ctrl?.value);
+    if (!Number.isFinite(value)) return;
+    if (value < min) ctrl?.setValue(min, { emitEvent: false });
   }
 }

@@ -12,8 +12,7 @@ type Seccion = 'sistema' | 'empresa';
   selector: 'app-roles-page',
   standalone: true,
   imports: [CommonModule, FormsModule, AlertMessageComponent, ModalConfirmationComponent],
-  templateUrl: './roles-page.component.html',
-  styleUrl: './roles-page.component.scss'
+  templateUrl: './roles-page.component.html'
 })
 export class RolesPageComponent implements OnInit {
   private readonly roleService = inject(RoleService);
@@ -23,6 +22,7 @@ export class RolesPageComponent implements OnInit {
   rolesEmpresa: Rol[] = [];
   rolSeleccionado: Rol | null = null;
   permisos: RolVistaPermiso[] = [];
+  busqueda = '';
 
   isLoadingRoles = false;
   isLoadingPermisos = false;
@@ -65,8 +65,19 @@ export class RolesPageComponent implements OnInit {
     return this.seccion === 'sistema' ? this.rolesSistema : this.rolesEmpresa;
   }
 
+  get rolesFiltrados(): Rol[] {
+    const q = this.busqueda.trim().toLowerCase();
+    if (!q) return this.rolesActivos;
+    return this.rolesActivos.filter(r =>
+      this.roleLabel(r.name).toLowerCase().includes(q) ||
+      r.name.toLowerCase().includes(q) ||
+      (r.descripcion ?? '').toLowerCase().includes(q)
+    );
+  }
+
   setSeccion(s: Seccion): void {
     this.seccion = s;
+    this.busqueda = '';
     this.rolSeleccionado = null;
     this.permisos = [];
     this.permisosModificados = false;

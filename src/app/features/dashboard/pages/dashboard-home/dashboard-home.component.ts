@@ -4,16 +4,17 @@ import { Router, RouterLink } from '@angular/router';
 import { AtencionResumen, DashboardStats } from '../../../../models/dashboard.model';
 import { Inventario } from '../../../../models/inventario.model';
 import { DashboardService } from '../../services/dashboard.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-dashboard-home',
   standalone: true,
   imports: [CommonModule, RouterLink],
-  templateUrl: './dashboard-home.component.html',
-  styleUrl: './dashboard-home.component.scss'
+  templateUrl: './dashboard-home.component.html'
 })
 export class DashboardHomeComponent implements OnInit {
   private readonly dashboardService = inject(DashboardService);
+  readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
   stats?: DashboardStats;
@@ -25,6 +26,10 @@ export class DashboardHomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+  }
+
+  get isAdmin(): boolean {
+    return this.auth.isAdmin();
   }
 
   cargar(): void {
@@ -73,27 +78,36 @@ export class DashboardHomeComponent implements OnInit {
     return map[estado] ?? estado;
   }
 
+  estadoInventarioClass(estado: string): string {
+    const map: Record<string, string> = {
+      vencido: 'bg-red-100 text-red-600',
+      por_vencer: 'bg-yellow-50 text-yellow-800',
+      bajo: 'bg-orange-50 text-orange-700'
+    };
+    return map[estado] ?? 'bg-slate-100 text-slate-500';
+  }
+
   irANuevaAtencion(): void { this.router.navigate(['/atenciones/nueva']); }
   irAPacientes(): void { this.router.navigate(['/pacientes']); }
   irAMedicamentos(): void { this.router.navigate(['/medicamentos']); }
   irAAtenciones(): void { this.router.navigate(['/atenciones']); }
 
   accionColor(accion: string): string {
-    if (accion.startsWith('LOGIN')) return 'dot-teal';
-    if (accion.startsWith('CREAR') || accion.startsWith('INGRESO')) return 'dot-green';
-    if (accion.startsWith('ACTUALIZAR') || accion.startsWith('GUARDAR')) return 'dot-amber';
-    if (accion.startsWith('ELIMINAR') || accion.startsWith('DESACTIVAR')) return 'dot-red';
-    if (accion === 'CAMBIO_CONTRASENA') return 'dot-purple';
-    return 'dot-blue';
+    if (accion.startsWith('LOGIN')) return 'bg-teal-600';
+    if (accion.startsWith('CREAR') || accion.startsWith('INGRESO')) return 'bg-green-600';
+    if (accion.startsWith('ACTUALIZAR') || accion.startsWith('GUARDAR')) return 'bg-amber-600';
+    if (accion.startsWith('ELIMINAR') || accion.startsWith('DESACTIVAR')) return 'bg-red-600';
+    if (accion === 'CAMBIO_CONTRASENA') return 'bg-purple-600';
+    return 'bg-primary-600';
   }
 
   accionBadgeClass(accion: string): string {
-    if (accion.startsWith('LOGIN')) return 'ab-teal';
-    if (accion.startsWith('CREAR') || accion.startsWith('INGRESO')) return 'ab-green';
-    if (accion.startsWith('ACTUALIZAR') || accion.startsWith('GUARDAR') || accion.startsWith('AJUSTE')) return 'ab-amber';
-    if (accion.startsWith('ELIMINAR') || accion.startsWith('DESACTIVAR')) return 'ab-red';
-    if (accion === 'CAMBIO_CONTRASENA') return 'ab-purple';
-    return 'ab-blue';
+    if (accion.startsWith('LOGIN')) return 'bg-teal-50 border-teal-200 text-teal-700';
+    if (accion.startsWith('CREAR') || accion.startsWith('INGRESO')) return 'bg-green-50 border-green-200 text-green-700';
+    if (accion.startsWith('ACTUALIZAR') || accion.startsWith('GUARDAR') || accion.startsWith('AJUSTE')) return 'bg-amber-50 border-amber-200 text-amber-800';
+    if (accion.startsWith('ELIMINAR') || accion.startsWith('DESACTIVAR')) return 'bg-red-50 border-red-200 text-red-600';
+    if (accion === 'CAMBIO_CONTRASENA') return 'bg-purple-50 border-purple-200 text-purple-700';
+    return 'bg-blue-50 border-blue-200 text-blue-700';
   }
 
   formatTs(ts: string): string {
