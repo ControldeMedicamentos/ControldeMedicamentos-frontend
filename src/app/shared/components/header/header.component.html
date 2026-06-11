@@ -1,0 +1,18 @@
+<header class="flex min-h-16 items-center justify-between border-b border-border bg-white px-6">
+  <div>
+    <h1 class="m-0 text-lg font-bold text-surface-900">Control de Medicamentos</h1>
+    <p class="mb-0 mt-0.5 text-xs text-slate-500">SISMED / SIGA</p>
+  </div>
+  <div class="flex items-center gap-2.5 text-surface-700">
+    <span class="pi pi-user"></span>
+    <span>{{ user?.username }}</span>
+    <button
+      type="button"
+      class="flex cursor-pointer items-center gap-1.5 rounded border border-border bg-white px-2.5 py-2 text-text hover:bg-surface-50"
+      (click)="logout()"
+    >
+      <span class="pi pi-sign-out"></span>
+      Salir
+    </button>
+  </div>
+</header>

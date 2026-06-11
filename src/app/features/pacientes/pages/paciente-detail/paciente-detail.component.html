@@ -1,0 +1,156 @@
+<div class="mb-6 flex items-center justify-between">
+  <button type="button" class="flex cursor-pointer items-center gap-1.5 border-0 bg-transparent p-0 text-sm font-medium text-primary-600 hover:text-primary-700" (click)="volver()">
+    <span class="pi pi-arrow-left"></span>
+    Pacientes
+  </button>
+  @if (paciente) {
+    <button type="button" class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-5 py-2 font-medium text-white hover:bg-primary-700" (click)="irANuevaAtencion()">
+      <span class="pi pi-plus"></span>
+      Nueva atención
+    </button>
+  }
+</div>
+
+<app-alert-message [message]="errorMessage" type="error" />
+
+@if (isLoading) {
+  <div class="flex flex-col items-center gap-3 px-4 py-12 text-sm text-slate-400">
+    <span class="pi pi-spinner pi-spin text-3xl"></span>
+    Cargando...
+  </div>
+} @else if (paciente) {
+  <div class="flex flex-col gap-6 rounded-modal border border-border bg-white p-6">
+
+    <div class="flex items-center gap-4 border-b border-border pb-5">
+      <span class="avatar pi pi-user flex h-13 w-13 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xl text-primary-600"></span>
+      <div class="min-w-0 flex-1">
+        <div class="mb-1 flex flex-wrap items-center gap-2">
+          <h3 class="m-0 text-lg font-bold text-text">{{ paciente.nombresApellidos }}</h3>
+          <span class="inline-block shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold" [ngClass]="tipoPacienteClass(paciente.tipoPaciente)">
+            {{ tipoPacienteLabel(paciente.tipoPaciente) }}
+          </span>
+          @if (paciente.activo === false) {
+            <span class="inline-block rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">Inactivo</span>
+          }
+        </div>
+        <span class="text-sm text-slate-500">
+          {{ paciente.tipoDocumento === 'CARNET_EXTRANJERIA' ? 'C.E.' : paciente.tipoDocumento }}:
+          {{ paciente.nroDocumento }}
+        </span>
+      </div>
+      <button type="button" class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-text hover:bg-surface-50" (click)="modalAbierto = true" title="Editar">
+        <span class="pi pi-pencil"></span>
+        Editar
+      </button>
+    </div>
+
+    <div class="grid grid-cols-detail-fields gap-4">
+      <div class="flex flex-col gap-1">
+        <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Sexo</span>
+        <span class="text-sm font-medium text-text">{{ paciente.sexo | titlecase }}</span>
+      </div>
+      @if (paciente.fechaNacimiento) {
+        <div class="flex flex-col gap-1">
+          <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Fecha de Nacimiento</span>
+          <span class="text-sm font-medium text-text">{{ paciente.fechaNacimiento | date:'dd/MM/yyyy' }}</span>
+        </div>
+      }
+      @if (paciente.carreraArea) {
+        <div class="flex flex-col gap-1">
+          <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Carrera / Área</span>
+          <span class="text-sm font-medium text-text">{{ paciente.carreraArea }}</span>
+        </div>
+      }
+      @if (paciente.cicloAcademico) {
+        <div class="flex flex-col gap-1">
+          <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Ciclo académico</span>
+          <span class="text-sm font-medium text-text">{{ paciente.cicloAcademico }}</span>
+        </div>
+      }
+      @if (paciente.telefono) {
+        <div class="flex flex-col gap-1">
+          <span class="text-xs font-semibold uppercase tracking-wide text-slate-400">Teléfono</span>
+          <span class="text-sm font-medium text-text">{{ paciente.telefono }}</span>
+        </div>
+      }
+    </div>
+
+    <div class="border-t border-border pt-4">
+      <div class="mb-3 flex items-center justify-between">
+        <h4 class="m-0 flex items-center gap-2 text-sm font-semibold text-text">
+          <span class="pi pi-history text-primary-600"></span>
+          Historial de atenciones
+        </h4>
+        @if (atenciones.length > 0) {
+          <span class="rounded-full border border-border bg-surface-50 px-2.5 py-1 text-xs text-slate-500">{{ atenciones.length }} registro{{ atenciones.length !== 1 ? 's' : '' }}</span>
+        }
+      </div>
+
+      @if (isLoadingAtenciones) {
+        <div class="flex items-center justify-center gap-2 p-8 text-sm text-slate-400">
+          <span class="pi pi-spinner pi-spin text-lg"></span>
+          Cargando historial...
+        </div>
+      } @else if (atenciones.length === 0) {
+        <div class="flex items-center justify-center gap-2 p-8 text-sm text-slate-400">
+          <span class="pi pi-calendar-times text-lg"></span>
+          Sin atenciones registradas para este paciente
+        </div>
+      } @else {
+        <table class="w-full border-collapse text-sm">
+          <thead>
+            <tr>
+              <th class="border-b border-border bg-surface-50 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Fecha</th>
+              <th class="border-b border-border bg-surface-50 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Motivo</th>
+              <th class="border-b border-border bg-surface-50 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Diagnóstico</th>
+              <th class="border-b border-border bg-surface-50 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">Medicamentos</th>
+              <th class="border-b border-border bg-surface-50 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Registrado por</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (at of atenciones; track at.id) {
+              <tr class="hover:bg-slate-50">
+                <td class="whitespace-nowrap border-b border-slate-100 px-3 py-2 font-semibold text-slate-600">{{ at.fechaEvaluacion | date:'dd/MM/yyyy' }}</td>
+                <td class="max-w-motivo border-b border-slate-100 px-3 py-2 text-text">{{ at.motivo }}</td>
+                <td class="max-w-dx border-b border-slate-100 px-3 py-2 text-text">
+                  @if (at.diagnostico1) {
+                    <span class="block max-w-dx-text truncate">{{ at.diagnostico1 }}</span>
+                    @if (at.diagnostico2) {
+                      <span class="mt-1 inline-block text-xs font-semibold text-primary-600">+{{ at.diagnostico3 ? 2 : 1 }} más</span>
+                    }
+                  } @else {
+                    <span class="text-slate-400">—</span>
+                  }
+                </td>
+                <td class="border-b border-slate-100 px-3 py-2 text-center">
+                  @if (at.consumos.length > 0) {
+                    <span class="inline-flex h-5.5 min-w-5.5 items-center justify-center rounded-full bg-blue-100 px-1.5 text-xs font-bold text-blue-700">{{ at.consumos.length }}</span>
+                  } @else {
+                    <span class="text-slate-400">—</span>
+                  }
+                </td>
+                <td class="border-b border-slate-100 px-3 py-2 text-xs text-slate-500">{{ at.usuarioRegistro }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+  </div>
+}
+
+@if (paciente) {
+  <app-modal-confirmation
+    title="Editar paciente"
+    [isOpen]="modalAbierto"
+    (closed)="modalAbierto = false"
+  >
+    <app-paciente-form
+      [paciente]="paciente"
+      [isLoading]="isSaving"
+      (formSubmit)="guardar($event)"
+      (cancelled)="modalAbierto = false"
+    />
+  </app-modal-confirmation>
+}

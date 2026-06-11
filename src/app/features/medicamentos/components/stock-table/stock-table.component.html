@@ -1,0 +1,101 @@
+<div class="mb-4 flex items-start justify-between border-b border-border pb-4">
+  <div>
+    <p class="mb-1 mt-0 text-xs font-bold uppercase tracking-wide text-primary-600">{{ medicamento.nombre }}</p>
+    @if (medicamento.presentacion) {
+      <p class="m-0 text-sm font-medium text-text">{{ medicamento.presentacion }}</p>
+    }
+  </div>
+  <div class="shrink-0 text-right">
+    <span class="block text-2xl font-bold leading-none text-primary-600">{{ stockTotal }}</span>
+    <span class="text-xs text-slate-500">unidades en stock</span>
+  </div>
+</div>
+
+@if (errorMessage) {
+  <p class="mb-3 mt-0 rounded-md bg-red-50 px-3 py-2 text-sm text-red-600">{{ errorMessage }}</p>
+}
+
+@if (isLoading) {
+  <div class="flex flex-col items-center gap-2 p-6 text-sm text-slate-400">
+    <span class="pi pi-spinner pi-spin"></span> Cargando lotes...
+  </div>
+} @else if (inventarios.length === 0 && !showForm) {
+  <div class="flex flex-col items-center gap-2 p-6 text-sm text-slate-400">
+    <span class="pi pi-inbox"></span>
+    Sin lotes registrados
+  </div>
+} @else if (inventarios.length > 0) {
+  <table class="mb-3 w-full border-collapse text-sm">
+    <thead>
+      <tr>
+        <th class="border-b border-border px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">Lote</th>
+        <th class="border-b border-border px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">F. Ingreso</th>
+        <th class="border-b border-border px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-400">F. Vencimiento</th>
+        <th class="border-b border-border px-3 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-400">Cantidad</th>
+        <th class="border-b border-border px-3 py-2 text-center text-xs font-semibold uppercase tracking-wide text-slate-400">Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (inv of inventarios; track inv.id) {
+        <tr>
+          <td class="border-b border-slate-100 px-3 py-2 font-mono text-xs text-text">{{ inv.lote || '—' }}</td>
+          <td class="border-b border-slate-100 px-3 py-2 text-text">{{ inv.fechaIngreso ? (inv.fechaIngreso | date:'dd/MM/yyyy') : '—' }}</td>
+          <td class="border-b border-slate-100 px-3 py-2 text-text">{{ inv.fechaVencimiento ? (inv.fechaVencimiento | date:'dd/MM/yyyy') : '—' }}</td>
+          <td class="border-b border-slate-100 px-3 py-2 text-right font-semibold text-text">{{ inv.stockActual }}</td>
+          <td class="border-b border-slate-100 px-3 py-2 text-center">
+            <span class="inline-block rounded-full px-2.5 py-1 text-xs font-semibold" [ngClass]="estadoClass(getEstado(inv))">
+              {{ getEstadoLabel(getEstado(inv)) }}
+            </span>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+}
+
+@if (showForm) {
+  <form [formGroup]="form" (ngSubmit)="guardarLote()" class="mt-3 rounded-lg border border-border bg-surface-50 p-4">
+    <h4 class="mb-3 mt-0 text-sm font-semibold text-text">Nuevo ingreso de lote</h4>
+    <div class="mb-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+      <label class="flex flex-col gap-1 text-xs font-medium text-text">
+        N° Lote
+        <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="text" formControlName="lote" placeholder="Ej: LOT-2024-001" maxlength="80">
+      </label>
+      <label class="flex flex-col gap-1 text-xs font-medium text-text">
+        Cantidad ingresada *
+        <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none"
+               [class.border-red-500]="hasError('stockActual')"
+               type="number" formControlName="stockActual" min="1" (input)="onStockActualInput()">
+        @if (hasError('stockActual')) {
+          <span class="text-xs font-normal text-red-500">Requerido (mín. 1)</span>
+        }
+      </label>
+      <label class="flex flex-col gap-1 text-xs font-medium text-text">
+        Fecha de ingreso
+        <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="date" formControlName="fechaIngreso" [max]="hoy">
+      </label>
+      <label class="flex flex-col gap-1 text-xs font-medium text-text">
+        Fecha de vencimiento
+        <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="date" formControlName="fechaVencimiento" [min]="manana">
+      </label>
+    </div>
+    <div class="flex justify-end gap-2">
+      <button type="button" class="cursor-pointer rounded-md border border-border bg-white px-3.5 py-1.5 text-sm font-medium text-text hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-60" (click)="showForm = false" [disabled]="isSaving">
+        Cancelar
+      </button>
+      <button type="submit" class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-3.5 py-1.5 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60" [disabled]="isSaving || form.invalid">
+        <span class="pi" [class.pi-check]="!isSaving" [class.pi-spin]="isSaving" [class.pi-spinner]="isSaving"></span>
+        {{ isSaving ? 'Guardando...' : 'Registrar lote' }}
+      </button>
+    </div>
+  </form>
+}
+
+@if (!showForm) {
+  <div class="mt-3 border-t border-border pt-3">
+    <button type="button" class="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md border border-dashed border-border bg-transparent px-3.5 py-2 text-sm font-medium text-primary-600 hover:bg-primary-50" (click)="abrirForm()">
+      <span class="pi pi-plus"></span>
+      Agregar lote / ingreso
+    </button>
+  </div>
+}

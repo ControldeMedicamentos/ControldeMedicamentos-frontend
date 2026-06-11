@@ -1,0 +1,32 @@
+<form class="flex flex-col gap-4.5 p-7" [formGroup]="form" (ngSubmit)="submit()">
+  <div class="flex items-center gap-3">
+    <span class="pi pi-lock flex h-10 w-10 items-center justify-center rounded-full border border-primary-200 bg-primary-50 text-primary-600"></span>
+    <div>
+      <h2 class="m-0 text-[22px] text-surface-900">Iniciar sesión</h2>
+      <p class="mb-0 mt-1 text-slate-500">Acceso al sistema SISMED</p>
+    </div>
+  </div>
+
+  <app-alert-message [message]="errorMessage" type="error" />
+  <app-alert-message [message]="successMessage" type="info" />
+
+  <label class="flex flex-col gap-1.5 text-sm text-surface-700">
+    Correo electrónico
+    <input class="rounded border border-slate-300 px-3 py-2.5" type="email" formControlName="username" autocomplete="email" placeholder="correo@ejemplo.com">
+  </label>
+
+  <label class="flex flex-col gap-1.5 text-sm text-surface-700">
+    Contraseña
+    <div class="relative flex">
+      <input class="w-full rounded border border-slate-300 px-3 py-2.5 pr-10" [type]="showPassword ? 'text' : 'password'" formControlName="password" autocomplete="current-password">
+      <button type="button" class="absolute right-0 top-0 flex h-full w-10 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-slate-600" (click)="togglePasswordVisibility()">
+        <span class="pi" [class.pi-eye]="!showPassword" [class.pi-eye-slash]="showPassword"></span>
+      </button>
+    </div>
+  </label>
+
+  <button class="flex cursor-pointer items-center justify-center gap-2 rounded border border-primary-700 bg-primary-600 px-3.5 py-2.75 text-white disabled:cursor-not-allowed disabled:border-slate-400 disabled:bg-slate-400" type="submit" [disabled]="isLoading">
+    <span class="pi pi-sign-in"></span>
+    {{ isLoading ? 'Validando...' : 'Ingresar' }}
+  </button>
+</form>

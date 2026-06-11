@@ -1,0 +1,375 @@
+<div class="mb-6 flex items-start justify-between">
+  <div>
+    <h2 class="mb-0.5 mt-0 text-xl font-bold text-text">Nueva atención</h2>
+    <p class="m-0 text-sm text-slate-500">Historia clínica · Registro de consulta</p>
+  </div>
+  <button type="button" class="flex cursor-pointer items-center gap-1.5 rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-text hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-60" (click)="cancelar()" [disabled]="isSaving">
+    <span class="pi pi-arrow-left"></span>
+    Volver
+  </button>
+</div>
+
+@if (isLoading) {
+  <div class="flex items-center justify-center gap-2 p-12 text-sm text-slate-400">
+    <span class="pi pi-spinner pi-spin"></span> Cargando datos...
+  </div>
+} @else {
+
+  <div class="mb-6 flex items-center rounded-modal border border-border bg-white px-6 py-4">
+    @for (step of steps; track step.num) {
+      <div class="flex shrink-0 flex-col items-center gap-1.5">
+        <button
+          type="button"
+          class="flex h-8.5 w-8.5 items-center justify-center rounded-full border-2 p-0 text-sm font-bold leading-none transition-colors"
+          [ngClass]="stepCircleClass(step.num)"
+          [disabled]="currentStep <= step.num"
+          (click)="goTo(step.num)"
+          [attr.aria-label]="step.label">
+          @if (currentStep > step.num) {
+            <span class="pi pi-check"></span>
+          } @else {
+            {{ step.num }}
+          }
+        </button>
+        <span class="whitespace-nowrap text-xs font-medium" [ngClass]="stepLabelClass(step.num)">{{ step.label }}</span>
+      </div>
+      @if (step.num < steps.length) {
+        <div class="mb-4.5 mx-1 flex-1 h-0.5 transition-colors" [ngClass]="currentStep > step.num ? 'bg-primary-600' : 'bg-border'"></div>
+      }
+    }
+  </div>
+
+  @if (errorMessage) {
+    <app-alert-message [message]="errorMessage" type="error" />
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+
+    @if (currentStep === 1) {
+      <div class="mb-4 overflow-hidden rounded-lg border border-border bg-white">
+        <div class="flex items-center gap-2.5 border-b border-border bg-surface-50 px-4 py-3">
+          <span class="pi pi-user text-sm text-primary-600"></span>
+          <h3 class="m-0 text-sm font-semibold text-text">Datos del paciente</h3>
+        </div>
+        <div class="grid grid-cols-2 gap-3.5 p-4">
+
+          <div class="col-span-2 flex flex-col gap-1">
+            <label class="text-sm font-medium text-text">Buscar paciente *</label>
+            @if (pacienteSeleccionado) {
+              <div class="flex items-center gap-3 rounded-md border border-blue-200 bg-blue-50 px-3.5 py-3">
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-600 text-base font-bold text-white">{{ pacienteSeleccionado.nombresApellidos.charAt(0) }}</div>
+                <div class="flex flex-1 flex-col gap-0.5">
+                  <span class="text-sm font-semibold text-text">{{ pacienteSeleccionado.nombresApellidos }}</span>
+                  <span class="font-mono text-xs text-slate-500">
+                    {{ pacienteSeleccionado.tipoDocumento === 'CARNET_EXTRANJERIA' ? 'C.E.' : pacienteSeleccionado.tipoDocumento }}:
+                    {{ pacienteSeleccionado.nroDocumento }}
+                  </span>
+                </div>
+                <button type="button" class="shrink-0 cursor-pointer border-0 bg-transparent p-1 text-sm text-slate-400 hover:text-red-500" (click)="clearPaciente()" title="Cambiar paciente">
+                  <span class="pi pi-times"></span>
+                </button>
+              </div>
+            } @else {
+              <div class="relative">
+                <span class="pi pi-search pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-slate-400"></span>
+                <input
+                  type="text"
+                  class="w-full rounded-md border border-border bg-white py-2 pl-8 pr-3 text-sm text-text focus:border-primary-600 focus:outline-none"
+                  placeholder="Buscar por nombre o número de documento..."
+                  [(ngModel)]="pacienteQuery"
+                  [ngModelOptions]="{ standalone: true }"
+                  (input)="onPacienteInput()"
+                  (blur)="onPacienteBlur()"
+                  autocomplete="off">
+                @if (showSuggestions) {
+                  <div class="absolute left-0 right-0 top-full z-100 mt-1 max-h-suggestions overflow-y-auto rounded-md border border-border bg-white shadow-suggestion">
+                    @for (p of pacienteSuggestions; track p.id) {
+                      <div class="flex cursor-pointer items-center justify-between gap-2 border-b border-slate-100 px-3 py-2 last:border-b-0 hover:bg-blue-50" (mousedown)="selectPaciente(p)">
+                        <span class="text-sm font-medium text-text">{{ p.nombresApellidos }}</span>
+                        <span class="shrink-0 font-mono text-xs text-slate-400">{{ p.nroDocumento }}</span>
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium text-text">Fecha de evaluación *</span>
+            <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="date" formControlName="fechaEvaluacion" [max]="hoy()">
+            @if (hasError('fechaEvaluacion')) {
+              <span class="text-xs font-normal text-red-500">Requerido</span>
+            }
+          </label>
+
+        </div>
+      </div>
+    }
+
+    @if (currentStep === 2) {
+      <div class="mb-4 overflow-hidden rounded-lg border border-border bg-white">
+        <div class="flex items-center gap-2.5 border-b border-border bg-surface-50 px-4 py-3">
+          <span class="pi pi-clipboard text-sm text-primary-600"></span>
+          <h3 class="m-0 text-sm font-semibold text-text">Evaluación clínica</h3>
+          <span class="ml-auto text-xs font-normal text-slate-400">Los campos de evaluación son opcionales salvo el motivo</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3.5 p-4">
+
+          <label class="col-span-2 flex flex-col gap-1">
+            <span class="text-sm font-medium text-text">Motivo de consulta *</span>
+            <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="text" formControlName="motivo" placeholder="Motivo principal de la consulta" maxlength="300">
+            @if (hasError('motivo')) {
+              <span class="text-xs font-normal text-red-500">Requerido (máx. 300 caracteres)</span>
+            }
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium text-text">Antecedentes</span>
+            <textarea class="resize-y rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" formControlName="antecedentes" rows="3" placeholder="Antecedentes personales, familiares, alergias..."></textarea>
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium text-text">Inmunizaciones</span>
+            <textarea class="resize-y rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" formControlName="inmunizaciones" rows="3" placeholder="Vacunas aplicadas e historial de inmunizaciones"></textarea>
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium text-text">Signos vitales</span>
+            <textarea class="resize-y rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" formControlName="signosVitales" rows="3" placeholder="PA, FC, FR, temperatura, SpO2, peso, talla..."></textarea>
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium text-text">Examen físico</span>
+            <textarea class="resize-y rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" formControlName="examenFisico" rows="3" placeholder="Hallazgos por sistemas (cardiovascular, respiratorio...)"></textarea>
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium text-text">Hallazgos de laboratorio e imágenes</span>
+            <textarea class="resize-y rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" formControlName="laboratorio" rows="3" placeholder="Valores numéricos, resultados, interpretación clínica de exámenes auxiliares..."></textarea>
+          </label>
+
+          <div class="col-span-2 flex flex-col gap-2">
+            <span class="text-sm font-medium text-text">Archivos adjuntos <span class="ml-1 text-xs font-normal text-slate-400">Adjunta el informe o imagen física · JPG, PNG, PDF · máx. 20 MB c/u</span></span>
+            <label class="flex cursor-pointer flex-col items-center gap-1.5 rounded-lg border-2 border-dashed border-border bg-surface-50 px-4 py-5 text-center hover:border-primary-600 hover:bg-blue-50" for="fileInput">
+              <span class="pi pi-upload text-2xl text-slate-400"></span>
+              <span class="text-sm text-slate-500">Arrastra archivos aquí o <strong class="text-primary-600">haz clic para seleccionar</strong></span>
+              <span class="text-xs text-slate-400">JPG, PNG, GIF, WEBP, PDF</span>
+            </label>
+            <input
+              id="fileInput"
+              type="file"
+              multiple
+              accept="image/*,.pdf"
+              class="hidden"
+              (change)="onFilesSelected($event)">
+
+            @if (archivosSeleccionados.length > 0) {
+              <div class="mt-1 flex flex-col gap-1.5">
+                @for (file of archivosSeleccionados; track $index) {
+                  <div class="flex items-center gap-2 rounded-md border border-border bg-white px-2.5 py-2">
+                    <span class="pi shrink-0 text-base text-primary-600" [class.pi-image]="isImage(file)" [class.pi-file-pdf]="!isImage(file)"></span>
+                    <span class="flex-1 truncate text-sm text-text" [title]="file.name">{{ file.name }}</span>
+                    <span class="shrink-0 font-mono text-xs text-slate-400">{{ formatSize(file.size) }}</span>
+                    <button type="button" class="flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded border-0 bg-transparent p-0 text-xs text-slate-400 hover:bg-red-50 hover:text-red-500" (click)="removeArchivo($index)" title="Quitar">
+                      <span class="pi pi-times"></span>
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+        </div>
+      </div>
+    }
+
+    @if (currentStep === 3) {
+      <div class="mb-4 overflow-hidden rounded-lg border border-border bg-white">
+        <div class="flex items-center gap-2.5 border-b border-border bg-surface-50 px-4 py-3">
+          <span class="pi pi-tag text-sm text-primary-600"></span>
+          <h3 class="m-0 text-sm font-semibold text-text">Diagnósticos</h3>
+          <span class="ml-auto text-xs font-normal text-slate-400">Hasta 3 diagnósticos con código CIE-10</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3.5 p-4">
+
+          @for (n of [1, 2, 3]; track n) {
+            <div class="col-span-2 overflow-hidden rounded-md border border-border">
+              <div class="flex items-center gap-2 border-b border-border bg-surface-50 px-3 py-2">
+                <span class="flex h-5.5 w-5.5 shrink-0 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">{{ n }}</span>
+                <span class="text-sm font-medium text-text">{{ n === 1 ? 'Diagnóstico principal' : 'Diagnóstico ' + n + ' (opcional)' }}</span>
+              </div>
+              <div class="flex items-end gap-2.5 p-3">
+                <label class="flex flex-1 flex-col gap-1">
+                  <span class="text-sm font-medium text-text">Descripción</span>
+                  <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="text" [formControlName]="'diagnostico' + n" placeholder="Descripción del diagnóstico" maxlength="150">
+                </label>
+                <label class="flex w-24 shrink-0 flex-col gap-1">
+                  <span class="text-sm font-medium text-text">CIE-10</span>
+                  <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm uppercase text-text focus:border-primary-600 focus:outline-none" type="text" [formControlName]="'cie10' + n" placeholder="J11.1" maxlength="15">
+                </label>
+                <label class="flex w-36 shrink-0 flex-col gap-1">
+                  <span class="text-sm font-medium text-text">Tipo</span>
+                  <select class="cursor-pointer rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" [formControlName]="'tipoDiagnostico' + n">
+                    <option value="">— Tipo —</option>
+                    @for (opt of tipoDxOptions; track opt.value) {
+                      <option [value]="opt.value">{{ opt.label }}</option>
+                    }
+                  </select>
+                </label>
+              </div>
+            </div>
+          }
+
+        </div>
+      </div>
+    }
+
+    @if (currentStep === 4) {
+      <div class="mb-4 overflow-hidden rounded-lg border border-border bg-white">
+        <div class="flex items-center gap-2.5 border-b border-border bg-surface-50 px-4 py-3">
+          <span class="pi pi-check-square text-sm text-primary-600"></span>
+          <h3 class="m-0 text-sm font-semibold text-text">Plan y conclusiones</h3>
+          <span class="ml-auto text-xs font-normal text-slate-400">Todos los campos son opcionales</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3.5 p-4">
+
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium text-text">Conclusión</span>
+            <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="text" formControlName="conclusion" placeholder="Conclusión de la consulta" maxlength="80">
+          </label>
+
+          <label class="flex flex-col gap-1">
+            <span class="text-sm font-medium text-text">Derivación</span>
+            <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="text" formControlName="derivacion" placeholder="Especialidad o servicio de derivación" maxlength="120">
+          </label>
+
+          <label class="col-span-2 flex flex-col gap-1">
+            <span class="text-sm font-medium text-text">Observaciones</span>
+            <textarea class="resize-y rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" formControlName="observaciones" rows="3" placeholder="Indicaciones, seguimiento u otras observaciones"></textarea>
+          </label>
+
+        </div>
+      </div>
+    }
+
+    @if (currentStep === 5) {
+      <div class="mb-4 overflow-hidden rounded-lg border border-border bg-white">
+        <div class="flex items-center gap-2.5 border-b border-border bg-surface-50 px-4 py-3">
+          <span class="pi pi-box text-sm text-primary-600"></span>
+          <h3 class="m-0 text-sm font-semibold text-text">Medicamentos entregados</h3>
+          <span class="ml-auto text-xs font-normal text-slate-400">Opcional · El stock se descuenta automáticamente al registrar</span>
+        </div>
+        <div class="grid grid-cols-1 gap-3.5 p-4">
+
+          @if (consumos.length === 0) {
+            <div class="flex flex-col items-center gap-2 p-6 text-sm text-slate-400">
+              <span class="pi pi-box text-2xl text-slate-300"></span>
+              <span>Sin medicamentos agregados</span>
+            </div>
+          }
+
+          @for (ctrl of consumos.controls; track $index) {
+            <div class="flex items-end gap-2.5 rounded-md border border-border bg-surface-50 p-3" [formGroup]="consumoGroup($index)">
+              <div class="flex flex-1 flex-col gap-1">
+                <span class="text-sm font-medium text-text">Medicamento *</span>
+
+                @if (medUiStates[$index].selected) {
+                  <div class="flex items-center gap-2.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
+                    <div class="flex min-w-0 flex-1 flex-col gap-0.5">
+                      <span class="truncate text-sm font-semibold text-text">{{ medUiStates[$index].selected!.nombre }}</span>
+                      @if (medUiStates[$index].selected!.presentacion) {
+                        <span class="text-xs text-slate-500">{{ medUiStates[$index].selected!.presentacion }}</span>
+                      }
+                    </div>
+                    <button type="button" class="shrink-0 cursor-pointer border-0 bg-transparent p-1 text-xs text-slate-400 hover:text-red-500" (click)="clearMed($index)" title="Cambiar medicamento">
+                      <span class="pi pi-times"></span>
+                    </button>
+                  </div>
+                } @else {
+                  <div class="relative">
+                    <span class="pi pi-search pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-slate-400"></span>
+                    <input
+                      type="text"
+                      class="w-full rounded-md border border-border bg-white py-2 pl-8 pr-3 text-sm text-text focus:border-primary-600 focus:outline-none"
+                      placeholder="Buscar medicamento por nombre..."
+                      [(ngModel)]="medUiStates[$index].query"
+                      [ngModelOptions]="{ standalone: true }"
+                      (input)="onMedInput($index)"
+                      (blur)="onMedBlur($index)"
+                      autocomplete="off">
+                    @if (medUiStates[$index].showSuggestions) {
+                      <div class="absolute left-0 right-0 top-full z-200 mt-1 max-h-suggestions overflow-y-auto rounded-md border border-border bg-white shadow-suggestion">
+                        @for (med of medUiStates[$index].suggestions; track med.id) {
+                          <div class="flex cursor-pointer flex-col gap-0.5 border-b border-slate-100 px-3 py-2 last:border-b-0 hover:bg-blue-50" (mousedown)="selectMed($index, med)">
+                            <span class="text-sm font-medium text-text">{{ med.nombre }}</span>
+                            @if (med.presentacion) {
+                              <span class="text-xs text-slate-400">{{ med.presentacion }}</span>
+                            }
+                          </div>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+
+                @if (consumoHasError($index, 'medicamentoId')) {
+                  <span class="text-xs font-normal text-red-500">Seleccione un medicamento</span>
+                }
+              </div>
+              <label class="flex w-24 shrink-0 flex-col gap-1">
+                <span class="text-sm font-medium text-text">Cantidad *</span>
+                <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="number" formControlName="cantidadConsumida" min="1" (input)="onCantidadConsumoInput($index)">
+                @if (consumoHasError($index, 'cantidadConsumida')) {
+                  <span class="text-xs font-normal text-red-500">Mín. 1</span>
+                }
+              </label>
+              <button type="button" class="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-md border border-red-200 bg-white text-red-500 hover:bg-red-50" (click)="quitarConsumo($index)" title="Quitar">
+                <span class="pi pi-trash"></span>
+              </button>
+            </div>
+          }
+
+          <button type="button" class="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md border border-dashed border-border bg-transparent px-4 py-2 text-sm font-medium text-primary-600 hover:bg-blue-50" (click)="agregarConsumo()">
+            <span class="pi pi-plus"></span>
+            Agregar medicamento
+          </button>
+
+        </div>
+      </div>
+    }
+
+    @if (stepError) {
+      <div class="mb-3 flex items-center gap-2 rounded-md border border-orange-200 bg-orange-50 px-3.5 py-2.5 text-sm font-medium text-orange-700">
+        <span class="pi pi-exclamation-triangle"></span>
+        {{ stepError }}
+      </div>
+    }
+
+    <div class="flex items-center justify-between rounded-lg border border-border bg-white px-4 py-3">
+      @if (currentStep > 1) {
+        <button type="button" class="flex cursor-pointer items-center gap-1.5 rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-text hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-60" (click)="anterior()" [disabled]="isSaving">
+          <span class="pi pi-chevron-left"></span>
+          Anterior
+        </button>
+      } @else {
+        <div></div>
+      }
+
+      <div class="flex gap-2">
+        @if (currentStep < steps.length) {
+          <button type="button" class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-5 py-2 text-sm font-medium text-white hover:bg-primary-700" (click)="siguiente()">
+            Siguiente
+            <span class="pi pi-chevron-right"></span>
+          </button>
+        } @else {
+          <button type="submit" class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-5 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60" [disabled]="isSaving || consumos.invalid">
+            <span class="pi" [class.pi-save]="!isSaving" [class.pi-spinner]="isSaving" [class.pi-spin]="isSaving"></span>
+            {{ isSaving ? 'Guardando...' : 'Registrar atención' }}
+          </button>
+        }
+      </div>
+    </div>
+
+  </form>
+}

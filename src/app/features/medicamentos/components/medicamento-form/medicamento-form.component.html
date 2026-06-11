@@ -1,0 +1,102 @@
+<form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-4">
+
+  <div class="overflow-hidden rounded-lg border border-border">
+    <div class="flex items-center gap-2 border-b border-border bg-surface-50 px-4 py-2.5 text-sm font-semibold text-text">
+      <span class="pi pi-file-text text-sm text-primary-600"></span>
+      Ficha del Producto
+    </div>
+
+    <div class="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
+
+      <label class="flex flex-col gap-1.5 text-sm font-medium text-text md:col-span-2">
+        Nombre *
+        <input class="rounded-md border border-border bg-white px-3 py-2 text-sm text-text focus:border-primary-600 focus:outline-none disabled:bg-surface-50 disabled:text-slate-400"
+               [class.border-red-500]="hasError('nombre')"
+               type="text" formControlName="nombre"
+               placeholder="Ej: SALBUVENT 2 mg / 5 mL Jarabe" maxlength="200">
+        @if (hasError('nombre')) {
+          <span class="text-xs font-normal text-red-500">El nombre es requerido</span>
+        }
+      </label>
+
+      <label class="flex flex-col gap-1.5 text-sm font-medium text-text">
+        Registro Sanitario
+        <input class="rounded-md border border-border bg-white px-3 py-2 text-sm uppercase text-text focus:border-primary-600 focus:outline-none disabled:bg-surface-50 disabled:text-slate-400" type="text" formControlName="registroSanitario"
+               placeholder="Ej: EN00880" maxlength="30">
+      </label>
+
+      <label class="flex flex-col gap-1.5 text-sm font-medium text-text">
+        Tipo de producto
+        <select class="rounded-md border border-border bg-white px-3 py-2 text-sm text-text focus:border-primary-600 focus:outline-none disabled:bg-surface-50 disabled:text-slate-400" formControlName="tipoProducto">
+          <option value="">— Seleccionar —</option>
+          @for (opt of tipoProductoOptions; track opt.value) {
+            <option [value]="opt.value">{{ opt.label }}</option>
+          }
+        </select>
+      </label>
+
+      <label class="flex flex-col gap-1.5 text-sm font-medium text-text md:col-span-2">
+        Presentación
+        <input class="rounded-md border border-border bg-white px-3 py-2 text-sm text-text focus:border-primary-600 focus:outline-none disabled:bg-surface-50 disabled:text-slate-400" type="text" formControlName="presentacion"
+               placeholder="Ej: Frasco x 150 mL x 1 unid." maxlength="120">
+      </label>
+
+      <label class="flex flex-col gap-1.5 text-sm font-medium text-text">
+        Nombre del Fabricante
+        <input class="rounded-md border border-border bg-white px-3 py-2 text-sm text-text focus:border-primary-600 focus:outline-none disabled:bg-surface-50 disabled:text-slate-400" type="text" formControlName="fabricante"
+               placeholder="Ej: LABORATORIOS ELIFARMA S.A." maxlength="150">
+      </label>
+
+      <label class="flex flex-col gap-1.5 text-sm font-medium text-text">
+        País de fabricación
+        <input class="rounded-md border border-border bg-white px-3 py-2 text-sm text-text focus:border-primary-600 focus:outline-none disabled:bg-surface-50 disabled:text-slate-400" type="text" formControlName="paisFabricacion"
+               placeholder="Ej: Perú" maxlength="80">
+      </label>
+
+      <label class="flex flex-col gap-1.5 text-sm font-medium text-text">
+        Precio unitario S/.
+        <input class="rounded-md border border-border bg-white px-3 py-2 text-sm text-text focus:border-primary-600 focus:outline-none disabled:bg-surface-50 disabled:text-slate-400" type="number" formControlName="precioUnitario"
+               (input)="onPrecioInput()"
+               placeholder="0.00" min="0" step="0.01" [min]="0">
+      </label>
+
+      <label class="flex flex-col gap-1.5 text-sm font-medium text-text">
+        Stock mínimo *
+        <input class="rounded-md border border-border bg-white px-3 py-2 text-sm text-text focus:border-primary-600 focus:outline-none disabled:bg-surface-50 disabled:text-slate-400"
+               [class.border-red-500]="hasError('stockMinimo')"
+               type="number" formControlName="stockMinimo" min="0" (input)="onStockMinimoInput()">
+        @if (hasError('stockMinimo')) {
+          <span class="text-xs font-normal text-red-500">Debe ser 0 o mayor</span>
+        }
+        <span class="text-xs font-normal text-slate-400">Alerta cuando el stock total esté por debajo de este valor</span>
+      </label>
+
+      <label class="flex flex-row items-center gap-2 text-sm font-medium text-text">
+        <input class="h-4 w-4 cursor-pointer" type="checkbox" formControlName="activo">
+        Medicamento activo
+      </label>
+
+    </div>
+  </div>
+
+  @if (isEditing && medicamento?.codigoSismed) {
+    <div class="flex items-center gap-1.5 rounded-md border border-green-200 bg-green-50 px-3.5 py-2 text-xs text-green-700">
+      <span class="pi pi-info-circle text-xs"></span>
+      Código SISMED asignado: <strong>{{ medicamento!.codigoSismed }}</strong>
+      @if (medicamento?.descripcionSismed) {
+        · {{ medicamento!.descripcionSismed }}
+      }
+    </div>
+  }
+
+  <div class="flex justify-end gap-3 border-t border-border pt-2">
+    <button type="button" class="cursor-pointer rounded-md border border-border bg-white px-5 py-2 font-medium text-text hover:bg-surface-50 disabled:cursor-not-allowed disabled:opacity-60" (click)="cancelled.emit()" [disabled]="isLoading">
+      Cancelar
+    </button>
+    <button type="submit" class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-5 py-2 font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60" [disabled]="isLoading || form.invalid">
+      <span class="pi" [class.pi-save]="!isLoading" [class.pi-spin]="isLoading" [class.pi-spinner]="isLoading"></span>
+      {{ isLoading ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Registrar') }}
+    </button>
+  </div>
+
+</form>

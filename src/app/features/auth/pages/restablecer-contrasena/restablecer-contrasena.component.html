@@ -1,0 +1,104 @@
+@if (isDone) {
+
+  <div class="flex flex-col items-center gap-4.5 p-7 text-center">
+    <div class="flex h-14 w-14 items-center justify-center rounded-full bg-green-100 text-green-600">
+      <span class="pi pi-check-circle text-2xl"></span>
+    </div>
+    <div>
+      <h2 class="m-0 text-[22px] text-surface-900">¡Contraseña establecida!</h2>
+      <p class="mb-0 mt-2 text-sm text-slate-500 leading-6">
+        Tu cuenta está activa. Ya puedes ingresar al sistema.
+      </p>
+    </div>
+    <button
+      class="flex w-full cursor-pointer items-center justify-center gap-2 rounded border border-primary-700 bg-primary-600 px-3.5 py-2.75 text-sm font-semibold text-white hover:bg-primary-700"
+      (click)="irAlLogin()">
+      <span class="pi pi-sign-in"></span>
+      Ir al inicio de sesión
+    </button>
+  </div>
+
+} @else if (isLoadingInfo) {
+
+  <div class="flex items-center justify-center gap-2.5 p-10 text-sm text-slate-400">
+    <span class="pi pi-spinner pi-spin"></span>
+    Verificando enlace...
+  </div>
+
+} @else {
+
+  <form class="flex flex-col gap-4.5 p-7" [formGroup]="form" (ngSubmit)="submit()">
+
+    <div class="flex items-center gap-3">
+      <span class="pi pi-lock flex h-10 w-10 items-center justify-center rounded-full border border-primary-200 bg-primary-50 text-primary-600"></span>
+      <div>
+        <h2 class="m-0 text-[22px] text-surface-900">Activa tu cuenta</h2>
+        <p class="mb-0 mt-1 text-sm text-slate-500">Sistema SISMED · Control de Medicamentos</p>
+      </div>
+    </div>
+
+    @if (nombre && !errorMsg) {
+      <div class="rounded-md border border-blue-100 bg-blue-50 px-4 py-3">
+        <p class="m-0 text-sm text-blue-800">
+          Hola, <strong>{{ nombre }}</strong>. Tu cuenta ha sido creada en el sistema.
+          Establece una contraseña para activar tu acceso.
+        </p>
+      </div>
+    }
+
+    @if (errorMsg) {
+      <div class="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-3.5 py-2.5 text-sm text-red-700">
+        <span class="pi pi-exclamation-triangle shrink-0"></span>
+        {{ errorMsg }}
+      </div>
+    }
+
+    @if (!errorMsg) {
+      <label class="flex flex-col gap-1.5 text-sm text-surface-700">
+        Nueva contraseña
+        <div class="relative flex">
+          <input
+            class="w-full rounded border border-slate-300 px-3 py-2.5 pr-10 text-sm focus:border-primary-600 focus:outline-none"
+            [type]="showNew ? 'text' : 'password'"
+            formControlName="newPassword"
+            autocomplete="new-password"
+            placeholder="Mínimo 6 caracteres">
+          <button type="button"
+            class="absolute right-0 top-0 flex h-full w-10 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-slate-400 hover:text-primary-600"
+            (click)="showNew = !showNew">
+            <span class="pi" [class.pi-eye]="!showNew" [class.pi-eye-slash]="showNew"></span>
+          </button>
+        </div>
+        @if (form.get('newPassword')?.invalid && form.get('newPassword')?.touched) {
+          <span class="text-xs text-red-500">Mínimo 6 caracteres</span>
+        }
+      </label>
+
+      <label class="flex flex-col gap-1.5 text-sm text-surface-700">
+        Confirmar contraseña
+        <div class="relative flex">
+          <input
+            class="w-full rounded border border-slate-300 px-3 py-2.5 pr-10 text-sm focus:border-primary-600 focus:outline-none"
+            [type]="showConfirm ? 'text' : 'password'"
+            formControlName="confirmPassword"
+            autocomplete="new-password"
+            placeholder="Repite la contraseña">
+          <button type="button"
+            class="absolute right-0 top-0 flex h-full w-10 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-slate-400 hover:text-primary-600"
+            (click)="showConfirm = !showConfirm">
+            <span class="pi" [class.pi-eye]="!showConfirm" [class.pi-eye-slash]="showConfirm"></span>
+          </button>
+        </div>
+      </label>
+
+      <button
+        class="flex cursor-pointer items-center justify-center gap-2 rounded border border-primary-700 bg-primary-600 px-3.5 py-2.75 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:border-slate-400 disabled:bg-slate-400"
+        type="submit"
+        [disabled]="isLoading">
+        <span class="pi" [class.pi-check]="!isLoading" [class.pi-spinner]="isLoading" [class.pi-spin]="isLoading"></span>
+        {{ isLoading ? 'Guardando...' : 'Establecer contraseña' }}
+      </button>
+    }
+
+  </form>
+}

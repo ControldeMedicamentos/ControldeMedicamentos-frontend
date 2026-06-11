@@ -1,0 +1,250 @@
+<div class="mb-5">
+  <h2 class="mb-1 mt-0 text-xl font-bold text-text">Ajustes de Inventario</h2>
+  <p class="m-0 text-sm text-slate-500">Registra devoluciones, vencidos y mermas por lote</p>
+</div>
+
+@if (successMessage) {
+  <div class="mb-4 flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-4 py-2.5 text-sm text-green-700">
+    <span class="pi pi-check-circle"></span> {{ successMessage }}
+  </div>
+}
+@if (errorMessage) {
+  <app-alert-message [message]="errorMessage" type="error" />
+}
+
+@if (lotesVencidosPendientes.length > 0) {
+  <div class="mb-5 overflow-hidden rounded-lg border border-amber-400 bg-amber-50">
+    <div class="flex cursor-pointer select-none items-center gap-2.5 px-4 py-2.5 hover:bg-amber-100" (click)="vencidosExpanded = !vencidosExpanded">
+      <span class="pi pi-exclamation-triangle shrink-0 text-sm text-amber-600"></span>
+      <span class="text-sm font-semibold text-amber-800">
+        {{ lotesVencidosPendientes.length }} lote{{ lotesVencidosPendientes.length === 1 ? '' : 's' }}
+        vencido{{ lotesVencidosPendientes.length === 1 ? '' : 's' }} con stock pendiente de baja
+      </span>
+      <span class="ml-1 text-xs text-amber-700">Haz clic en un lote para ir directamente al ajuste</span>
+      <span class="pi ml-auto text-xs text-amber-600" [class.pi-chevron-up]="vencidosExpanded" [class.pi-chevron-down]="!vencidosExpanded"></span>
+    </div>
+    @if (vencidosExpanded) {
+      <div class="border-t border-amber-200">
+        @for (lote of lotesVencidosPendientes; track lote.id) {
+          <div class="flex cursor-pointer items-center gap-4 border-b border-amber-100 px-4 py-2.5 last:border-b-0 hover:bg-yellow-100" (click)="irALoteVencido(lote)">
+            <div class="flex min-w-0 flex-1 flex-col">
+              <span class="truncate text-sm font-medium text-text">{{ lote.nombreMedicamento }}</span>
+              <span class="text-xs text-amber-800">
+                Lote {{ lote.lote || 'S/N' }} · Venció {{ lote.fechaVencimiento | date:'dd/MM/yyyy' }}
+              </span>
+            </div>
+            <span class="shrink-0 text-sm font-bold text-red-600">{{ lote.stockActual }} uds.</span>
+            <span class="flex shrink-0 items-center gap-1 text-xs font-medium text-primary-600">
+              <span class="pi pi-arrow-right"></span> Registrar baja
+            </span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+}
+
+<div class="grid grid-cols-1 items-start gap-5 xl:grid-cols-inventory-layout">
+
+  <div class="relative overflow-visible rounded-lg border border-border bg-white">
+    <div class="flex items-center gap-2 rounded-t-lg border-b border-border bg-surface-50 px-4 py-3">
+      <span class="pi pi-search text-sm text-primary-600"></span>
+      <span class="text-sm font-semibold text-text">Seleccionar medicamento</span>
+    </div>
+    <div class="p-4">
+      @if (medicamentoSeleccionado) {
+        <div class="mb-4 flex items-center gap-2.5 rounded-md border border-blue-200 bg-blue-50 px-3 py-2">
+          <div class="flex flex-1 flex-col">
+            <span class="text-sm font-semibold text-text">{{ medicamentoSeleccionado.nombre }}</span>
+            @if (medicamentoSeleccionado.presentacion) {
+              <span class="text-xs text-slate-500">{{ medicamentoSeleccionado.presentacion }}</span>
+            }
+          </div>
+          <button type="button" class="cursor-pointer border-0 bg-transparent p-1 text-xs text-slate-400 hover:text-red-500" (click)="clearMedicamento()" title="Cambiar">
+            <span class="pi pi-times"></span>
+          </button>
+        </div>
+      } @else {
+        <div class="relative">
+          <span class="pi pi-search pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400"></span>
+          <input
+            type="text"
+            class="w-full rounded-md border border-border bg-white py-2 pl-8 pr-3 text-sm text-text focus:border-primary-600 focus:outline-none"
+            placeholder="Buscar por nombre o registro sanitario..."
+            [(ngModel)]="medQuery"
+            (input)="onMedInput()"
+            (blur)="onMedBlur()"
+            autocomplete="off">
+          @if (showSuggestions) {
+            <div class="absolute left-0 right-0 top-full z-100 mt-1 max-h-suggestions overflow-y-auto rounded-md border border-border bg-white shadow-suggestion">
+              @for (m of medSuggestions; track m.id) {
+                <div class="flex cursor-pointer flex-col gap-0.5 border-b border-slate-100 px-3 py-2 last:border-b-0 hover:bg-blue-50" (mousedown)="selectMedicamento(m)">
+                  <span class="text-sm font-medium text-text">{{ m.nombre }}</span>
+                  @if (m.presentacion) {
+                    <span class="text-xs text-slate-400">{{ m.presentacion }}</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      @if (medicamentoSeleccionado) {
+        <div class="mt-4">
+          <h4 class="mb-2.5 mt-0 flex items-center gap-1.5 text-xs font-semibold text-text">
+            Lotes con stock disponible
+            @if (lotes.length > 0) { <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary-600 text-xs font-bold text-white">{{ lotes.length }}</span> }
+          </h4>
+
+          @if (isLoadingLotes) {
+            <div class="flex items-center gap-2 py-3 text-xs text-slate-400"><span class="pi pi-spinner pi-spin"></span> Cargando...</div>
+          } @else if (lotes.length === 0) {
+            <div class="flex items-center gap-2 py-3 text-xs text-slate-400"><span class="pi pi-inbox"></span> Sin lotes con stock disponible</div>
+          } @else {
+            <div class="flex flex-col gap-2">
+              @for (lote of lotes; track lote.id) {
+                <div
+                  class="cursor-pointer rounded-md border px-3.5 py-3 transition-colors hover:border-primary-600 hover:bg-slate-50"
+                  [ngClass]="loteClass(lote)"
+                  (click)="selectLote(lote)">
+                  <div class="mb-1 flex items-center justify-between">
+                    <span class="font-mono text-sm font-semibold text-text">{{ lote.lote || 'Sin N° lote' }}</span>
+                    <span class="text-sm font-bold text-primary-600">{{ lote.stockActual }} uds.</span>
+                  </div>
+                  <div class="flex gap-3 text-xs text-slate-500">
+                    @if (lote.fechaIngreso) {
+                      <span><span class="pi pi-calendar mr-1 text-xs"></span> Ingreso: {{ lote.fechaIngreso | date:'dd/MM/yyyy' }}</span>
+                    }
+                    @if (lote.fechaVencimiento) {
+                      <span [class.font-medium]="estadoLote(lote) === 'vencido' || estadoLote(lote) === 'por_vencer'" [class.text-red-600]="estadoLote(lote) === 'vencido'" [class.text-orange-600]="estadoLote(lote) === 'por_vencer'">
+                        <span class="pi pi-clock mr-1 text-xs"></span> Vence: {{ lote.fechaVencimiento | date:'dd/MM/yyyy' }}
+                      </span>
+                    }
+                  </div>
+                  @if (estadoLote(lote) === 'vencido') {
+                    <span class="mt-1.5 inline-block rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-600">Vencido</span>
+                  } @else if (estadoLote(lote) === 'por_vencer') {
+                    <span class="mt-1.5 inline-block rounded-full bg-orange-50 px-2 py-0.5 text-xs font-semibold text-orange-700">Por vencer</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <div class="rounded-lg border border-border bg-white">
+    <div class="flex items-center gap-2 rounded-t-lg border-b border-border bg-surface-50 px-4 py-3">
+      <span class="pi pi-sliders-h text-sm text-primary-600"></span>
+      <span class="text-sm font-semibold text-text">Registrar ajuste</span>
+    </div>
+    <div class="p-4">
+
+      @if (!medicamentoSeleccionado) {
+        <div class="flex flex-col items-center gap-2 px-4 py-10 text-center text-sm text-slate-400">
+          <span class="pi pi-arrow-left text-2xl"></span>
+          Selecciona un medicamento primero
+        </div>
+      } @else if (!loteSeleccionado) {
+        <div class="flex flex-col items-center gap-2 px-4 py-10 text-center text-sm text-slate-400">
+          <span class="pi pi-list text-2xl"></span>
+          Selecciona un lote para registrar el ajuste
+        </div>
+      } @else {
+        <div class="mb-5 flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-3.5 py-2 text-xs text-blue-700">
+          <span class="pi pi-box text-sm"></span>
+          Lote: <strong>{{ loteSeleccionado.lote || 'Sin N° lote' }}</strong>
+          &nbsp;·&nbsp; Stock actual: <strong>{{ loteSeleccionado.stockActual }}</strong> uds.
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="guardar()" class="flex flex-col gap-4">
+
+          <div class="flex flex-col gap-2">
+            <label class="text-xs font-medium text-text">Tipo de ajuste *</label>
+            <div class="flex gap-2.5">
+              @for (t of tiposAjuste; track t.value) {
+                <label
+                  class="flex flex-1 cursor-pointer flex-col items-center gap-1 rounded-lg border-2 px-2 py-3 text-center transition-colors"
+                  [ngClass]="tipoOptionClass(t.value)"
+                >
+                  <input class="hidden" type="radio" formControlName="tipoAjuste" [value]="t.value">
+                  <span class="pi {{ t.icon }} text-lg"></span>
+                  <span class="text-xs font-semibold">{{ t.label }}</span>
+                  <span class="text-xs leading-tight text-slate-400">{{ t.desc }}</span>
+                </label>
+              }
+            </div>
+            @if (hasError('tipoAjuste')) {
+              <span class="text-xs text-red-500">Selecciona el tipo de ajuste</span>
+            }
+          </div>
+
+          <div class="flex items-start gap-3">
+            <label class="flex flex-col gap-1">
+              <span class="text-xs font-medium text-text">Cantidad *</span>
+              <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="number" formControlName="cantidad" min="1" [max]="cantidadMax" (input)="onCantidadInput()">
+              @if (loteVencidoSeleccionado) {
+                <span class="flex items-center gap-1 text-xs text-red-600">
+                  <span class="pi pi-info-circle text-xs"></span> Pre-completado con el stock total del lote vencido
+                </span>
+              } @else if (!esReingreso) {
+                <span class="text-xs text-slate-400">Máximo disponible: {{ stockDisponible }}</span>
+              } @else {
+                <span class="text-xs text-green-700">El stock aumentará al registrar</span>
+              }
+              @if (hasError('cantidad')) {
+                <span class="text-xs text-red-500">Mínimo 1</span>
+              }
+            </label>
+
+            <label class="flex flex-1 flex-col gap-1">
+              <span class="text-xs font-medium text-text">Observación</span>
+              <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="text" formControlName="observacion" placeholder="Motivo o detalle del ajuste" maxlength="200">
+            </label>
+          </div>
+
+          <button type="button" class="flex cursor-pointer items-center justify-center gap-1.5 self-start rounded-md border-0 bg-primary-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="solicitarConfirmacion()" [disabled]="isSaving || form.invalid || !cantidadValida">
+            <span class="pi" [class.pi-check]="!isSaving" [class.pi-spinner]="isSaving" [class.pi-spin]="isSaving"></span>
+            {{ isSaving ? 'Registrando...' : 'Registrar ajuste' }}
+          </button>
+
+        </form>
+      }
+    </div>
+  </div>
+
+</div>
+
+<app-modal-confirmation
+  title="Confirmar ajuste de inventario"
+  [isOpen]="showConfirmAjuste"
+  (closed)="showConfirmAjuste = false">
+  <div class="flex flex-col items-center gap-3 px-0 pb-1 pt-2 text-center">
+    <span class="pi pi-exclamation-triangle text-3xl text-amber-500"></span>
+    <p class="m-0 text-sm leading-6 text-text">
+      ¿Registrar <strong>{{ tipoAjusteLabel }}</strong> de
+      <strong>{{ form.get('cantidad')?.value }}</strong> unidades
+      del lote <strong>{{ loteSeleccionado?.lote || 'sin número' }}</strong>?
+      <br>
+      <span class="text-xs text-slate-500">
+        @if (esReingreso) {
+          El stock pasará de {{ loteSeleccionado?.stockActual }} a
+          {{ (loteSeleccionado?.stockActual ?? 0) + (form.get('cantidad')?.value ?? 0) }} unidades.
+        } @else {
+          El stock pasará de {{ loteSeleccionado?.stockActual }} a
+          {{ (loteSeleccionado?.stockActual ?? 0) - (form.get('cantidad')?.value ?? 0) }} unidades.
+        }
+        Esta acción afectará el reporte SISMED del período actual.
+      </span>
+    </p>
+    <div class="flex justify-center gap-3">
+      <button class="cursor-pointer rounded-md border border-border bg-white px-4 py-2 text-sm text-text hover:bg-surface-50" (click)="showConfirmAjuste = false">Cancelar</button>
+      <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="guardar()" [disabled]="isSaving || !cantidadValida">
+        <span class="pi pi-check"></span> Confirmar
+      </button>
+    </div>
+  </div>
+</app-modal-confirmation>
