@@ -22,24 +22,28 @@ export class AuditoriaPageComponent implements OnInit {
   errorMessage = '';
 
   filtroEmail = '';
+  filtroIp = '';
   filtroModulo = '';
   filtroAccion = '';
+  filtroResultado = '';
   filtroDesde = '';
   filtroHasta = '';
 
-  readonly modulos = ['Seguridad', 'Empleados', 'Roles', 'Pacientes', 'Atenciones', 'Medicamentos', 'Inventario', 'Reportes'];
+  readonly modulos = ['Seguridad', 'Empleados', 'Roles', 'Pacientes', 'Atenciones', 'Medicamentos', 'Inventario', 'Reportes', 'Auditoría', 'Sistema'];
 
   readonly acciones = [
-    'LOGIN_EXITOSO', 'CAMBIO_CONTRASENA',
+    'LOGIN_EXITOSO', 'LOGIN_FALLIDO', 'CAMBIO_CONTRASENA', 'RESTABLECER_CONTRASENA', 'REGISTRAR_USUARIO',
     'CREAR_EMPLEADO', 'ACTUALIZAR_EMPLEADO', 'ACTIVAR_EMPLEADO', 'DESACTIVAR_EMPLEADO',
     'CREAR_ROL', 'ACTUALIZAR_ROL', 'ELIMINAR_ROL', 'GUARDAR_PERMISOS',
     'CONSULTAR_PACIENTES', 'CONSULTAR_DETALLE_PACIENTE',
     'CREAR_PACIENTE', 'ACTUALIZAR_PACIENTE', 'ACTIVAR_PACIENTE', 'DESACTIVAR_PACIENTE',
     'SUBIR_ARCHIVO',
-    'CONSULTAR_ATENCIONES', 'CONSULTAR_ATENCIONES_PACIENTE', 'CREAR_ATENCION',
+    'CONSULTAR_ATENCIONES', 'CONSULTAR_ATENCIONES_PACIENTE', 'CONSULTAR_DETALLE_ATENCION',
+    'CREAR_ATENCION', 'EDITAR_ATENCION', 'SUBIR_ARCHIVO_ATENCION', 'DESCARGAR_ARCHIVO_ATENCION',
     'CREAR_MEDICAMENTO', 'ACTUALIZAR_MEDICAMENTO', 'ACTIVAR_MEDICAMENTO', 'DESACTIVAR_MEDICAMENTO', 'ELIMINAR_MEDICAMENTO',
-    'INGRESO_INVENTARIO', 'AJUSTE_INVENTARIO',
-    'CONSULTAR_REPORTE', 'EXPORTAR_REPORTE', 'CIERRE_MES'
+    'INGRESO_INVENTARIO', 'ACTUALIZAR_LOTE', 'AJUSTE_INVENTARIO', 'CREAR_MOVIMIENTO_INVENTARIO',
+    'DESCARGAR_ARCHIVO', 'CONSULTAR_REPORTE', 'CONCILIAR_INVENTARIO', 'EXPORTAR_REPORTE', 'CIERRE_MES',
+    'ACCESO_DENEGADO', 'ACCESO_NO_AUTENTICADO', 'OPERACION_HTTP', 'OPERACION_FALLIDA'
   ];
 
   ngOnInit(): void { this.cargar(); }
@@ -49,8 +53,10 @@ export class AuditoriaPageComponent implements OnInit {
     this.currentPage = page;
     this.auditoriaService.getLogs({
       email: this.filtroEmail || undefined,
+      ipAddress: this.filtroIp || undefined,
       modulo: this.filtroModulo || undefined,
       accion: this.filtroAccion || undefined,
+      resultado: this.filtroResultado || undefined,
       desde: this.filtroDesde || undefined,
       hasta: this.filtroHasta || undefined,
       page,
@@ -78,8 +84,10 @@ export class AuditoriaPageComponent implements OnInit {
 
   limpiarFiltros(): void {
     this.filtroEmail = '';
+    this.filtroIp = '';
     this.filtroModulo = '';
     this.filtroAccion = '';
+    this.filtroResultado = '';
     this.filtroDesde = '';
     this.filtroHasta = '';
     this.cargar(0);
@@ -110,9 +118,17 @@ export class AuditoriaPageComponent implements OnInit {
       'Atenciones': 'bg-teal-50 border-teal-200 text-teal-700',
       'Medicamentos': 'bg-green-50 border-green-200 text-green-700',
       'Inventario': 'bg-orange-50 border-orange-200 text-orange-700',
-      'Reportes': 'bg-slate-50 border-slate-200 text-slate-600'
+      'Reportes': 'bg-slate-50 border-slate-200 text-slate-600',
+      'Auditoría': 'bg-purple-50 border-purple-200 text-purple-700',
+      'Sistema': 'bg-slate-50 border-slate-200 text-slate-600'
     };
     return map[modulo] ?? 'bg-slate-50 border-slate-200 text-slate-600';
+  }
+
+  resultadoClass(resultado: AuditLog['resultado']): string {
+    if (resultado === 'EXITOSO') return 'bg-green-50 border-green-200 text-green-700';
+    if (resultado === 'DENEGADO') return 'bg-amber-50 border-amber-200 text-amber-800';
+    return 'bg-red-50 border-red-200 text-red-600';
   }
 
   formatTs(ts: string): string {

@@ -32,6 +32,42 @@ export class DashboardHomeComponent implements OnInit {
     return this.auth.isAdmin();
   }
 
+  get isEnfermera(): boolean {
+    return this.auth.getCurrentUser()?.rol === 'ENFERMERA';
+  }
+
+  get showPatientCard(): boolean {
+    return !this.isEnfermera && this.auth.canReadPath('/pacientes');
+  }
+
+  get showMedicinesCard(): boolean {
+    return this.isEnfermera && this.auth.canReadPath('/medicamentos');
+  }
+
+  get showAtencionesDashboard(): boolean {
+    return this.auth.canReadPath('/atenciones');
+  }
+
+  get showLatestAtenciones(): boolean {
+    return this.showAtencionesDashboard && this.auth.canReadPath('/pacientes');
+  }
+
+  get showTopConsumos(): boolean {
+    return (this.isAdmin || this.isEnfermera)
+      && this.showAtencionesDashboard && this.auth.canReadPath('/medicamentos');
+  }
+
+  get showInventoryDashboard(): boolean {
+    return this.auth.canReadPath('/medicamentos/ajustes');
+  }
+
+  get dashboardSubtitle(): string {
+    const role = this.auth.getCurrentUser()?.rol;
+    if (role === 'MEDICO') return 'Actividad clínica y seguimiento de pacientes';
+    if (role === 'ENFERMERA') return 'Atenciones, medicamentos y alertas de inventario';
+    return 'Supervisión general, seguridad y operación SISMED';
+  }
+
   cargar(): void {
     this.isLoading = true;
     this.errorMessage = '';
