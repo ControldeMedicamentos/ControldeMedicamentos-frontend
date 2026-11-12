@@ -9,6 +9,7 @@ import { Paciente, PacienteCreate, TipoPaciente } from '../../../../models/pacie
 import { AtencionService } from '../../../atenciones/services/atencion.service';
 import { PacienteFormComponent } from '../../components/paciente-form/paciente-form.component';
 import { PacienteService } from '../../services/paciente.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-paciente-detail',
@@ -26,6 +27,7 @@ export class PacienteDetailComponent implements OnInit {
   private readonly atencionService = inject(AtencionService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  readonly auth = inject(AuthService);
 
   paciente?: Paciente;
   atenciones: Atencion[] = [];
