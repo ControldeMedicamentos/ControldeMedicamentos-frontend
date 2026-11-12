@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -10,6 +10,7 @@ export class HeaderComponent {
   private readonly authService = inject(AuthService);
 
   readonly user = this.authService.getCurrentUser();
+  @Output() readonly menuToggle = new EventEmitter<void>();
 
   logout(): void {
     this.authService.logout();

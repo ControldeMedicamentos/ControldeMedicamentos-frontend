@@ -1,0 +1,159 @@
+<div class="mb-6 flex flex-col items-start justify-between gap-3 sm:flex-row">
+  <div>
+    <h2 class="mb-0.5 mt-0 text-xl font-bold text-text">Editar atención</h2>
+    <p class="m-0 text-sm text-slate-500">Corrección de datos clínicos · Los consumos y el stock no se modifican aquí</p>
+  </div>
+  <button type="button" class="flex cursor-pointer items-center gap-1.5 rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-text hover:bg-surface-50" (click)="volver()">
+    <span class="pi pi-arrow-left"></span> Volver
+  </button>
+</div>
+
+@if (isLoading) {
+  <div class="flex items-center justify-center gap-2 p-12 text-sm text-slate-400">
+    <span class="pi pi-spinner pi-spin"></span> Cargando atención...
+  </div>
+}
+
+@if (errorMessage) {
+  <app-alert-message [message]="errorMessage" type="error" />
+}
+
+@if (atencion; as item) {
+  <form [formGroup]="form" (ngSubmit)="guardar()">
+    <div class="mb-4 overflow-hidden rounded-lg border border-border bg-white">
+      <div class="flex items-center gap-2.5 border-b border-border bg-surface-50 px-4 py-3">
+        <span class="pi pi-user text-sm text-primary-600"></span>
+        <h3 class="m-0 text-sm font-semibold text-text">Atención registrada</h3>
+      </div>
+      <div class="grid grid-cols-1 gap-3.5 p-4 md:grid-cols-2">
+        <div class="flex flex-col gap-1">
+          <span class="text-xs font-semibold uppercase tracking-section text-slate-400">Paciente</span>
+          <span class="text-sm font-medium text-text">{{ item.pacienteNombre }} · {{ item.pacienteNroDocumento }}</span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <span class="text-xs font-semibold uppercase tracking-section text-slate-400">Fecha de evaluación</span>
+          <span class="text-sm font-medium text-text">{{ item.fechaEvaluacion | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="flex flex-col gap-1">
+          <span class="text-xs font-semibold uppercase tracking-section text-slate-400">Registrado por</span>
+          <span class="text-sm font-medium text-text">{{ item.usuarioRegistro }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-4 overflow-hidden rounded-lg border border-border bg-white">
+      <div class="flex items-center gap-2.5 border-b border-border bg-surface-50 px-4 py-3">
+        <span class="pi pi-clipboard text-sm text-primary-600"></span>
+        <h3 class="m-0 text-sm font-semibold text-text">Evaluación clínica</h3>
+      </div>
+      <div class="grid grid-cols-1 gap-3.5 p-4 md:grid-cols-2">
+        <label class="flex flex-col gap-1 md:col-span-2">
+          <span class="text-sm font-medium text-text">Motivo de consulta *</span>
+          <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="text" formControlName="motivo" maxlength="300">
+          @if (hasError('motivo')) { <span class="text-xs text-red-500">Indique el motivo de consulta (máx. 300 caracteres).</span> }
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-sm font-medium text-text">Antecedentes</span>
+          <textarea class="resize-y rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" formControlName="antecedentes" rows="3"></textarea>
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-sm font-medium text-text">Inmunizaciones</span>
+          <textarea class="resize-y rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" formControlName="inmunizaciones" rows="3"></textarea>
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-sm font-medium text-text">Signos vitales</span>
+          <textarea class="resize-y rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" formControlName="signosVitales" rows="3"></textarea>
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-sm font-medium text-text">Examen físico</span>
+          <textarea class="resize-y rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" formControlName="examenFisico" rows="3"></textarea>
+        </label>
+        <label class="flex flex-col gap-1 md:col-span-2">
+          <span class="text-sm font-medium text-text">Hallazgos de laboratorio e imágenes</span>
+          <textarea class="resize-y rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" formControlName="laboratorio" rows="3"></textarea>
+        </label>
+      </div>
+    </div>
+
+    <div class="mb-4 overflow-hidden rounded-lg border border-border bg-white">
+      <div class="flex items-center gap-2.5 border-b border-border bg-surface-50 px-4 py-3">
+        <span class="pi pi-tag text-sm text-primary-600"></span>
+        <h3 class="m-0 text-sm font-semibold text-text">Diagnósticos</h3>
+      </div>
+      <div class="flex flex-col gap-3.5 p-4">
+        @for (n of [1, 2, 3]; track n) {
+          <div class="overflow-hidden rounded-md border border-border">
+            <div class="border-b border-border bg-surface-50 px-3 py-2 text-sm font-medium text-text">Diagnóstico {{ n }}</div>
+            <div class="grid grid-cols-1 gap-3 p-3 md:grid-cols-2">
+              <label class="flex flex-col gap-1 md:col-span-2">
+                <span class="text-sm font-medium text-text">Descripción</span>
+                <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="text" [formControlName]="'diagnostico' + n" maxlength="150">
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="text-sm font-medium text-text">CIE-10</span>
+                <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm uppercase text-text focus:border-primary-600 focus:outline-none" type="text" [formControlName]="'cie10' + n" maxlength="15">
+              </label>
+              <label class="flex flex-col gap-1">
+                <span class="text-sm font-medium text-text">Tipo</span>
+                <select class="cursor-pointer rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" [formControlName]="'tipoDiagnostico' + n">
+                  <option value="">— Tipo —</option>
+                  @for (opt of tipoDxOptions; track opt.value) {
+                    <option [value]="opt.value">{{ opt.label }}</option>
+                  }
+                </select>
+              </label>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="mb-4 overflow-hidden rounded-lg border border-border bg-white">
+      <div class="flex items-center gap-2.5 border-b border-border bg-surface-50 px-4 py-3">
+        <span class="pi pi-check-square text-sm text-primary-600"></span>
+        <h3 class="m-0 text-sm font-semibold text-text">Plan y conclusiones</h3>
+      </div>
+      <div class="grid grid-cols-1 gap-3.5 p-4 md:grid-cols-2">
+        <label class="flex flex-col gap-1">
+          <span class="text-sm font-medium text-text">Conclusión</span>
+          <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="text" formControlName="conclusion" maxlength="80">
+        </label>
+        <label class="flex flex-col gap-1">
+          <span class="text-sm font-medium text-text">Derivación</span>
+          <input class="rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="text" formControlName="derivacion" maxlength="120">
+        </label>
+        <label class="flex flex-col gap-1 md:col-span-2">
+          <span class="text-sm font-medium text-text">Observaciones</span>
+          <textarea class="resize-y rounded-md border border-border bg-white px-2.5 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" formControlName="observaciones" rows="3"></textarea>
+        </label>
+      </div>
+    </div>
+
+    <div class="mb-4 overflow-hidden rounded-lg border border-border bg-white">
+      <div class="flex items-center gap-2.5 border-b border-border bg-surface-50 px-4 py-3">
+        <span class="pi pi-box text-sm text-primary-600"></span>
+        <h3 class="m-0 text-sm font-semibold text-text">Medicamentos consumidos · Solo lectura</h3>
+      </div>
+      @if (item.consumos.length === 0) {
+        <p class="m-0 p-4 text-sm text-slate-400">Esta atención no registra medicamentos consumidos.</p>
+      } @else {
+        <div class="p-4">
+          @for (consumo of item.consumos; track consumo.id) {
+            <div class="flex justify-between gap-3 border-b border-slate-100 py-2 text-sm last:border-0">
+              <span class="text-text">{{ consumo.descripcionSismed }}</span>
+              <span class="font-semibold text-text">{{ consumo.cantidadConsumida }} uds.</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="flex flex-wrap justify-end gap-2 rounded-lg border border-border bg-white px-4 py-3">
+      <button type="button" class="cursor-pointer rounded-md border border-border bg-white px-4 py-2 text-sm text-text hover:bg-surface-50" (click)="volver()" [disabled]="isSaving">Cancelar</button>
+      <button type="submit" class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-5 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60" [disabled]="isSaving">
+        <span class="pi" [class.pi-save]="!isSaving" [class.pi-spinner]="isSaving" [class.pi-spin]="isSaving"></span>
+        {{ isSaving ? 'Guardando...' : 'Guardar cambios' }}
+      </button>
+    </div>
+  </form>
+}

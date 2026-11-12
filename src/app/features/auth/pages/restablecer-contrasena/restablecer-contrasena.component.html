@@ -62,15 +62,16 @@
             [type]="showNew ? 'text' : 'password'"
             formControlName="newPassword"
             autocomplete="new-password"
-            placeholder="Mínimo 6 caracteres">
+            placeholder="Mínimo 8 caracteres">
           <button type="button"
             class="absolute right-0 top-0 flex h-full w-10 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-slate-400 hover:text-primary-600"
-            (click)="showNew = !showNew">
+            (click)="showNew = !showNew"
+            aria-label="Mostrar u ocultar nueva contraseña">
             <span class="pi" [class.pi-eye]="!showNew" [class.pi-eye-slash]="showNew"></span>
           </button>
         </div>
         @if (form.get('newPassword')?.invalid && form.get('newPassword')?.touched) {
-          <span class="text-xs text-red-500">Mínimo 6 caracteres</span>
+          <span class="text-xs text-red-500">Mínimo 8 caracteres</span>
         }
       </label>
 
@@ -85,7 +86,8 @@
             placeholder="Repite la contraseña">
           <button type="button"
             class="absolute right-0 top-0 flex h-full w-10 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-slate-400 hover:text-primary-600"
-            (click)="showConfirm = !showConfirm">
+            (click)="showConfirm = !showConfirm"
+            aria-label="Mostrar u ocultar confirmación de contraseña">
             <span class="pi" [class.pi-eye]="!showConfirm" [class.pi-eye-slash]="showConfirm"></span>
           </button>
         </div>

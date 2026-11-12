@@ -1,5 +1,16 @@
-<main class="flex min-h-screen items-center justify-center bg-surface-100 p-6">
-  <section class="w-full max-w-auth rounded-md border border-border bg-white">
+<main class="flex min-h-screen items-center justify-center gap-12 bg-gradient-to-br from-surface-900 via-primary-700 to-primary-600 p-6">
+  <section class="hidden max-w-detail text-white lg:block">
+    <div class="mb-5 flex h-13 w-13 items-center justify-center rounded-modal border border-white/20 bg-white/10">
+      <span class="pi pi-heart-fill text-2xl"></span>
+    </div>
+    <p class="mb-2 mt-0 text-xs font-bold uppercase tracking-section text-primary-100">Tópico de Salud</p>
+    <h1 class="mb-4 mt-0 text-3xl leading-tight">Control seguro de medicamentos</h1>
+    <p class="m-0 text-sm leading-6 text-primary-100">
+      Gestión clínica, inventario SISMED y trazabilidad de accesos en un solo sistema.
+    </p>
+  </section>
+
+  <section class="w-full max-w-auth overflow-hidden rounded-xl border border-white/20 bg-white shadow-modal">
     <router-outlet />
   </section>
 </main>

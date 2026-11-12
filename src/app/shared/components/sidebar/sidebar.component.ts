@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
@@ -7,6 +7,7 @@ interface MenuItem {
   label: string;
   path: string;
   icon: string;
+  permission?: 'read' | 'edit';
 }
 
 @Component({
@@ -23,7 +24,7 @@ export class SidebarComponent implements OnInit {
     { label: 'Pacientes',    path: '/pacientes',            icon: 'pi pi-users' },
     { label: 'Atenciones',   path: '/atenciones',           icon: 'pi pi-clipboard' },
     { label: 'Medicamentos', path: '/medicamentos',         icon: 'pi pi-box' },
-    { label: 'Inventario',   path: '/medicamentos/ajustes', icon: 'pi pi-sliders-h' },
+    { label: 'Ajustes de inventario', path: '/medicamentos/ajustes', icon: 'pi pi-sliders-h', permission: 'edit' },
     { label: 'Reportes',     path: '/reportes',             icon: 'pi pi-file-excel' }
   ];
 
@@ -34,6 +35,8 @@ export class SidebarComponent implements OnInit {
   ];
 
   visibleItems: MenuItem[] = [];
+  @Input() mobileOpen = false;
+  @Output() readonly closed = new EventEmitter<void>();
 
   get isAdmin(): boolean {
     return this.authService.isAdmin();
@@ -41,7 +44,9 @@ export class SidebarComponent implements OnInit {
 
   ngOnInit(): void {
     this.authService.permisos$.subscribe(() => {
-      this.visibleItems = this.allItems.filter(item => this.authService.canReadPath(item.path));
+      this.visibleItems = this.allItems.filter(item => item.permission === 'edit'
+        ? this.authService.canEdit(item.path)
+        : this.authService.canReadPath(item.path));
     });
   }
 }

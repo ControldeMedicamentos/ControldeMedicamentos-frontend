@@ -27,7 +27,7 @@ export class CambiarContrasenaComponent {
 
   readonly form = this.fb.nonNullable.group({
     currentPassword: ['', Validators.required],
-    newPassword:     ['', [Validators.required, Validators.minLength(6)]],
+    newPassword:     ['', [Validators.required, Validators.minLength(8), Validators.maxLength(100)]],
     confirmPassword: ['', Validators.required]
   });
 

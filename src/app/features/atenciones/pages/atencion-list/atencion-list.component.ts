@@ -180,6 +180,11 @@ export class AtencionListComponent implements OnInit {
     this.router.navigate(['/atenciones/nueva']);
   }
 
+  editarAtencion(atencion: Atencion): void {
+    this.showDetail = false;
+    this.router.navigate(['/atenciones', atencion.id, 'editar']);
+  }
+
   tipoDxLabel(tipo?: TipoDiagnostico): string {
     if (!tipo) return '';
     const map: Record<TipoDiagnostico, string> = {

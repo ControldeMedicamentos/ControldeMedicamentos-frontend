@@ -24,6 +24,16 @@ export interface MovimientoInventario {
   observacion?: string;
   usuarioRegistro: string;
   createdAt?: string;
+  lotes: MovimientoLote[];
+}
+
+export interface MovimientoLote {
+  inventarioId: number;
+  lote?: string;
+  fechaVencimiento?: string;
+  cantidad: number;
+  stockAntes: number;
+  stockDespues: number;
 }
 
 export interface AjusteInventario {

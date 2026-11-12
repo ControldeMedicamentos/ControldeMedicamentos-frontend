@@ -25,7 +25,7 @@ export interface ConsumoMedicamento {
 export interface ConsumoMedicamentoCreate {
   medicamentoId: number;
   cantidadConsumida: number;
-  tipoConsumo?: TipoConsumo;
+  tipoConsumo: TipoConsumo;
 }
 
 export interface Atencion {
@@ -89,4 +89,26 @@ export interface AtencionCreate {
   derivacion?: string;
   observaciones?: string;
   consumos?: ConsumoMedicamentoCreate[];
+}
+
+export interface AtencionUpdate {
+  updatedAt: string;
+  motivo: string;
+  antecedentes: string | null;
+  inmunizaciones: string | null;
+  signosVitales: string | null;
+  examenFisico: string | null;
+  laboratorio: string | null;
+  diagnostico1: string | null;
+  cie101: string | null;
+  tipoDiagnostico1: TipoDiagnostico | null;
+  diagnostico2: string | null;
+  cie102: string | null;
+  tipoDiagnostico2: TipoDiagnostico | null;
+  diagnostico3: string | null;
+  cie103: string | null;
+  tipoDiagnostico3: TipoDiagnostico | null;
+  conclusion: string | null;
+  derivacion: string | null;
+  observaciones: string | null;
 }

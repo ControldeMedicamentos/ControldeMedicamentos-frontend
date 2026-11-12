@@ -27,7 +27,7 @@ export class RestablecerContrasenaComponent implements OnInit {
   showConfirm  = false;
 
   readonly form = this.fb.nonNullable.group({
-    newPassword:     ['', [Validators.required, Validators.minLength(6)]],
+    newPassword:     ['', [Validators.required, Validators.minLength(8), Validators.maxLength(100)]],
     confirmPassword: ['', Validators.required]
   });
 

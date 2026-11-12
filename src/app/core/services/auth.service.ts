@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, catchError, map, Observable, of, tap } from 'rxjs';
 import { AuthResponse, AuthUser, LoginRequest } from '../../models/auth.model';
 import { ApiService } from './api.service';
 
@@ -32,14 +32,15 @@ export class AuthService {
     if (user) this.permisosSubject.next(user.permisos);
   }
 
-  refreshPermisos(): void {
-    if (!this.isAuthenticated()) return;
+  refreshPermisos(): Observable<string[]> {
+    if (!this.isAuthenticated()) return of([]);
     const user = this.getCurrentUser();
-    if (!user || user.rol === 'ADMIN') return;
-    this.api.get<{ permisos: string[] }>('/auth/me').subscribe({
-      next: (res) => this.permisosSubject.next(res.permisos),
-      error: () => {}
-    });
+    if (!user || user.rol === 'ADMIN') return of(this.permisosSubject.value);
+    return this.api.get<{ permisos: string[] }>('/auth/me').pipe(
+      map((response) => response.permisos),
+      tap((permisos) => this.permisosSubject.next(permisos)),
+      catchError(() => of(this.permisosSubject.value))
+    );
   }
 
   login(request: LoginRequest): Observable<AuthResponse> {
@@ -89,7 +90,7 @@ export class AuthService {
   canReadPath(path: string): boolean {
     const user = this.getCurrentUser();
     if (!user) return false;
-    if (user.rol === 'ADMIN' || user.permisos.includes('*')) return true;
+    if (user.rol === 'ADMIN' || this.permisosSubject.value.includes('*')) return true;
     const cleanPath = path.split('?')[0].split('#')[0];
     const matched = this.protectedPaths.find(p => cleanPath === p || cleanPath.startsWith(p + '/'));
     if (!matched) return true;
@@ -119,14 +120,17 @@ export class AuthService {
 
   firstAccessiblePath(): string {
     const user = this.getCurrentUser();
-    if (!user || user.rol === 'ADMIN' || user.permisos.includes('*')) return '/dashboard';
-    return this.protectedPaths.find(path => user.permisos.includes(path)) ?? '/cambiar-contrasena';
+    if (!user || user.rol === 'ADMIN' || this.permisosSubject.value.includes('*')) return '/dashboard';
+    const landingPaths = ['/dashboard', '/pacientes', '/atenciones', '/medicamentos', '/reportes'];
+    return landingPaths.find(path => this.permisosSubject.value.includes(path)) ?? '/cambiar-contrasena';
   }
 
   decodeToken(token: string): AuthUser | null {
     try {
       const payload = token.split('.')[1];
-      const decoded = JSON.parse(atob(payload)) as Record<string, unknown>;
+      const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+      const decoded = JSON.parse(atob(padded)) as Record<string, unknown>;
       return {
         username: String(decoded['sub']),
         rol: decoded['rol'] as AuthUser['rol'],

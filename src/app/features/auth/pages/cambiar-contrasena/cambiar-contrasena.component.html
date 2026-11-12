@@ -1,57 +1,53 @@
-<div class="flex min-h-screen items-center justify-center bg-surface-50 p-4">
-  <div class="w-full max-w-auth rounded-xl border border-border bg-white px-9 py-8 shadow-card">
-    <div class="mx-auto mb-5 flex h-13 w-13 items-center justify-center rounded-full bg-blue-100 text-primary-600">
-      <span class="pi pi-lock text-xl"></span>
+<form class="flex flex-col gap-4.5 p-7" [formGroup]="form" (ngSubmit)="submit()">
+  <div class="flex items-center gap-3">
+    <span class="pi pi-key flex h-10 w-10 items-center justify-center rounded-full border border-primary-200 bg-primary-50 text-primary-600"></span>
+    <div>
+      <h2 class="m-0 text-[22px] text-surface-900">Protege tu cuenta</h2>
+      <p class="mb-0 mt-1 text-sm text-slate-500">Cambio obligatorio de contraseña</p>
     </div>
-    <h2 class="mb-2 mt-0 text-center text-xl font-bold text-text">Cambiar contraseña</h2>
-    <p class="mb-5 mt-0 text-center text-sm leading-6 text-slate-500">
-      Hola, <strong>{{ nombreUsuario }}</strong>. Por seguridad debes establecer
-      una contraseña personal antes de continuar.
-    </p>
-
-    <app-alert-message [message]="errorMessage" type="error" />
-
-    <form [formGroup]="form" (ngSubmit)="submit()" class="mt-4 flex flex-col gap-4">
-      <label class="flex flex-col gap-1">
-        <span class="text-xs font-medium text-text">Contraseña actual (tu DNI)</span>
-        <div class="relative flex items-center">
-          <input class="w-full rounded-md border border-border bg-white py-2 pl-3 pr-10 text-sm text-text focus:border-primary-600 focus:outline-none" [type]="showCurrent ? 'text' : 'password'" formControlName="currentPassword"
-                 placeholder="Ingresa tu DNI" autocomplete="current-password">
-          <button type="button" class="absolute right-2 cursor-pointer border-0 bg-transparent p-0 text-sm text-slate-400 hover:text-primary-600" (click)="showCurrent = !showCurrent">
-            <span class="pi" [class.pi-eye]="!showCurrent" [class.pi-eye-slash]="showCurrent"></span>
-          </button>
-        </div>
-      </label>
-
-      <label class="flex flex-col gap-1">
-        <span class="text-xs font-medium text-text">Nueva contraseña</span>
-        <div class="relative flex items-center">
-          <input class="w-full rounded-md border border-border bg-white py-2 pl-3 pr-10 text-sm text-text focus:border-primary-600 focus:outline-none" [type]="showNew ? 'text' : 'password'" formControlName="newPassword"
-                 placeholder="Mínimo 6 caracteres" autocomplete="new-password">
-          <button type="button" class="absolute right-2 cursor-pointer border-0 bg-transparent p-0 text-sm text-slate-400 hover:text-primary-600" (click)="showNew = !showNew">
-            <span class="pi" [class.pi-eye]="!showNew" [class.pi-eye-slash]="showNew"></span>
-          </button>
-        </div>
-        @if (form.get('newPassword')?.invalid && form.get('newPassword')?.touched) {
-          <span class="text-xs text-red-500">Mínimo 6 caracteres</span>
-        }
-      </label>
-
-      <label class="flex flex-col gap-1">
-        <span class="text-xs font-medium text-text">Confirmar nueva contraseña</span>
-        <div class="relative flex items-center">
-          <input class="w-full rounded-md border border-border bg-white py-2 pl-3 pr-10 text-sm text-text focus:border-primary-600 focus:outline-none" [type]="showConfirm ? 'text' : 'password'" formControlName="confirmPassword"
-                 placeholder="Repite la nueva contraseña" autocomplete="new-password">
-          <button type="button" class="absolute right-2 cursor-pointer border-0 bg-transparent p-0 text-sm text-slate-400 hover:text-primary-600" (click)="showConfirm = !showConfirm">
-            <span class="pi" [class.pi-eye]="!showConfirm" [class.pi-eye-slash]="showConfirm"></span>
-          </button>
-        </div>
-      </label>
-
-      <button type="submit" class="mt-1 flex cursor-pointer items-center justify-center gap-1.5 rounded-md border-0 bg-primary-600 p-2.5 text-sm font-semibold text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60" [disabled]="isLoading">
-        <span class="pi" [class.pi-check]="!isLoading" [class.pi-spinner]="isLoading" [class.pi-spin]="isLoading"></span>
-        {{ isLoading ? 'Guardando...' : 'Establecer contraseña' }}
-      </button>
-    </form>
   </div>
-</div>
+
+  <div class="rounded-md border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800">
+    Hola, <strong>{{ nombreUsuario }}</strong>. Establece una contraseña personal de al menos 8 caracteres antes de continuar.
+  </div>
+
+  <app-alert-message [message]="errorMessage" type="error" />
+
+  <label class="flex flex-col gap-1.5 text-sm text-surface-700">
+    Contraseña actual
+    <div class="relative flex">
+      <input class="w-full rounded border border-slate-300 px-3 py-2.5 pr-10 focus:border-primary-600 focus:outline-none" [type]="showCurrent ? 'text' : 'password'" formControlName="currentPassword" autocomplete="current-password" placeholder="Ingresa tu contraseña actual">
+      <button type="button" class="absolute right-0 top-0 flex h-full w-10 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-slate-400 hover:text-primary-600" (click)="showCurrent = !showCurrent" aria-label="Mostrar u ocultar contraseña actual">
+        <span class="pi" [class.pi-eye]="!showCurrent" [class.pi-eye-slash]="showCurrent"></span>
+      </button>
+    </div>
+  </label>
+
+  <label class="flex flex-col gap-1.5 text-sm text-surface-700">
+    Nueva contraseña
+    <div class="relative flex">
+      <input class="w-full rounded border border-slate-300 px-3 py-2.5 pr-10 focus:border-primary-600 focus:outline-none" [type]="showNew ? 'text' : 'password'" formControlName="newPassword" autocomplete="new-password" placeholder="Mínimo 8 caracteres">
+      <button type="button" class="absolute right-0 top-0 flex h-full w-10 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-slate-400 hover:text-primary-600" (click)="showNew = !showNew" aria-label="Mostrar u ocultar nueva contraseña">
+        <span class="pi" [class.pi-eye]="!showNew" [class.pi-eye-slash]="showNew"></span>
+      </button>
+    </div>
+    @if (form.get('newPassword')?.invalid && form.get('newPassword')?.touched) {
+      <span class="text-xs text-red-500">La contraseña debe tener al menos 8 caracteres.</span>
+    }
+  </label>
+
+  <label class="flex flex-col gap-1.5 text-sm text-surface-700">
+    Confirmar nueva contraseña
+    <div class="relative flex">
+      <input class="w-full rounded border border-slate-300 px-3 py-2.5 pr-10 focus:border-primary-600 focus:outline-none" [type]="showConfirm ? 'text' : 'password'" formControlName="confirmPassword" autocomplete="new-password" placeholder="Repite la nueva contraseña">
+      <button type="button" class="absolute right-0 top-0 flex h-full w-10 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-slate-400 hover:text-primary-600" (click)="showConfirm = !showConfirm" aria-label="Mostrar u ocultar confirmación de contraseña">
+        <span class="pi" [class.pi-eye]="!showConfirm" [class.pi-eye-slash]="showConfirm"></span>
+      </button>
+    </div>
+  </label>
+
+  <button type="submit" class="flex cursor-pointer items-center justify-center gap-2 rounded border border-primary-700 bg-primary-600 px-3.5 py-2.75 text-sm font-semibold text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:border-slate-400 disabled:bg-slate-400" [disabled]="isLoading">
+    <span class="pi" [class.pi-check]="!isLoading" [class.pi-spinner]="isLoading" [class.pi-spin]="isLoading"></span>
+    {{ isLoading ? 'Guardando...' : 'Guardar y continuar' }}
+  </button>
+</form>

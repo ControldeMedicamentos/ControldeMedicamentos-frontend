@@ -19,7 +19,7 @@
     Contraseña
     <div class="relative flex">
       <input class="w-full rounded border border-slate-300 px-3 py-2.5 pr-10" [type]="showPassword ? 'text' : 'password'" formControlName="password" autocomplete="current-password">
-      <button type="button" class="absolute right-0 top-0 flex h-full w-10 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-slate-600" (click)="togglePasswordVisibility()">
+      <button type="button" class="absolute right-0 top-0 flex h-full w-10 cursor-pointer items-center justify-center border-0 bg-transparent p-0 text-slate-600" (click)="togglePasswordVisibility()" aria-label="Mostrar u ocultar contraseña">
         <span class="pi" [class.pi-eye]="!showPassword" [class.pi-eye-slash]="showPassword"></span>
       </button>
     </div>
