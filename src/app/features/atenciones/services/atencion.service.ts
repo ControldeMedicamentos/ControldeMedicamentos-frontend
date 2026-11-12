@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_ENDPOINTS } from '../../../constants/api-endpoints';
 import { ApiService } from '../../../core/services/api.service';
-import { Atencion, AtencionArchivo, AtencionCreate } from '../../../models/atencion.model';
+import { Atencion, AtencionArchivo, AtencionCreate, AtencionUpdate } from '../../../models/atencion.model';
 import { PageResponse } from '../../../models/page-response.model';
 import { environment } from '../../../../environments/environment';
 
@@ -35,6 +35,10 @@ export class AtencionService {
 
   create(data: AtencionCreate): Observable<Atencion> {
     return this.api.post<Atencion, AtencionCreate>(this.base, data);
+  }
+
+  updateClinical(id: number, data: AtencionUpdate): Observable<Atencion> {
+    return this.api.put<Atencion, AtencionUpdate>(`${this.base}/${id}/clinical`, data);
   }
 
   uploadArchivo(atencionId: number, file: File): Observable<AtencionArchivo> {
