@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
-import { ReporteSISMED } from '../../../../models/reporte.model';
+import { catchError, forkJoin, of, throwError } from 'rxjs';
+import { AuthService } from '../../../../core/services/auth.service';
+import { ConciliacionMensual, ReporteSISMED } from '../../../../models/reporte.model';
 import { ReporteService } from '../../services/reporte.service';
 
 @Component({
@@ -13,13 +14,18 @@ import { ReporteService } from '../../services/reporte.service';
 })
 export class ReporteSismedComponent implements OnInit {
   private readonly reporteService = inject(ReporteService);
+  private readonly authService = inject(AuthService);
 
   selectedPeriodo = new Date().toISOString().substring(0, 7);
   reporteData: ReporteSISMED[] = [];
   isLoading = false;
   isExporting = false;
   isCerrando = false;
+  isConciliando = false;
   periodoCerrado = false;
+  conciliacion: ConciliacionMensual | null = null;
+  conteosFisicos: Record<string, number | null> = {};
+  observacionConciliacion = '';
   errorMessage = '';
   successMessage = '';
   showConfirmCierre = false;
@@ -40,6 +46,17 @@ export class ReporteSismedComponent implements OnInit {
     return anio < hoy.getFullYear() || (anio === hoy.getFullYear() && mes < hoy.getMonth() + 1);
   }
 
+  get canModifyReports(): boolean {
+    return this.authService.canEdit('/reportes');
+  }
+
+  get conteoCompleto(): boolean {
+    return this.reporteData.length > 0 && this.reporteData.every((reporte) => {
+      const value = this.conteosFisicos[reporte.codigoSismed];
+      return value !== null && value !== undefined && Number.isInteger(value) && value >= 0;
+    });
+  }
+
   ngOnInit(): void {
     this.cargarPeriodo();
   }
@@ -50,6 +67,9 @@ export class ReporteSismedComponent implements OnInit {
     this.successMessage = '';
     this.showConfirmCierre = false;
     this.periodoCerrado = false;
+    this.conciliacion = null;
+    this.conteosFisicos = {};
+    this.observacionConciliacion = '';
     this.cargarPeriodo();
   }
 
@@ -59,11 +79,21 @@ export class ReporteSismedComponent implements OnInit {
     this.errorMessage = '';
     forkJoin({
       estado: this.reporteService.getEstadoPeriodo(this.periodo6),
-      data:   this.reporteService.getReporte(this.periodo6)
+      data:   this.reporteService.getReporte(this.periodo6),
+      conciliacion: this.reporteService.getConciliacion(this.periodo6).pipe(
+        catchError((err) => err?.status === 404 ? of(null) : throwError(() => err))
+      )
     }).subscribe({
-      next: ({ estado, data }) => {
+      next: ({ estado, data, conciliacion }) => {
         this.periodoCerrado = estado.cerrado;
         this.reporteData = data;
+        this.conciliacion = conciliacion;
+        this.observacionConciliacion = conciliacion?.observacion ?? '';
+        this.conteosFisicos = Object.fromEntries(
+          data.map((reporte) => [
+            reporte.codigoSismed,
+            conciliacion?.detalles.find((detalle) => detalle.codigoSismed === reporte.codigoSismed)?.stockFisico ?? null
+          ]));
         this.isLoading = false;
       },
       error: () => {
@@ -91,6 +121,47 @@ export class ReporteSismedComponent implements OnInit {
         this.isCerrando = false;
       }
     });
+  }
+
+  guardarConciliacion(): void {
+    if (!this.conteoCompleto || !this.canModifyReports || this.periodoCerrado) return;
+    this.isConciliando = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+    this.reporteService.guardarConciliacion(this.periodo6, {
+      conteos: this.reporteData.map((reporte) => ({
+        codigoSismed: reporte.codigoSismed,
+        stockFisico: Number(this.conteosFisicos[reporte.codigoSismed])
+      })),
+      observacion: this.observacionConciliacion.trim() || undefined
+    }).subscribe({
+      next: (conciliacion) => {
+        this.conciliacion = conciliacion;
+        this.successMessage = conciliacion.resultado === 'CUADRADO'
+          ? 'Conciliación guardada: el stock físico coincide con el reporte SISMED.'
+          : 'Conciliación guardada con diferencias pendientes de regularizar.';
+        this.isConciliando = false;
+      },
+      error: (err) => {
+        this.errorMessage = err?.error?.message ?? 'Error al guardar la conciliación.';
+        this.isConciliando = false;
+      }
+    });
+  }
+
+  diferencia(reporte: ReporteSISMED): number | null {
+    const stockFisico = this.conteosFisicos[reporte.codigoSismed];
+    if (stockFisico === null || stockFisico === undefined) return null;
+    return Number(stockFisico) - reporte.stockFinal;
+  }
+
+  totalStockFisico(): number {
+    return this.reporteData.reduce(
+      (total, reporte) => total + Number(this.conteosFisicos[reporte.codigoSismed] ?? 0), 0);
+  }
+
+  totalDiferencia(): number {
+    return this.reporteData.reduce((total, reporte) => total + (this.diferencia(reporte) ?? 0), 0);
   }
 
   exportar(): void {
