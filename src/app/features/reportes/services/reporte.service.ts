@@ -3,7 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { API_ENDPOINTS } from '../../../constants/api-endpoints';
 import { ApiService } from '../../../core/services/api.service';
-import { ReporteSISMED } from '../../../models/reporte.model';
+import { ConciliacionMensual, ConciliacionRequest, ReporteSISMED } from '../../../models/reporte.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -28,5 +28,14 @@ export class ReporteService {
 
   cerrarMes(periodo: string): Observable<{ periodo: string; medicamentosProcesados: number; mensaje: string }> {
     return this.api.post(`${API_ENDPOINTS.reportes}/sismed/${periodo}/cerrar`, {});
+  }
+
+  getConciliacion(periodo: string): Observable<ConciliacionMensual> {
+    return this.api.get<ConciliacionMensual>(`${API_ENDPOINTS.reportes}/sismed/${periodo}/conciliacion`);
+  }
+
+  guardarConciliacion(periodo: string, request: ConciliacionRequest): Observable<ConciliacionMensual> {
+    return this.api.post<ConciliacionMensual, ConciliacionRequest>(
+      `${API_ENDPOINTS.reportes}/sismed/${periodo}/conciliacion`, request);
   }
 }

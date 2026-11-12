@@ -9,4 +9,6 @@ import { SidebarComponent } from '../../shared/components/sidebar/sidebar.compon
   imports: [HeaderComponent, RouterOutlet, SidebarComponent],
   templateUrl: './main-layout.component.html'
 })
-export class MainLayoutComponent {}
+export class MainLayoutComponent {
+  sidebarOpen = false;
+}

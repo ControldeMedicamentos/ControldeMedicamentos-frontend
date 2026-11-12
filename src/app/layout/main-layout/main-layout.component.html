@@ -1,8 +1,8 @@
 <div class="flex min-h-screen">
-  <app-sidebar />
+  <app-sidebar [mobileOpen]="sidebarOpen" (closed)="sidebarOpen = false" />
   <section class="flex min-w-0 flex-1 flex-col">
-    <app-header />
-    <main class="p-6">
+    <app-header (menuToggle)="sidebarOpen = !sidebarOpen" />
+    <main class="p-4 sm:p-6">
       <router-outlet />
     </main>
   </section>

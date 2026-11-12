@@ -1,4 +1,4 @@
-<div class="mb-5 flex items-start justify-between">
+<div class="mb-5 flex flex-col items-start justify-between gap-3 sm:flex-row">
   <div>
     <h2 class="mb-0.5 mt-0 text-xl font-bold text-text">Atenciones</h2>
     <p class="m-0 text-sm text-slate-500">Registro de consultas, diagnósticos y consumos.</p>
@@ -12,7 +12,7 @@
 </div>
 
 @if (draft) {
-  <div class="mb-4 flex items-center gap-4 rounded-lg border border-amber-300 border-l-4 border-l-amber-500 bg-amber-50 px-4 py-3">
+  <div class="mb-4 flex flex-col items-stretch gap-4 rounded-lg border border-amber-300 border-l-4 border-l-amber-500 bg-amber-50 px-4 py-3 sm:flex-row sm:items-center">
     <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-100">
       <span class="pi pi-clock text-amber-600"></span>
     </div>
@@ -26,7 +26,7 @@
         @if (draft.hasFiles) { &nbsp;· <span class="pi pi-paperclip text-xs opacity-70"></span> Archivos seleccionados (requieren nueva selección) }
       </span>
     </div>
-    <div class="flex shrink-0 gap-2">
+    <div class="flex shrink-0 flex-wrap gap-2">
       <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-amber-500 px-3 py-1.5 text-sm font-semibold text-white hover:bg-amber-600" (click)="continuarDraft()">
         <span class="pi pi-play"></span>
         Continuar
@@ -60,19 +60,19 @@
 </app-modal-confirmation>
 
 <div class="mb-4 flex flex-wrap items-end gap-3">
-  <label class="flex flex-col gap-1 text-sm font-medium text-text">
+  <label class="flex w-full flex-col gap-1 text-sm font-medium text-text sm:w-auto">
     Desde
-    <input type="date" class="rounded-md border border-border bg-white px-2.5 py-1.5 text-sm text-text focus:border-primary-600 focus:outline-none" [(ngModel)]="desde">
+    <input type="date" class="w-full rounded-md border border-border bg-white px-2.5 py-1.5 text-sm text-text focus:border-primary-600 focus:outline-none sm:w-auto" [(ngModel)]="desde">
   </label>
-  <label class="flex flex-col gap-1 text-sm font-medium text-text">
+  <label class="flex w-full flex-col gap-1 text-sm font-medium text-text sm:w-auto">
     Hasta
-    <input type="date" class="rounded-md border border-border bg-white px-2.5 py-1.5 text-sm text-text focus:border-primary-600 focus:outline-none" [(ngModel)]="hasta">
+    <input type="date" class="w-full rounded-md border border-border bg-white px-2.5 py-1.5 text-sm text-text focus:border-primary-600 focus:outline-none sm:w-auto" [(ngModel)]="hasta">
   </label>
   <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-60" (click)="buscar()" [disabled]="isLoading">
     <span class="pi pi-search"></span>
     Buscar
   </button>
-  <div class="relative min-w-search-small flex-1">
+  <div class="relative min-w-search-small flex-1 max-sm:w-full">
     <span class="pi pi-user pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-sm text-slate-400"></span>
     <input
       type="text"
@@ -92,7 +92,7 @@
   <app-alert-message [message]="errorMessage" type="error" />
 }
 
-<div class="overflow-hidden rounded-lg border border-border bg-white">
+<div class="overflow-x-auto rounded-lg border border-border bg-white">
   @if (isLoading) {
     <div class="flex items-center justify-center gap-2 p-10 text-sm text-slate-400">
       <span class="pi pi-spinner pi-spin"></span> Cargando atenciones...
@@ -134,6 +134,11 @@
               <button class="inline-flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-md border border-border bg-white text-sm text-text transition-colors hover:border-primary-600 hover:bg-primary-600 hover:text-white" title="Ver detalle" (click)="verDetalle(at)">
                 <span class="pi pi-eye"></span>
               </button>
+              @if (auth.canEdit('/atenciones')) {
+                <button class="ml-1 inline-flex h-7.5 w-7.5 cursor-pointer items-center justify-center rounded-md border border-border bg-white text-sm text-text transition-colors hover:border-primary-600 hover:bg-primary-600 hover:text-white" title="Editar datos clínicos" (click)="editarAtencion(at)">
+                  <span class="pi pi-pencil"></span>
+                </button>
+              }
             </td>
           </tr>
         }
@@ -232,6 +237,14 @@
         <span class="text-sm font-medium text-text">{{ atencionDetalle.usuarioRegistro }}</span>
       </div>
     </div>
+
+    @if (auth.canEdit('/atenciones')) {
+      <div class="mb-4 flex justify-end">
+        <button class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700" (click)="editarAtencion(atencionDetalle)">
+          <span class="pi pi-pencil"></span> Editar datos clínicos
+        </button>
+      </div>
+    }
 
     @if (atencionDetalle.consumos.length > 0) {
       <div class="border-t border-border pt-3">

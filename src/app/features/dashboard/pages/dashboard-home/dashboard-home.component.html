@@ -1,7 +1,7 @@
-<div class="mb-6 flex items-start justify-between">
+<div class="mb-6 flex flex-col items-start justify-between gap-3 sm:flex-row">
   <div>
     <h2 class="mb-1 mt-0 text-xl font-bold text-text">Panel de control</h2>
-    <p class="m-0 text-sm text-slate-500">Tópico de Salud · {{ mesActual | titlecase }}</p>
+    <p class="m-0 text-sm text-slate-500">{{ dashboardSubtitle }} · {{ mesActual | titlecase }}</p>
   </div>
   @if (auth.canWrite('/atenciones')) {
     <button class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700" (click)="irANuevaAtencion()">
@@ -25,29 +25,46 @@
   </div>
 } @else if (stats) {
 
-  <div class="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+  <div class="mb-5 grid grid-cols-1 gap-4 md:grid-cols-2" [ngClass]="showInventoryDashboard ? 'xl:grid-cols-4' : 'xl:grid-cols-2'">
 
+    @if (showPatientCard) {
     <div class="flex cursor-pointer items-center gap-4 rounded-modal border border-border bg-white px-5 py-4 transition-shadow hover:shadow-card-hover" (click)="irAPacientes()">
       <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-modal bg-blue-100 text-xl text-primary-600">
         <span class="pi pi-users"></span>
       </div>
       <div class="flex min-w-0 flex-col">
         <span class="text-3xl font-bold leading-none text-text">{{ stats.totalPacientesActivos }}</span>
-        <span class="whitespace-nowrap text-xs text-slate-500">Pacientes activos</span>
+        <span class="text-xs text-slate-500">Pacientes activos</span>
       </div>
     </div>
+    }
 
+    @if (showAtencionesDashboard) {
     <div class="flex cursor-pointer items-center gap-4 rounded-modal border border-border bg-white px-5 py-4 transition-shadow hover:shadow-card-hover" (click)="irAAtenciones()">
       <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-modal bg-emerald-100 text-xl text-emerald-600">
         <span class="pi pi-calendar-plus"></span>
       </div>
       <div class="flex min-w-0 flex-col">
         <span class="text-3xl font-bold leading-none text-text">{{ stats.atencionesMes }}</span>
-        <span class="whitespace-nowrap text-xs text-slate-500">Atenciones este mes</span>
+        <span class="text-xs text-slate-500">Atenciones este mes</span>
       </div>
     </div>
+    }
 
-    <div class="flex cursor-pointer items-center gap-4 rounded-modal border bg-white px-5 py-4 transition-shadow hover:shadow-card-hover"
+    @if (showMedicinesCard) {
+    <div class="flex cursor-pointer items-center gap-4 rounded-modal border border-border bg-white px-5 py-4 transition-shadow hover:shadow-card-hover" (click)="irAMedicamentos()">
+      <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-modal bg-blue-100 text-xl text-primary-600">
+        <span class="pi pi-box"></span>
+      </div>
+      <div class="flex min-w-0 flex-col">
+        <span class="text-3xl font-bold leading-none text-text">{{ stats.totalMedicamentosActivos }}</span>
+        <span class="text-xs text-slate-500">Medicamentos activos</span>
+      </div>
+    </div>
+    }
+
+    @if (showInventoryDashboard) {
+      <div class="flex cursor-pointer items-center gap-4 rounded-modal border bg-white px-5 py-4 transition-shadow hover:shadow-card-hover"
          [class.border-orange-200]="stats.medicamentosConBajoStock > 0"
          [class.bg-orange-50]="stats.medicamentosConBajoStock > 0"
          [class.border-border]="stats.medicamentosConBajoStock === 0"
@@ -61,11 +78,11 @@
       </div>
       <div class="flex min-w-0 flex-col">
         <span class="text-3xl font-bold leading-none text-text">{{ stats.medicamentosConBajoStock }}</span>
-        <span class="whitespace-nowrap text-xs text-slate-500">Lotes con stock bajo</span>
+        <span class="text-xs text-slate-500">Lotes con stock bajo</span>
       </div>
-    </div>
+      </div>
 
-    <div class="flex cursor-pointer items-center gap-4 rounded-modal border bg-white px-5 py-4 transition-shadow hover:shadow-card-hover"
+      <div class="flex cursor-pointer items-center gap-4 rounded-modal border bg-white px-5 py-4 transition-shadow hover:shadow-card-hover"
          [class.border-red-200]="stats.inventariosAlertaVencimiento > 0"
          [class.bg-red-50]="stats.inventariosAlertaVencimiento > 0"
          [class.border-border]="stats.inventariosAlertaVencimiento === 0"
@@ -79,15 +96,17 @@
       </div>
       <div class="flex min-w-0 flex-col">
         <span class="text-3xl font-bold leading-none text-text">{{ stats.inventariosAlertaVencimiento }}</span>
-        <span class="whitespace-nowrap text-xs text-slate-500">Lotes próx. a vencer / vencidos</span>
+        <span class="text-xs text-slate-500">Lotes próx. a vencer / vencidos</span>
       </div>
-    </div>
+      </div>
+    }
 
   </div>
 
-  <div class="mb-4 grid grid-cols-1 gap-4 xl:grid-cols-[3fr_2fr]">
+  <div class="mb-4 grid grid-cols-1 gap-4" [ngClass]="showTopConsumos ? 'xl:grid-cols-[3fr_2fr]' : ''">
 
-    <div class="overflow-hidden rounded-modal border border-border bg-white">
+    @if (showAtencionesDashboard) {
+    <div class="overflow-x-auto rounded-modal border border-border bg-white">
       <div class="flex items-center justify-between border-b border-border bg-surface-50 px-4 py-3">
         <h3 class="m-0 flex items-center gap-2 text-sm font-semibold text-text">
           <span class="pi pi-chart-bar text-primary-600"></span>
@@ -108,8 +127,10 @@
         </div>
       </div>
     </div>
+    }
 
-    <div class="overflow-hidden rounded-modal border border-border bg-white">
+    @if (showTopConsumos) {
+  <div class="overflow-x-auto rounded-modal border border-border bg-white">
       <div class="flex items-center justify-between border-b border-border bg-surface-50 px-4 py-3">
         <h3 class="m-0 flex items-center gap-2 text-sm font-semibold text-text">
           <span class="pi pi-sort-amount-down text-primary-600"></span>
@@ -139,6 +160,7 @@
         </div>
       }
     </div>
+    }
 
   </div>
 
@@ -166,8 +188,9 @@
     </div>
   }
 
-  <div class="grid grid-cols-1 gap-4 xl:grid-cols-[2fr_1fr]">
+  <div class="grid grid-cols-1 gap-4" [ngClass]="showInventoryDashboard ? 'xl:grid-cols-[2fr_1fr]' : ''">
 
+    @if (showLatestAtenciones) {
     <div class="overflow-hidden rounded-modal border border-border bg-white">
       <div class="flex items-center justify-between border-b border-border bg-surface-50 px-4 py-3">
         <h3 class="m-0 flex items-center gap-2 text-sm font-semibold text-text">
@@ -214,9 +237,11 @@
         </table>
       }
     </div>
+    }
 
-    <div class="flex flex-col gap-4">
-    <div class="overflow-hidden rounded-modal border border-border bg-white">
+    @if (showInventoryDashboard) {
+      <div class="flex flex-col gap-4">
+      <div class="overflow-hidden rounded-modal border border-border bg-white">
       <div class="flex items-center justify-between border-b border-border bg-surface-50 px-4 py-3">
         <h3 class="m-0 flex items-center gap-2 text-sm font-semibold text-text">
           <span class="pi pi-bell text-primary-600"></span>
@@ -255,7 +280,7 @@
           </tbody>
         </table>
       }
-    </div>
+      </div>
 
       @if (isAdmin && stats.actividadReciente && stats.actividadReciente.length) {
         <div class="hidden overflow-hidden rounded-modal border border-border bg-white xl:block">
@@ -287,7 +312,8 @@
           </div>
         </div>
       }
-    </div>
+      </div>
+    }
 
   </div>
 }

@@ -6,6 +6,13 @@ export interface AuditLog {
   accion: string;
   modulo: string;
   detalle: string;
+  ipAddress: string | null;
+  requestMethod: string | null;
+  requestPath: string | null;
+  resultado: 'EXITOSO' | 'FALLIDO' | 'DENEGADO';
+  entidadTipo: string | null;
+  entidadId: string | null;
+  userAgent: string | null;
 }
 
 export interface AuditLogPage {

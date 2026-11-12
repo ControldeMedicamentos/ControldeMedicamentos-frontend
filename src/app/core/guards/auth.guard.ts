@@ -1,5 +1,6 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
+import { map } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 export const authGuard: CanActivateFn = (_route, state) => {
@@ -10,11 +11,14 @@ export const authGuard: CanActivateFn = (_route, state) => {
     return router.createUrlTree(['/login']);
   }
 
-  authService.refreshPermisos();
-
-  if (!authService.canReadPath(state.url)) {
-    return router.createUrlTree([authService.firstAccessiblePath()]);
+  const user = authService.getCurrentUser();
+  if (user?.mustChangePassword && !state.url.startsWith('/cambiar-contrasena')) {
+    return router.createUrlTree(['/cambiar-contrasena']);
   }
 
-  return true;
+  return authService.refreshPermisos().pipe(
+    map(() => authService.canReadPath(state.url)
+      ? true
+      : router.createUrlTree([authService.firstAccessiblePath()]))
+  );
 };

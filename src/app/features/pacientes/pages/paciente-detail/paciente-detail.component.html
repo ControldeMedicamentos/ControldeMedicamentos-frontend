@@ -3,7 +3,7 @@
     <span class="pi pi-arrow-left"></span>
     Pacientes
   </button>
-  @if (paciente) {
+  @if (paciente && auth.canWrite('/atenciones')) {
     <button type="button" class="flex cursor-pointer items-center gap-1.5 rounded-md border-0 bg-primary-600 px-5 py-2 font-medium text-white hover:bg-primary-700" (click)="irANuevaAtencion()">
       <span class="pi pi-plus"></span>
       Nueva atención
@@ -38,10 +38,12 @@
           {{ paciente.nroDocumento }}
         </span>
       </div>
-      <button type="button" class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-text hover:bg-surface-50" (click)="modalAbierto = true" title="Editar">
-        <span class="pi pi-pencil"></span>
-        Editar
-      </button>
+      @if (auth.canEdit('/pacientes')) {
+        <button type="button" class="flex shrink-0 cursor-pointer items-center gap-1.5 rounded-md border border-border bg-white px-4 py-2 text-sm font-medium text-text hover:bg-surface-50" (click)="modalAbierto = true" title="Editar">
+          <span class="pi pi-pencil"></span>
+          Editar
+        </button>
+      }
     </div>
 
     <div class="grid grid-cols-detail-fields gap-4">
@@ -140,7 +142,7 @@
   </div>
 }
 
-@if (paciente) {
+@if (paciente && auth.canEdit('/pacientes')) {
   <app-modal-confirmation
     title="Editar paciente"
     [isOpen]="modalAbierto"

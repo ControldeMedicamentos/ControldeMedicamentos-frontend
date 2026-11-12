@@ -9,13 +9,15 @@ export class AuditoriaService {
   private readonly base = '/admin/audit-logs';
 
   getLogs(params: {
-    accion?: string; modulo?: string; email?: string;
+    accion?: string; modulo?: string; email?: string; ipAddress?: string; resultado?: string;
     desde?: string; hasta?: string; page?: number; size?: number;
   }): Observable<AuditLogPage> {
     const query: Record<string, string | number | boolean> = { page: params.page ?? 0, size: params.size ?? 20 };
     if (params.accion) query['accion'] = params.accion;
     if (params.modulo) query['modulo'] = params.modulo;
     if (params.email) query['email'] = params.email;
+    if (params.ipAddress) query['ipAddress'] = params.ipAddress;
+    if (params.resultado) query['resultado'] = params.resultado;
     if (params.desde) query['desde'] = params.desde;
     if (params.hasta) query['hasta'] = params.hasta;
     return this.api.get<AuditLogPage>(this.base, query);

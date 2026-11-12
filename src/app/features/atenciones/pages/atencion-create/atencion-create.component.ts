@@ -223,7 +223,8 @@ export class AtencionCreateComponent implements OnInit, OnDestroy {
   agregarConsumo(): void {
     this.consumos.push(this.fb.group({
       medicamentoId:     [null, Validators.required],
-      cantidadConsumida: [1,    [Validators.required, Validators.min(1)]]
+      cantidadConsumida: [1,    [Validators.required, Validators.min(1)]],
+      tipoConsumo:       [null, Validators.required]
     }));
     this.medUiStates.push({ query: '', suggestions: [], showSuggestions: false, selected: null });
   }
@@ -338,9 +339,10 @@ export class AtencionCreateComponent implements OnInit, OnDestroy {
       conclusion:       raw.conclusion       || undefined,
       derivacion:       raw.derivacion       || undefined,
       observaciones:    raw.observaciones    || undefined,
-      consumos: this.consumos.value.map((c: { medicamentoId: string | number; cantidadConsumida: number }): ConsumoMedicamentoCreate => ({
+      consumos: this.consumos.value.map((c: { medicamentoId: string | number; cantidadConsumida: number; tipoConsumo: TipoConsumo }): ConsumoMedicamentoCreate => ({
         medicamentoId:     Number(c.medicamentoId),
-        cantidadConsumida: c.cantidadConsumida
+        cantidadConsumida: c.cantidadConsumida,
+        tipoConsumo:       c.tipoConsumo
       }))
     };
 

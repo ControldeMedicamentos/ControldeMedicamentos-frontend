@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { Inventario, MovimientoInventario } from '../../../../models/inventario.model';
 import { Medicamento, MedicamentoCreate } from '../../../../models/medicamento.model';
 import { AlertMessageComponent } from '../../../../shared/components/alert-message/alert-message.component';
@@ -57,12 +57,21 @@ export class MedicamentosListComponent implements OnInit {
     this.cargar();
   }
 
+  get canReadInventory(): boolean {
+    return this.auth.canReadPath('/medicamentos/ajustes');
+  }
+
+  get hasRowActions(): boolean {
+    return this.canReadInventory || this.auth.canEdit('/medicamentos')
+      || this.auth.canDelete('/medicamentos');
+  }
+
   cargar(): void {
     this.isLoading = true;
     this.errorMessage = '';
     forkJoin([
       this.medicamentoService.getPage(this.page - 1, this.pageSize, this.searchText, this.filtroEstado),
-      this.inventarioService.getAll()
+      this.canReadInventory ? this.inventarioService.getAll() : of([] as Inventario[])
     ]).subscribe({
       next: ([medPage, invs]) => {
         this.medicamentos = medPage.content;
@@ -154,6 +163,7 @@ export class MedicamentosListComponent implements OnInit {
   }
 
   abrirStock(med: Medicamento): void {
+    if (!this.canReadInventory) return;
     this.medicamentoSeleccionado = med;
     this.showStockModal = true;
   }
@@ -212,12 +222,14 @@ export class MedicamentosListComponent implements OnInit {
   }
 
   onStockActualizado(): void {
+    if (!this.canReadInventory) return;
     this.inventarioService.getAll().subscribe({
       next: (invs) => (this.inventarios = invs)
     });
   }
 
   abrirHistorial(med: Medicamento): void {
+    if (!this.canReadInventory) return;
     this.medicamentoSeleccionado = med;
     this.historialMovimientos = [];
     this.showHistorialModal = true;
