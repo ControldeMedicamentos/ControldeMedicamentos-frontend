@@ -1,7 +1,17 @@
-<aside class="sticky top-0 h-screen w-sidebar shrink-0 overflow-y-auto bg-surface-900 text-slate-200">
+@if (mobileOpen) {
+  <button type="button" class="fixed inset-0 z-100 cursor-default border-0 bg-overlay md:hidden" aria-label="Cerrar menú" (click)="closed.emit()"></button>
+}
+
+<aside
+  class="fixed inset-y-0 left-0 z-200 h-screen w-sidebar shrink-0 overflow-y-auto bg-surface-900 text-slate-200 transition-transform md:sticky md:top-0 md:z-auto md:translate-x-0"
+  [class.translate-x-0]="mobileOpen"
+  [class.-translate-x-full]="!mobileOpen">
   <div class="flex h-16 items-center gap-2.5 border-b border-sidebar-border px-5">
     <span class="pi pi-shield"></span>
     <strong>SISMED</strong>
+    <button type="button" class="ml-auto cursor-pointer border-0 bg-transparent p-1 text-slate-300 hover:text-white md:hidden" aria-label="Cerrar menú" (click)="closed.emit()">
+      <span class="pi pi-times"></span>
+    </button>
   </div>
 
   <nav class="flex flex-col gap-1 p-3.5">
@@ -10,6 +20,7 @@
         class="flex items-center gap-2.5 rounded px-3 py-2.5 text-slate-300 no-underline hover:bg-slate-800 hover:text-white"
         routerLinkActive="bg-slate-800 !text-white"
         [routerLink]="item.path"
+        (click)="closed.emit()"
       >
         <span [class]="item.icon"></span>
         {{ item.label }}
@@ -23,6 +34,7 @@
           class="flex items-center gap-2.5 rounded px-3 py-2.5 text-slate-300 no-underline hover:bg-slate-800 hover:text-white"
           routerLinkActive="bg-slate-800 !text-white"
           [routerLink]="item.path"
+          (click)="closed.emit()"
         >
           <span [class]="item.icon"></span>
           {{ item.label }}

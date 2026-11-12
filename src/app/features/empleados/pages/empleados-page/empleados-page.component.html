@@ -151,7 +151,7 @@
           <label class="flex flex-col gap-1">
             <span class="text-xs font-medium text-text">DNI *</span>
             <input class="rounded-md border border-border bg-white px-3 py-2 text-sm text-text focus:border-primary-600 focus:outline-none" type="text" [(ngModel)]="form.dni" placeholder="12345678" maxlength="8" inputmode="numeric" (input)="onEmpleadoDniInput()" />
-            <span class="text-xs text-slate-400">Debe tener 8 dígitos. Se usará como contraseña temporal.</span>
+            <span class="text-xs text-slate-400">Debe tener 8 dígitos. El empleado recibirá un enlace para establecer su contraseña.</span>
             @if (empleadoDniInvalido) {
               <span class="text-xs text-red-500">DNI debe tener exactamente 8 dígitos</span>
             }

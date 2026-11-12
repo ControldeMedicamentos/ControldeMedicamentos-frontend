@@ -4,22 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { Rol, RolVistaPermiso } from '../../../../models/role.model';
 import { RoleService } from '../../services/role.service';
 import { AlertMessageComponent } from '../../../../shared/components/alert-message/alert-message.component';
-import { ModalConfirmationComponent } from '../../../../shared/components/modal-confirmation/modal-confirmation.component';
-
-type Seccion = 'sistema' | 'empresa';
 
 @Component({
   selector: 'app-roles-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, AlertMessageComponent, ModalConfirmationComponent],
+  imports: [CommonModule, FormsModule, AlertMessageComponent],
   templateUrl: './roles-page.component.html'
 })
 export class RolesPageComponent implements OnInit {
   private readonly roleService = inject(RoleService);
 
-  seccion: Seccion = 'empresa';
   rolesSistema: Rol[] = [];
-  rolesEmpresa: Rol[] = [];
   rolSeleccionado: Rol | null = null;
   permisos: RolVistaPermiso[] = [];
   busqueda = '';
@@ -31,13 +26,6 @@ export class RolesPageComponent implements OnInit {
 
   successMessage = '';
   errorMessage = '';
-
-  showCreateModal = false;
-  newRoleName = '';
-  newRoleDesc = '';
-
-  showConfirmEliminar = false;
-  rolAEliminar: Rol | null = null;
 
   readonly CAMPOS: { key: keyof RolVistaPermiso; label: string }[] = [
     { key: 'leer',     label: 'VER' },
@@ -53,35 +41,27 @@ export class RolesPageComponent implements OnInit {
   cargarRoles(): void {
     this.isLoadingRoles = true;
     this.roleService.getSystemRoles().subscribe({
-      next: (data) => (this.rolesSistema = data)
-    });
-    this.roleService.getEmpresaRoles().subscribe({
-      next: (data) => { this.rolesEmpresa = data; this.isLoadingRoles = false; },
+      next: (data) => {
+        this.rolesSistema = data;
+        this.isLoadingRoles = false;
+        if (data.length > 0) this.selectRol(data[0]);
+      },
       error: () => (this.isLoadingRoles = false)
     });
   }
 
-  get rolesActivos(): Rol[] {
-    return this.seccion === 'sistema' ? this.rolesSistema : this.rolesEmpresa;
-  }
-
   get rolesFiltrados(): Rol[] {
     const q = this.busqueda.trim().toLowerCase();
-    if (!q) return this.rolesActivos;
-    return this.rolesActivos.filter(r =>
+    if (!q) return this.rolesSistema;
+    return this.rolesSistema.filter(r =>
       this.roleLabel(r.name).toLowerCase().includes(q) ||
       r.name.toLowerCase().includes(q) ||
       (r.descripcion ?? '').toLowerCase().includes(q)
     );
   }
 
-  setSeccion(s: Seccion): void {
-    this.seccion = s;
-    this.busqueda = '';
-    this.rolSeleccionado = null;
-    this.permisos = [];
-    this.permisosModificados = false;
-    this.clearMessages();
+  get isAdminSelected(): boolean {
+    return this.rolSeleccionado?.name === 'ROLE_ADMIN';
   }
 
   selectRol(rol: Rol): void {
@@ -108,6 +88,7 @@ export class RolesPageComponent implements OnInit {
   }
 
   togglePermiso(vista: RolVistaPermiso, campo: keyof RolVistaPermiso): void {
+    if (this.isAdminSelected) return;
     const idx = this.permisos.findIndex(p => p.vistaId === vista.vistaId);
     if (idx === -1) return;
     (this.permisos[idx] as any)[campo] = !(this.permisos[idx] as any)[campo];
@@ -120,7 +101,7 @@ export class RolesPageComponent implements OnInit {
   }
 
   guardarPermisos(): void {
-    if (!this.rolSeleccionado) return;
+    if (!this.rolSeleccionado || this.isAdminSelected) return;
     this.isSaving = true;
     this.clearMessages();
     this.roleService.saveVistas(this.rolSeleccionado.id, this.permisos).subscribe({
@@ -140,51 +121,6 @@ export class RolesPageComponent implements OnInit {
   descartarPermisos(): void {
     if (this.rolSeleccionado) this.cargarPermisos(this.rolSeleccionado.id);
     this.permisosModificados = false;
-  }
-
-  abrirCrearModal(): void {
-    this.newRoleName = '';
-    this.newRoleDesc = '';
-    this.showCreateModal = true;
-    this.clearMessages();
-  }
-
-  crearRol(): void {
-    if (!this.newRoleName.trim()) return;
-    this.showCreateModal = false;
-    this.roleService.create(this.newRoleName.trim(), this.newRoleDesc.trim() || undefined).subscribe({
-      next: (rol) => {
-        this.rolesEmpresa = [...this.rolesEmpresa, rol];
-        this.selectRol(rol);
-        this.successMessage = `Rol "${this.roleLabel(rol.name)}" creado.`;
-      },
-      error: (err) => (this.errorMessage = err?.error?.message ?? 'Error al crear el rol.')
-    });
-  }
-
-  confirmarEliminar(rol: Rol): void {
-    this.rolAEliminar = rol;
-    this.showConfirmEliminar = true;
-  }
-
-  eliminarRol(): void {
-    if (!this.rolAEliminar) return;
-    this.showConfirmEliminar = false;
-    this.roleService.delete(this.rolAEliminar.id).subscribe({
-      next: () => {
-        this.rolesEmpresa = this.rolesEmpresa.filter(r => r.id !== this.rolAEliminar!.id);
-        if (this.rolSeleccionado?.id === this.rolAEliminar!.id) {
-          this.rolSeleccionado = null;
-          this.permisos = [];
-        }
-        this.successMessage = `Rol eliminado.`;
-        this.rolAEliminar = null;
-      },
-      error: (err) => {
-        this.errorMessage = err?.error?.message ?? 'Error al eliminar el rol.';
-        this.rolAEliminar = null;
-      }
-    });
   }
 
   roleLabel(name: string): string {
