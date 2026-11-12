@@ -5,6 +5,7 @@ import { finalize } from 'rxjs';
 import { Inventario, InventarioCreate } from '../../../../models/inventario.model';
 import { Medicamento } from '../../../../models/medicamento.model';
 import { InventarioService } from '../../services/inventario.service';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-stock-table',
@@ -18,6 +19,7 @@ export class StockTableComponent implements OnInit, OnChanges {
 
   private readonly inventarioService = inject(InventarioService);
   private readonly fb = inject(FormBuilder);
+  readonly auth = inject(AuthService);
 
   inventarios: Inventario[] = [];
   isLoading = false;
@@ -87,6 +89,7 @@ export class StockTableComponent implements OnInit, OnChanges {
   }
 
   abrirForm(): void {
+    if (!this.auth.canWrite('/medicamentos/ajustes')) return;
     this.form.reset({ lote: '', fechaIngreso: '', fechaVencimiento: '', stockActual: 1 });
     this.showForm = true;
   }
